@@ -1,0 +1,188 @@
+%%%%%%%%%%%%%%%%%%%% packages %%%%%%%%%%%%%%%%%%%%
+%% format/style packages
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\usepackage{dcolumn}
+\usepackage{geometry}
+\usepackage{pdflscape}
+\usepackage{bm}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{xcolor} % custom colors
+\usepackage[most]{tcolorbox} % boxed definitions/examples
+
+%% math/code packages
+\usepackage{amsmath,amsthm,amssymb} % extra math stuff
+\usepackage{listings} % code snippets
+\usepackage{tikz-cd} % number lines, arrow diagrams, networks
+
+%%%%%%%%%%%%%%%%%%%% custom commands %%%%%%%%%%%%%%%%%%%%
+%% general math commands
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\renewcommand{\C}{\mathbb{C}}
+\newcommand{\wo}{\setminus}
+\newcommand{\sub}{\subseteq}
+\newcommand{\A}{\forall\ }
+\newcommand{\E}{\exists\ }
+\newcommand{\eps}{\varepsilon}
+\newcommand{\xn}{\left\{ x_n \right\}}
+\newcommand{\seq}{\left\{ x_i \right\}_{i=1}^\infty}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\fxy}{f: X \longrightarrow Y}
+\newcommand{\cl}{\overline}
+\newcommand{\del}{\partial}
+\renewcommand{\|}{\ |\ }
+\newcommand{\cat}[1]{\bm{\mathsf{#1}}}
+
+%% project specific commands
+\newcommand{\bc}{\mathcal{C}^{B}_{\epsilon,n}}
+\newcommand{\nc}{\mathcal{C}^{N}_{k,n}}
+\newcommand{\minmax}{\operatorname{minmax}}
+\newcommand{\maxmin}{\operatorname{maxmin}}
+\newcommand{\fl}{\operatorname{fl}}
+\newcommand{\lf}{\operatorname{lf}}
+
+%% custom colors
+\definecolor{light-grey}{gray}{0.95}
+\definecolor{dark-grey}{gray}{0.5}
+
+%%%%%%%%%%%%%%%%%%%% custom styling %%%%%%%%%%%%%%%%%%%%
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+%\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\providecommand{\tightlist}{
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+} % use close list spacing
+
+%%%%%%%%%%%%%%%%%%%% code formatting %%%%%%%%%%%%%%%%%%%%
+%% set up listings for code snippets
+\lstset{
+    basicstyle=\ttfamily,
+    frame=lines,
+    language=Python,
+    commentstyle=\color{gray},
+    keepspaces=true,
+    columns=[l]fullflexible,
+    flexiblecolumns=true,
+    escapeinside={(*}{*)}
+}
+
+%% set names of code snippets to be "\textbf{Algorithm n.}"
+\renewcommand\lstlistingname{Algorithm}
+\newcommand\lstlistingnamestyle{\bfseries}
+
+%% left-align labels (vs centered)
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+    #1. #2\par
+  \vskip\belowcaptionskip}%
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%% tikz formatting %%%%%%%%%%%%%%%%%%%%
+%% customize spacing around tikz images
+\newenvironment{centeredTikz}{\vspace*{5mm}\begin{center}\begin{tikzpicture}}
+{\
+\end{tikzpicture}\end{center}\vspace*{5mm}
+}
+
+%%%%%%%%%%%%%%%%%%%% def/ex/thm formatting %%%%%%%%%%%%%%%%%%%%
+%% set up custom definitions
+\newtcbtheorem
+    [] % init options
+    {Definition} % name
+    {Definition} % title
+    {%
+        enhanced,
+        sharp corners,
+        attach boxed title to top left={
+            xshift=-1mm,
+            yshift=-5mm,
+            yshifttext=-1mm
+        },
+        top=1.5em,
+        colback=white,
+        colframe=light-grey,
+        fonttitle=\color{dark-grey}\bfseries,
+        boxed title style={
+            sharp corners,
+            size=small,
+            colback=light-grey,
+            colframe=dark-grey,
+        }
+    } % options
+    {def} % prefix
+\newenvironment{boxDef}[2]{\vspace*{3mm}\begin{Definition}[adjusted title=Definition (#1)]{}{}}{\end{Definition}\vspace*{3mm}}
+
+%% set up custom examples
+\newtcbtheorem
+    [] % init options
+    {Example} % name
+    {Example} % title
+    {%
+        breakable, % allow examples to span >1 page
+        enhanced, % remove border at bottom of page breaks
+        sharp corners,
+        attach boxed title to top left={
+            xshift=-1mm,
+            yshift=-5mm,
+            yshifttext=-1mm
+        },
+        top=1.5em,
+        colback=white,
+        colframe=light-grey,
+        fonttitle=\color{dark-grey}\bfseries,
+        boxed title style={
+            sharp corners,
+            size=small,
+            colback=light-grey,
+            colframe=dark-grey,
+        }
+    } % options
+    {ex} % prefix
+\newenvironment{boxEx}[2]{\vspace*{3mm}\begin{Example}[adjusted title= Ex #1]{}{}}{\end{Example}\vspace*{3mm}}
+
+
+%% (auto generated)
+%%%%%%%%%%%%%%%%%%%% deal with pdfs, latex versions %%%%%%%%%%%%%%%%%%%%
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+
+\hypersetup{
+  pdftitle={Robust recovery of homological features in simulated and real-world data sets using the mapper construction},
+  pdfauthor={Jason Cory Brunson; Yara Skaf; Brandon Demkowicz; Sanmati Choudhary},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs

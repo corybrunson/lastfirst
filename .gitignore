@@ -1,0 +1,10 @@
+# Mac OS X
+.DS_Store
+
+# R project
+.Rproj.user
+
+# generated files
+*.tex
+*.pdf
+
