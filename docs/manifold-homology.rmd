@@ -23,6 +23,19 @@ library(ggplot2)
 ```
 
 ```{r}
+# number of iterations of each experiment
+n_iter <- 120L
+# number of sampled points (after boosting)
+n_pts <- 360L
+# power of skewing polynomial
+p_skew <- 2
+# boosting denominator
+d_boost <- 6L
+# number of landmarks
+n_lmk <- 12L
+```
+
+```{r}
 lmk_funs <- list(
   random = function(x, num)
     sample(which(! duplicated(x)), size = num),
@@ -44,30 +57,73 @@ gudhi_persistence_df <- function(ph) {
 
 ## sample from a sphere
 
+```{r}
+samp_funs <- list(
+  uniform_none = function(n) sample_sphere(n, d = 2L, sd = 0),
+  uniform_boost = function(n) {
+    m <- n / d_boost
+    s <- sample_sphere(m, d = 2L, sd = 0)
+    # iterative (cumulative) boosting
+    for (i in seq(d_boost - 1L)) {
+      s <- rbind(s, s[sample(nrow(s), m, replace = TRUE), , drop = FALSE])
+    }
+    s
+  },
+  skewed_none = function(n) {
+    # rejection sampling
+    s <- matrix(NA_real_, nrow = 0, ncol = 3)
+    while (nrow(s) < n) {
+      t <- sample_sphere(n, d = 2L, sd = 0)
+      p <- (acos(t[, "z"]) / pi) ^ p_skew
+      d <- runif(n, 0, 1)
+      s <- rbind(s, t[p > d, , drop = FALSE])
+    }
+    s <- s[seq(n), , drop = FALSE]
+  },
+  skewed_boost = function(n) {
+    m <- n / d_boost
+    # rejection sampling
+    s <- matrix(NA_real_, nrow = 0, ncol = 3)
+    while (nrow(s) < m) {
+      t <- sample_sphere(m, d = 2L, sd = 0)
+      p <- (acos(t[, "z"]) / pi) ^ p_skew
+      d <- runif(m, 0, 1)
+      s <- rbind(s, t[p > d, , drop = FALSE])
+    }
+    s <- s[seq(m), , drop = FALSE]
+    # iterative (cumulative) boosting
+    for (i in seq(d_boost - 1L)) {
+      s <- rbind(s, s[sample(nrow(s), m, replace = TRUE), , drop = FALSE])
+    }
+    s
+  }
+)
+```
+
 Here we rough and partial reproduce an experiment of @DeSilva2004.
 
 ```{r sphere}
-num <- 12L
 diam <- data.frame()
 phom <- data.frame()
-for (i in seq(60L)) {
+for (i in seq(n_iter)) for (j in seq_along(samp_funs)) {
   # sample points
-  sph <- sample_sphere(500L, d = 2, sd = 0)
+  sph <- samp_funs[[j]](n_pts)
   # 
-  for (j in seq_along(lmk_funs)) {
+  for (k in seq_along(lmk_funs)) {
     # generate landmarks
-    lmk <- lmk_funs[[j]](sph, num)
+    lmk <- lmk_funs[[k]](sph, n_lmk)
     # append diameter data
     diam <- rbind(diam, data.frame(
       iter = i,
-      landmarks = names(lmk_funs)[[j]],
+      sample = names(samp_funs)[[j]],
+      landmarks = names(lmk_funs)[[k]],
       diameter = max(dist(sph[lmk, , drop = FALSE]))
     ))
     # simplex tree constructions
     st_const <- list(
       Rips = {
         sc <- gd$RipsComplex(points = sph[lmk, , drop = FALSE],
-                            max_edge_length = 3)
+                             max_edge_length = 3)
         sc$create_simplex_tree(max_dimension = 3L)
       },
       alpha = {
@@ -76,19 +132,20 @@ for (i in seq(60L)) {
       },
       witness = {
         sc <- gd$EuclideanWitnessComplex(landmarks = sph[lmk, , drop = FALSE],
-                                           witnesses = sph)
+                                         witnesses = sph)
         sc$create_simplex_tree(max_alpha_square = 3, limit_dimension = 3L)
       }
     )
     # 
-    for (k in seq_along(st_const)) {
+    for (l in seq_along(st_const)) {
       # calculate persistence
-      ph <- gudhi_persistence_df(st_const[[k]]$persistence())
+      ph <- gudhi_persistence_df(st_const[[l]]$persistence())
       # append persistence data
       phom <- rbind(phom, transform(ph,
                                     iter = i,
-                                    landmarks = names(lmk_funs)[[j]],
-                                    complex = names(st_const)[[k]]))
+                                    sample = names(samp_funs)[[j]],
+                                    landmarks = names(lmk_funs)[[k]],
+                                    complex = names(st_const)[[l]]))
     }
   }
 }
@@ -97,16 +154,20 @@ for (i in seq(60L)) {
 ```{r}
 tidyr::pivot_longer(phom, cols = c(birth, death),
                     names_to = "event", values_to = "radius") %>%
-  mutate(landmarks = forcats::fct_inorder(landmarks),
+  tidyr::separate(sample, c("distribution", "duplication")) %>%
+  mutate(distribution = forcats::fct_inorder(distribution),
+         duplication = forcats::fct_inorder(duplication),
+         landmarks = forcats::fct_inorder(landmarks),
          complex = forcats::fct_inorder(complex)) %>%
-  group_by(iter, landmarks, complex) %>%
+  group_by(iter, distribution, duplication, landmarks, complex) %>%
   arrange(radius, dimension) %>%
   mutate(incr = ifelse(event == "birth", 1L, -1L)) %>%
   mutate(hom0 = cumsum((dimension == 0L) * incr),
          hom1 = cumsum((dimension == 1L) * incr),
          hom2 = cumsum((dimension == 2L) * incr)) %>%
-  select(iter, landmarks, complex, radius, hom0, hom1, hom2) %>%
-  group_by(iter, landmarks, complex, radius) %>%
+  select(iter, distribution, duplication, landmarks, complex,
+         radius, hom0, hom1, hom2) %>%
+  group_by(iter, distribution, duplication, landmarks, complex, radius) %>%
   summarize_at(vars(starts_with("hom")), last) %>%
   print() -> betti
 ```
@@ -124,16 +185,20 @@ betti %>%
   )) %>%
   mutate(space = forcats::fct_inorder(space)) %>%
   filter(! is.na(space)) %>%
-  group_by(iter, landmarks, complex, space) %>%
+  group_by(iter, distribution, duplication, landmarks, complex, space) %>%
   filter(space == "sphere" | r1 == Inf) %>%
   filter(r0 == max(r0)) %>%
-  select(iter, landmarks, complex, r0, r1, space) %>%
+  select(iter, distribution, duplication, landmarks, complex, r0, r1, space) %>%
   rename(`0` = r0, `1` = r1) %>%
   mutate(space = case_when(space == "sphere" ~ "R", space == "point" ~ "K")) %>%
   tidyr::pivot_wider(names_from = c(space), values_from = c(`0`, `1`),
                      names_glue = "{space}_{.value}") %>%
-  left_join(mutate(diam, landmarks = forcats::fct_inorder(landmarks)),
-            by = c("iter", "landmarks")) %>%
+  left_join(diam %>%
+              tidyr::separate(sample, c("distribution", "duplication")) %>%
+              mutate(distribution = forcats::fct_inorder(distribution),
+                     duplication = forcats::fct_inorder(duplication),
+                     landmarks = forcats::fct_inorder(landmarks)),
+            by = c("iter", "distribution", "duplication", "landmarks")) %>%
   mutate(K_1 = diameter) %>% select(-diameter) %>%
   mutate(relative = (R_1 - R_0) / K_0, absolute = (R_1 - R_0) / K_1) %>%
   print() -> dominance
@@ -146,10 +211,12 @@ betti %>%
 
 ```{r}
 dominance %>%
-  select(iter, landmarks, complex, relative, absolute) %>%
+  select(iter, distribution, duplication, landmarks, complex,
+         relative, absolute) %>%
   tidyr::pivot_longer(cols = c(relative, absolute),
                       names_to = "type", values_to = "dominance") %>%
   ggplot(aes(x = dominance)) +
-  facet_grid(complex ~ type) +
+  #facet_grid(complex ~ type) +
+  facet_grid(distribution + duplication ~ complex + type) +
   geom_boxplot(aes(y = landmarks))
 ```
