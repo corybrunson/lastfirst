@@ -26,7 +26,7 @@ library(ggplot2)
 # number of iterations of each experiment
 n_iter <- 120L
 # number of sampled points (after boosting)
-n_pts <- 360L
+n_pts <- 540L
 # power of skewing polynomial
 p_skew <- 2
 # boosting denominator
@@ -65,13 +65,22 @@ samp_funs <- list(
     s <- sample_sphere(m, d = 2L, sd = 0)
     # iterative (cumulative) boosting
     for (i in seq(d_boost - 1L)) {
-      s <- rbind(s, s[sample(nrow(s), m, replace = TRUE), , drop = FALSE])
+      # rejection sampling
+      t <- matrix(NA_real_, nrow = 0L, ncol = 3L)
+      while (nrow(t) < m) {
+        u <- s[sample(nrow(s), m, replace = TRUE), , drop = FALSE]
+        p <- (acos(u[, "z"]) / pi)
+        d <- runif(m, 0, 1)
+        t <- rbind(t, u[p > d, , drop = FALSE])
+      }
+      t <- t[seq(m), , drop = FALSE]
+      s <- rbind(s, t)
     }
     s
   },
   skewed_none = function(n) {
     # rejection sampling
-    s <- matrix(NA_real_, nrow = 0, ncol = 3)
+    s <- matrix(NA_real_, nrow = 0L, ncol = 3L)
     while (nrow(s) < n) {
       t <- sample_sphere(n, d = 2L, sd = 0)
       p <- (acos(t[, "z"]) / pi) ^ p_skew
@@ -83,7 +92,7 @@ samp_funs <- list(
   skewed_boost = function(n) {
     m <- n / d_boost
     # rejection sampling
-    s <- matrix(NA_real_, nrow = 0, ncol = 3)
+    s <- matrix(NA_real_, nrow = 0L, ncol = 3L)
     while (nrow(s) < m) {
       t <- sample_sphere(m, d = 2L, sd = 0)
       p <- (acos(t[, "z"]) / pi) ^ p_skew
@@ -93,11 +102,38 @@ samp_funs <- list(
     s <- s[seq(m), , drop = FALSE]
     # iterative (cumulative) boosting
     for (i in seq(d_boost - 1L)) {
-      s <- rbind(s, s[sample(nrow(s), m, replace = TRUE), , drop = FALSE])
+      # rejection sampling
+      t <- matrix(NA_real_, nrow = 0L, ncol = 3L)
+      while (nrow(t) < m) {
+        u <- s[sample(nrow(s), m, replace = TRUE), , drop = FALSE]
+        p <- (acos(u[, "z"]) / pi)
+        d <- runif(m, 0, 1)
+        t <- rbind(t, u[p > d, , drop = FALSE])
+      }
+      t <- t[seq(m), , drop = FALSE]
+      s <- rbind(s, t)
     }
     s
   }
 )
+```
+
+```{r}
+sph <- data.frame()
+for (i in seq_along(samp_funs)) {
+  s <- as.data.frame(samp_funs[[i]](n_pts))
+  s$sample = names(samp_funs)[[i]]
+  sph <- rbind(sph, s)
+}
+sph %>%
+  tidyr::separate(sample, c("distribution", "duplication")) %>%
+  mutate(distribution = forcats::fct_inorder(distribution),
+         duplication = forcats::fct_inorder(duplication)) %>%
+  ggplot(aes(x = x, y = z)) +
+  theme_bw() +
+  facet_grid(distribution ~ duplication) +
+  geom_point(alpha = .25) +
+  coord_equal()
 ```
 
 Here we rough and partial reproduce an experiment of @DeSilva2004.
@@ -211,12 +247,22 @@ betti %>%
 
 ```{r}
 dominance %>%
-  select(iter, distribution, duplication, landmarks, complex,
-         relative, absolute) %>%
-  tidyr::pivot_longer(cols = c(relative, absolute),
-                      names_to = "type", values_to = "dominance") %>%
-  ggplot(aes(x = dominance)) +
+  select(iter, distribution, duplication, landmarks, complex, relative) %>%
+  ggplot(aes(x = relative)) +
   #facet_grid(complex ~ type) +
-  facet_grid(distribution + duplication ~ complex + type) +
-  geom_boxplot(aes(y = landmarks))
+  facet_grid(distribution + duplication ~ complex) +
+  geom_boxplot(aes(y = forcats::fct_rev(landmarks))) +
+  scale_x_continuous(limits = c(0, 1)) +
+  labs(x = "relative dominance", y = "landmark selection")
+```
+
+```{r}
+dominance %>%
+  select(iter, distribution, duplication, landmarks, complex, absolute) %>%
+  ggplot(aes(x = absolute)) +
+  #facet_grid(complex ~ type) +
+  facet_grid(distribution + duplication ~ complex) +
+  geom_boxplot(aes(y = forcats::fct_rev(landmarks))) +
+  scale_x_continuous(limits = c(0, 1)) +
+  labs(x = "absolute dominance", y = "landmark selection")
 ```
