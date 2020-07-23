@@ -10,10 +10,14 @@
 \usepackage{float}
 \usepackage{xcolor} % custom colors
 \usepackage[most]{tcolorbox} % boxed definitions/examples
+\usepackage{wrapfig} % wrap text around figures/code listings
 
 %% math/code packages
 \usepackage{amsmath,amsthm,amssymb} % extra math stuff
+\usepackage{centernot} % centered overlay slash
 \usepackage{listings} % code snippets
+\usepackage{algorithmic}
+\usepackage[ruled]{algorithm}
 \usepackage{tikz-cd} % number lines, arrow diagrams, networks
 
 %%%%%%%%%%%%%%%%%%%% custom commands %%%%%%%%%%%%%%%%%%%%
@@ -23,10 +27,12 @@
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Q}{\mathbb{Q}}
 \renewcommand{\C}{\mathbb{C}}
+\newcommand{\Sph}{\mathbb{S}}
 \newcommand{\wo}{\setminus}
 \newcommand{\sub}{\subseteq}
 \newcommand{\A}{\forall\ }
 \newcommand{\E}{\exists\ }
+\newcommand{\nimplies}{\centernot\implies}
 \newcommand{\eps}{\varepsilon}
 \newcommand{\xn}{\left\{ x_n \right\}}
 \newcommand{\seq}{\left\{ x_i \right\}_{i=1}^\infty}
@@ -40,6 +46,8 @@
 %% project specific commands
 \newcommand{\bc}{\mathcal{C}^{B}_{\epsilon,n}}
 \newcommand{\nc}{\mathcal{C}^{N}_{k,n}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\uniq}[1]{\abs{\supp{#1}}}
 \newcommand{\minmax}{\operatorname{minmax}}
 \newcommand{\maxmin}{\operatorname{maxmin}}
 \newcommand{\fl}{\operatorname{fl}}
@@ -58,21 +66,28 @@
 } % use close list spacing
 
 %%%%%%%%%%%%%%%%%%%% code formatting %%%%%%%%%%%%%%%%%%%%
+
+%\floatname{algorithm}{Algorithm}
+
 %% set up listings for code snippets
 \lstset{
-    basicstyle=\ttfamily,
+    basicstyle=\ttfamily\small,
     frame=lines,
     language=Python,
     commentstyle=\color{gray},
     keepspaces=true,
     columns=[l]fullflexible,
     flexiblecolumns=true,
-    escapeinside={(*}{*)}
+    escapeinside={(*}{*)},
+    captionpos=t,
+    abovecaptionskip=0em,
+    aboveskip=0pt,
+    belowskip=4pt
 }
 
 %% set names of code snippets to be "\textbf{Algorithm n.}"
-\renewcommand\lstlistingname{Algorithm}
-\newcommand\lstlistingnamestyle{\bfseries}
+%\renewcommand\lstlistingname{Algorithm}
+%\renewcommand\lstlistingnamestyle{\bfseries}
 
 %% left-align labels (vs centered)
 \makeatletter
@@ -90,6 +105,40 @@
 }
 
 %%%%%%%%%%%%%%%%%%%% def/ex/thm formatting %%%%%%%%%%%%%%%%%%%%
+\makeatletter
+
+\newtheoremstyle{myThm}
+  {\topsep}%   Space above
+  {12pt}%   Space below
+  {\slshape}%          Body font
+  {}%          Indent amount (empty = no indent, \parindent = para indent)
+  {\bfseries}% Thm head font
+  {}%         Punctuation after thm head
+  {0.5em}%     Space after thm head: " " = normal interword space;
+     %         \newline = linebreak
+  {}%          Thm head spec (can be left empty, meaning `normal')
+\makeatother
+
+\newtheoremstyle{myDef}
+  {\topsep}%   Space above
+  {12pt}%   Space below
+  {}%          Body font
+  {}%          Indent amount (empty = no indent, \parindent = para indent)
+  {\bfseries}% Thm head font
+  {}%         Punctuation after thm head
+  {0.5em}%     Space after thm head: " " = normal interword space;
+     %         \newline = linebreak
+  {}%          Thm head spec (can be left empty, meaning `normal')
+\makeatother
+
+\theoremstyle{myThm}
+\newtheorem{proposition}{Proposition}
+
+\theoremstyle{myDef}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
 %% set up custom definitions
 \newtcbtheorem
     [] % init options
