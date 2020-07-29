@@ -28,7 +28,7 @@ n_iter <- 120L
 # number of sampled points (after boosting)
 n_pts <- 540L
 # power of skewing polynomial
-p_skew <- 2
+p_skew <- 4
 # boosting denominator
 d_boost <- 6L
 # number of landmarks
@@ -95,7 +95,7 @@ samp_funs <- list(
     s <- matrix(NA_real_, nrow = 0L, ncol = 3L)
     while (nrow(s) < m) {
       t <- sample_sphere(m, d = 2L, sd = 0)
-      p <- (acos(t[, "z"]) / pi) ^ p_skew
+      p <- (acos(t[, "z"]) / pi) ^ (p_skew/2)
       d <- runif(m, 0, 1)
       s <- rbind(s, t[p > d, , drop = FALSE])
     }
@@ -106,7 +106,7 @@ samp_funs <- list(
       t <- matrix(NA_real_, nrow = 0L, ncol = 3L)
       while (nrow(t) < m) {
         u <- s[sample(nrow(s), m, replace = TRUE), , drop = FALSE]
-        p <- (acos(u[, "z"]) / pi)
+        p <- (acos(u[, "z"]) / pi) ^ (p_skew/2)
         d <- runif(m, 0, 1)
         t <- rbind(t, u[p > d, , drop = FALSE])
       }

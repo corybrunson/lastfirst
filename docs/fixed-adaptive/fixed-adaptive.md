@@ -27,7 +27,7 @@ header-includes:
 
 Topological data analysis (TDA) is a maturing field at the interface of statistics, computer science, and mathematics---the domain of data science. Topology is often described as the mathematical study of shape but can also be defined as the study of continuity, and TDA consists in the use of computational theories of continuity to model the shape of data. While TDA is most commonly associated with persistent homology (PH) and mapper, it encompasses and often generalizes many conventional and even classical techniques, including cluster analysis, association network analysis, and $k$-nearest neighbors (kNN) prediction.
 
-Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of functions (such as annotations or hashes) that nearby cases or points in the domain have nearby images in the codomain. This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of kNN prediction and the locally-sensitive hashing used in its implementations. We use the term \emph{cardinality reduction}\footnote{The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable \cite{Micci-Barreca2001;Refaat2010} or of time series \cite{Hu2011} (also "numerosity reduction" \cite{Lin2007}). Our meaning is that of \cite{Byczkowska-Lipinska2017}: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$.}, in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of cases or points rather than the number of variables or spatial dimensions used to represent them. Cardinality reduction describes the classical fields of cluster analysis and association (co-occurrence or correlation) network analysis, for example.
+Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of functions (such as annotations or hashes) that nearby cases or points in the domain have nearby images in the codomain. This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of kNN prediction and the locally-sensitive hashing used in its implementations. We use the term \emph{cardinality reduction}\footnote{The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@Micci-Barreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is that of [@Byczkowska-Lipinska2017]: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$.}, in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of cases or points rather than the number of variables or spatial dimensions used to represent them. Cardinality reduction describes the classical fields of cluster analysis and association (co-occurrence or correlation) network analysis, for example.
 
 More elaborate TDA techniques combine locality preservation and cardinality reduction, often through the use of covering methods, as with the approximation of PH through witness complexes or in the mapper construction. Covering methods, in turn, can be enhanced by strategic sampling from large data sets, as can other spatial techniques like kNN. The maxmin procedure is often used for this purpose, as it is computationally efficient and generates more evenly distributed samples than random selection. However, maxmin comes with its own limitations, which may be particularly consequential to the analysis of data that vary greatly in density or have multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite metric spaces using similarity measures rather than vector space embeddings.
 
@@ -51,14 +51,14 @@ For convenience, we assume $0\in\N$.
 
 The lastfirst procedure addresses a peculiar disadvantage of the maxmin procedure that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases. These render the finite metric space representation of the data non-Hausdorff: certain subsets of points, called \emph{points with multiplicity}, will represent distinct cases but have zero distance. While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common. Because our procedure is motivated by the same practical needs that motivate the use of the maxmin procedure, we begin with a discussion of those needs.
 
-The earliest appearance of the maxmin\footnote{Note that this procedure is distinct from many other uses of "maxmin" and related terms in various quantitative literatures.} procedure of which we are aware is \cite{DeSilva2004}. The authors propose witness complexes, later generalized to alpha complexes \cite{}, for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use the maxmin procedure, which we define in Section~\ref{sec:maxmin}, as an alternative to selecting the landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly dispersed throughout the point cloud.
+The earliest appearance of the maxmin\footnote{Note that this procedure is distinct from many other uses of "maxmin" and related terms in various quantitative literatures.} procedure of which we are aware is [@DeSilva2004]. The authors propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use the maxmin procedure, which we define in Section~\ref{sec:maxmin}, as an alternative to selecting the landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly dispersed throughout the point cloud.
 While the procedure improved little upon uniform random selection in most use cases, on some tasks it far outperformed.
 
-Subsequent uses of maxmin include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction \cite{Singh2007}; and the optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius \cite{Dlotko2019}. In addition to approximating persistent homology \cite{DeSilva2004;Dlotko2019}, maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration \cite{Singh2007;Dlotko2019}.
+Subsequent uses of maxmin include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019]. In addition to approximating persistent homology [@DeSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
 
 ## Motivation
 
-The ball covers mentioned above have been proposed as a complement to the mapper construction \cite{Dlotko2019}, where they exchange complexity for computational cost, but they have not yet been used in mapper constructions themselves, which include a crucial covering step that has received limited theoretical attention.
+The ball covers mentioned above have been proposed as a complement to the mapper construction [@Dlotko2019], where they exchange complexity for computational cost, but they have not yet been used in mapper constructions themselves, which include a crucial covering step that has received limited theoretical attention.
 Conventionally, mappers rely on covers consisting of overlapping intervals (when the lens is one-dimensional) or of their cartesian products (higher-dimensional).
 For this purpose, we propose that ball covers, heuristically optimized or near-optimized using the maxmin procedure, have a key potential advantage over conventional covers, alongside a key potential disadvantage.
 
@@ -135,7 +135,7 @@ The lastfirst procedure is defined analogously to the maxmin procedure, except f
 ### Rank distances
 
 \textit{Rank distance} is an adaptive notion of distance with respect to $k$-nearest neighborhoods.\footnote{Note that, as used here, rank distance is distinct from the \emph{rank distance} between permutations, which is used to define rank correlation coefficients, and from the \emph{ordinal distance} proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.} Instead of nearness being defined by distance via psuedometric $d_X$, it is defined with respect to the number of nearest neighbors one point is away from another.
-{\bfseries Note: "Rank distance" should probably be renamed, but to what? One possibility is "nearestness", in the spirit of other points being "$k$-nearest" to an index point.}
+**Note: "Rank distance" should probably be renamed, but to what? One possibility is "nearestness", in the spirit of other points being "$k$-nearest" to an index point.**
 
 \begin{definition} (Rank distance)
     For $x,y\in X$, define the \textit{rank distance} $q_X : X \times X \longrightarrow \N$ as follows:
@@ -426,56 +426,57 @@ In this notation, $q=\check{q}$.
 These two rank distances correspond to two tie-handling schemes when calculating rankings for lists with duplicates: For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_1),\check{q}(x,y_1),\check{q}(x,y_1))=(1,2,2,4)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_1),\hat{q}(x,y_1),\hat{q}(x,y_1))=(1,3,3,4)$.
 
 \begin{example}\label{ex:rank-distance-max}
-    Recall $X=\{a,b,c,d\}$ from Example~\ref{ex:rank-distance}. The rank-distance $\hat{q}$ is also asymmetric:
-    \begin{align*}
-        \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
-        \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
-               &= \abs{\{a, b, c, d\}} &&= \abs{\{b, c, d\}} \\
-               &= 4 &&= 3
-    \end{align*}
 
-    Observe that $\hat{q}(x,x) = 1$ only for distinguishable points $x \in X$:
-    \begin{align*}
-        \hat{q}(a,a) &= \abs{\{x \in X \mid \abs{x-a} \leq \abs{a-a} = 0\}} &
-        \hat{q}(c,c) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{c-c} = 0\}} \\
-               &= \abs{\{a\}} &&= \abs{\{c, d\}} \\
-               &= 1 &&= 2
-    \end{align*}
+Recall $X=\{a,b,c,d\}$ from Example~\ref{ex:rank-distance}. The rank-distance $\hat{q}$ is also asymmetric:
+\begin{align*}
+    \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
+    \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
+        &= \abs{\{a, b, c, d\}} &&= \abs{\{b, c, d\}} \\
+        &= 4 &&= 3
+\end{align*}
 
-    Finally, observe that $\hat{q}(x,\,\cdot\,)$ always maxes out at $\abs{X}$: $\hat{q}(a,c) = \hat{q}(b,c) = \hat{q}(c,a) = \hat{q}(d,a) = \abs{X}$.
+Observe that $\hat{q}(x,x) = 1$ only for distinguishable points $x \in X$:
+\begin{align*}
+    \hat{q}(a,a) &= \abs{\{x \in X \mid \abs{x-a} \leq \abs{a-a} = 0\}} &
+    \hat{q}(c,c) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{c-c} = 0\}} \\
+       &= \abs{\{a\}} &&= \abs{\{c, d\}} \\
+       &= 1 &&= 2
+\end{align*}
 
-    Continuing on as in Example~\ref{ex:rank-neighborhoods}, we can compute $\hat{N}_2^+$ and $\hat{N}_2^-$ for $b$ and $c$:
-    \begin{align*}
+Finally, observe that $\hat{q}(x,\,\cdot\,)$ always maxes out at $\abs{X}$: $\hat{q}(a,c) = \hat{q}(b,c) = \hat{q}(c,a) = \hat{q}(d,a) = \abs{X}$.
+
+Continuing on as in Example~\ref{ex:rank-neighborhoods}, we can compute $\hat{N}_2^+$ and $\hat{N}_2^-$ for $b$ and $c$:
+\begin{align*}
     \hat{N}_2^+ (b) &= \{x \in X \mid \hat{q}(b,x) \leq 2\} &
     \hat{N}_2^+ (c) &= \{x \in X \mid \hat{q}(c,x) \leq 2\} \\
-           &= \{a, b\} &&= \{c, d\} \\
-           \\
+        &= \{a, b\} &&= \{c, d\} \\
+        \\
     \hat{N}_2^- (b) &= \{x \in X \mid \hat{q}(x,b) \leq 2\} &
     \hat{N}_2^- (c) &= \{x \in X \mid \hat{q}(x,c) \leq 2\} \\
-           &= \{a, b\} &&= \{c, d\}
-    \end{align*}
+        &= \{a, b\} &&= \{c, d\}
+\end{align*}
 
-    Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ to obtain $\hat{Q}^+$ and $\hat{Q}^-$ for $b$ and $c$:
-    \begin{align*}
+Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ to obtain $\hat{Q}^+$ and $\hat{Q}^-$ for $b$ and $c$:
+\begin{align*}
     \hat{Q}^+ (b) &= (\abs{\hat{N}^+_1(b)}, \abs{\hat{N}^+_2(b)}, \abs{\hat{N}^+_3(b)}, \abs{\hat{N}^+_4(b)}) &
     \hat{Q}^+ (c) &= (\abs{\hat{N}^+_1(c)}, \abs{\hat{N}^+_2(c)}, \abs{\hat{N}^+_3(c)}, \abs{\hat{N}^+_4(c)}) \\
-                 &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
-                 &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
-                 &= (1, 2, 2, 4) &
-                 &= (0, 2, 3, 4) \\
-               \\
+        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
+        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
+        &= (1, 2, 2, 4) &
+        &= (0, 2, 3, 4) \\
+        \\
     \hat{Q}^- (b) &= (\abs{\hat{N}^-_1(b)}, \abs{\hat{N}^-_2(b)}, \abs{\hat{N}^-_3(b)}, \abs{\hat{N}^-_4(b)}) &
     \hat{Q}^- (c) &= (\abs{\hat{N}^-_1(c)}, \abs{\hat{N}^-_2(c)}, \abs{\hat{N}^-_3(c)}, \abs{\hat{N}^-_4(c)}) \\
-    &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
-                 &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}) \\
-                 &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
-    \end{align*}
+        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
+        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}) \\
+        &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
+\end{align*}
 \end{example}
 
 Letting $\dot{q}$ denote either $\check{q}$ or $\hat{q}$, we can define $\dot{N}^\pm_k(x)$ and $\dot{Q}^\pm(x)$ as before and arrive at corresponding notions of firstlast and lastfirst sets.
 Conceptually, these tools would produce landmark sets that yield neighborhood covers with smaller, rather than larger, neighborhoods in regions of high multiplicity.
 While we do not use these ideas in this study, they may be suitable in some settings or for some purposes, for example when high multiplicity indicates a failure to distinguish between similar but distinct cases that the analyst wishes to maintain greater separation between.
-They may also play a role in the stability analysis, e.g. by producing an interleaving sequence of nervers of covers.
+They may also play a role in the stability analysis, e.g. by producing an interleaving sequence of nerves of covers.
 
 ### Implementation
 
@@ -499,7 +500,16 @@ _Choose one (at least moderately) large data set for each combination of the fol
 
 ## Benchmark tests
 
+Our R package includes two implementations each of the maxmin and lastfirst procedures, using C++ (for Euclidean distances only) and R (which calls the proxy function to calculate distances other than Euclidean). We benchmarked the implementations on two types of data set: uniform samples from the unit circle $\Sph^1\subset\R^2$, and samples with duplication from the integer lattice $[0,11]\times[0,5]$ using the probability mass function $p(a,b) \propto 2^{-ab}$. The samples ranged in size over several orders of magnitude.
+
 ## Robustness analysis
+
+We compared the suitability of three landmarking procedures (random, maxmin, lastfirst) to datasets with varying density and duplication patterns by extending an example of @DeSilva2004: We sampled 540 points from the sphere $\Sph^2\subset\R^3$ and selected 12 landmark points. We then used the landmarks to compute PH and recorded the statistics $R_0,R_1,K_0,K_1$ as well as the length of the most persistent generator of rank-2 PH.
+The points $x=(r,\theta,\phi)$ were sampled in four ways: uniformly randomly, with probability distribution function $p(x)=\frac{1}{4\pi}$; boosted from a uniform sample of 90 points, following the quartic probability distribution $p(x) \propto (\phi/\pi)^4$; with probability distribution $p(x)$, via rejection sampling with rejection rate $1-(\phi/\pi)^4$; and a composition of rejection sampling with rejection rate $1-(\phi/\pi)^2$ and boosting with probability $p(x) \propto (\phi/\pi)^2$.
+The landmark points were selected in three ways: uniform random selection (without replacement), the maxmin procedure, and the lastfirst procedure.
+We computed PH in GUDHI, using three implementations: Vietoris–Rips filtrations on the landmarks, alpha complexes on the landmarks, and (Euclidean) witness complexes on the landmarks with the full sample as witnesses.
+
+
 
 ## Stability analysis
 
