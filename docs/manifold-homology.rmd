@@ -3,7 +3,7 @@ title: "Manifold homology detection"
 author: "Cory Brunson"
 date: "`r Sys.Date()`"
 output: html_document
-bibliography: landmarks.bib
+bibliography: lastfirst.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -144,7 +144,7 @@ phom <- data.frame()
 for (i in seq(n_iter)) for (j in seq_along(samp_funs)) {
   # sample points
   sph <- samp_funs[[j]](n_pts)
-  # 
+  #
   for (k in seq_along(lmk_funs)) {
     # generate landmarks
     lmk <- lmk_funs[[k]](sph, n_lmk)
@@ -172,7 +172,7 @@ for (i in seq(n_iter)) for (j in seq_along(samp_funs)) {
         sc$create_simplex_tree(max_alpha_square = 3, limit_dimension = 3L)
       }
     )
-    # 
+    #
     for (l in seq_along(st_const)) {
       # calculate persistence
       ph <- gudhi_persistence_df(st_const[[l]]$persistence())

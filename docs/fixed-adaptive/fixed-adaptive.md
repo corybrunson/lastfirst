@@ -82,11 +82,11 @@ pandoc fixed-adaptive.md \
 -o fixed-adaptive.tex \
 -s \
 --number-sections \
---bibliography=../landmarks.bib
+--bibliography=../lastfirst.bib
 # To generate the PDF directly, execute the following:
 pandoc fixed-adaptive.md \
 -o fixed-adaptive.pdf \
 -s \
 --number-sections \
---bibliography=../landmarks.bib
+--bibliography=../lastfirst.bib
 -->
