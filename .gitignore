@@ -6,5 +6,6 @@
 
 # generated files
 *.tex
+*.html
 *.pdf
 
