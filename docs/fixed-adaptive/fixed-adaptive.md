@@ -518,6 +518,19 @@ We computed PH in GUDHI, using three implementations: Vietoris–Rips filtration
 
 ## Stability analysis
 
+
+
+### Exercises
+
+1. Let $X^\ast$ be the set of distinguishable points, i.e. the set of equivalence classes of distance-zero points, in a pseudometric space $X$. Show that $X^\ast$ is the terminal object in a (relatively small) category that also includes $X$ as an object.
+
+2. Rigorously restate the assertion that $\max\{d_X(\minmax(X),x) \mid x\in X\wo \{\minmax(X)\}\}$ varies continuously with perturbations in $X$. Prove that this rigorous statement is correct.
+
+3. Let $\mathcal{D}$ be the set of finite decompositions of $[0,1]$ into intervals of non-negative length, i.e. $0 = a_0 \leq a_1 \leq a_2 \leq \cdots \leq a_n = 1$ for some $n \in \N$.
+    a) Prove by construction that every $D\in\mathcal{D}$ is obtained as the (nonincreasing) sequence $m_i=\max\{\min\{d(x,\ell) \mid \ell \in  L_i\} \mid x \in X^\ast \wo L_i\}$ of a maxmin procedure on a finite pseudometric space $X$ seeded with $\ell_0$ so that $\max\{d(x,\ell_0) \mid x \in X^\ast \wo \{\ell_0\}\}=1$. Is it enough to consider only finite metric spaces?
+    b) Define a reasonable metric or pseudometric on $\mathcal{D}$. Which is more appropriate?
+    c) Prove that the map $(X,\ell_0) \mapsto D$ from part (a) is stable when $\abs{X} \leq 3$.
+
 # Applications
 
 ## Data visualization
