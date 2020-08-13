@@ -28,7 +28,7 @@ n_iter <- 120L
 # number of sampled points (after boosting)
 n_pts <- 540L
 # power of skewing polynomial
-p_skew <- 4
+p_skew <- 4L
 # boosting denominator
 d_boost <- 6L
 # number of landmarks
@@ -59,7 +59,7 @@ gudhi_persistence_df <- function(ph) {
 
 ```{r}
 samp_funs <- list(
-  uniform_none = function(n) sample_sphere(n, d = 2L, sd = 0),
+  uniform_raw = function(n) sample_sphere(n, d = 2L, sd = 0),
   uniform_boost = function(n) {
     m <- n / d_boost
     s <- sample_sphere(m, d = 2L, sd = 0)
@@ -69,7 +69,7 @@ samp_funs <- list(
       t <- matrix(NA_real_, nrow = 0L, ncol = 3L)
       while (nrow(t) < m) {
         u <- s[sample(nrow(s), m, replace = TRUE), , drop = FALSE]
-        p <- (acos(u[, "z"]) / pi)
+        p <- (acos(u[, "z"]) / pi) ^ p_skew
         d <- runif(m, 0, 1)
         t <- rbind(t, u[p > d, , drop = FALSE])
       }
@@ -78,7 +78,7 @@ samp_funs <- list(
     }
     s
   },
-  skewed_none = function(n) {
+  skewed_raw = function(n) {
     # rejection sampling
     s <- matrix(NA_real_, nrow = 0L, ncol = 3L)
     while (nrow(s) < n) {
@@ -95,7 +95,7 @@ samp_funs <- list(
     s <- matrix(NA_real_, nrow = 0L, ncol = 3L)
     while (nrow(s) < m) {
       t <- sample_sphere(m, d = 2L, sd = 0)
-      p <- (acos(t[, "z"]) / pi) ^ (p_skew/2)
+      p <- (acos(t[, "z"]) / pi) ^ (p_skew / 2L)
       d <- runif(m, 0, 1)
       s <- rbind(s, t[p > d, , drop = FALSE])
     }
@@ -106,7 +106,7 @@ samp_funs <- list(
       t <- matrix(NA_real_, nrow = 0L, ncol = 3L)
       while (nrow(t) < m) {
         u <- s[sample(nrow(s), m, replace = TRUE), , drop = FALSE]
-        p <- (acos(u[, "z"]) / pi) ^ (p_skew/2)
+        p <- (acos(u[, "z"]) / pi) ^ (p_skew / 2L)
         d <- runif(m, 0, 1)
         t <- rbind(t, u[p > d, , drop = FALSE])
       }
