@@ -24,16 +24,18 @@ careunits <- setdiff(careunits, c("NICU", "NWARD"))[1]
 
 ```{r loop parameters}
 careunit <- "CCU"
-max_k <- 180L
+n_folds <- 3L#6L
+max_k <- 80L#180L
+min_k <- 12L
 # weight functions take a matrix and apply a function to each column
 # https://github.com/KlausVigo/kknn/blob/master/R/kknn.R
 wt_funs <- list(
-  rank1 = function(d) (nrow(d) + 1L) - apply(d, 2L, rank, ties.method = "min"),
-  rank2 = function(d) (nrow(d) + 1L) - apply(d, 2L, rank, ties.method = "max"),
+  #rank1 = function(d) (nrow(d) + 1L) - apply(d, 2L, rank, ties.method = "min"),
+  #rank2 = function(d) (nrow(d) + 1L) - apply(d, 2L, rank, ties.method = "max"),
   inverse = function(d) 1 / d,
   triangle = function(d) 1 - d
 )
-n_lmks <- 120L
+n_lmks <- 48L#120L
 auc_fun <- function(response, predictor) {
   as.double(suppressMessages(pROC::auc(pROC::roc(
     response = response,
@@ -44,16 +46,18 @@ auc_fun <- function(response, predictor) {
 
 ```{r}
 # uniform 6-by-6-fold cross-validation split
-folds <- data.frame(outer = rep(seq(6L), times = 6L),
-                    inner = rep(seq(6L), each = 6L))
+folds <- data.frame(outer = rep(seq(n_folds), times = n_folds),
+                    inner = rep(seq(n_folds), each = n_folds))
 # binary data with cross-validation indices
 file.path(rt_data, str_c("mimic-", tolower(careunit), "-cases.rds")) %>%
   read_rds() %>%
   bind_cols(folds[sample(nrow(folds), nrow(.), replace = TRUE), ]) %>%
   print() -> unit_cases
-# initialize data frames
-evaluation <- tibble()
-for (i in seq(6L)) for (j in seq(6L)) {
+# initialize list and data frame
+auc_plots <- vector(mode = "list", length = n_folds * n_folds)
+dim(auc_plots) <- c(n_folds, n_folds)
+auc_stats <- tibble()
+for (i in seq(n_folds)) for (j in seq(n_folds)) {
   print(c(i, j))
   # training, optimizing, and testing indices
   train <- which(unit_cases$outer != i & unit_cases$inner != j)
@@ -94,8 +98,8 @@ for (i in seq(6L)) for (j in seq(6L)) {
     opt_auc <- apply(opt_k_preds, 2L, auc_fun, response = unit_resp[opt, ])
     k_wt_aucs[, w] <- opt_auc
   }
-  # plot AUC across neighborhood size by weight functino!
-  k_wt_aucs %>%
+  # plot AUC across neighborhood size by weight function!
+  auc_plot <- k_wt_aucs %>%
     as_tibble() %>%
     set_names(names(wt_funs)) %>%
     mutate(k = row_number()) %>%
@@ -103,10 +107,12 @@ for (i in seq(6L)) for (j in seq(6L)) {
     ggplot(aes(x = k, y = AUC, group = Weight)) +
     geom_line(aes(color = Weight)) +
     ggtitle(str_c("Optimization step (", i, ",", j, ") for ", careunit))
+  print(auc_plot)
+  auc_plots[[i, j]] <- auc_plot
   # best parameters subject to neighborhoods of size at least 12
-  max_auc <- max(k_wt_aucs[seq(12L, nrow(k_wt_aucs)), ])
-  k_wt_opt <- which(k_wt_aucs[seq(12L, nrow(k_wt_aucs)), ] == max_auc,
-                    arr.ind = TRUE) + c(12L, 0L)
+  max_auc <- max(k_wt_aucs[seq(min_k, nrow(k_wt_aucs)), ])
+  k_wt_opt <- which(k_wt_aucs[seq(min_k, nrow(k_wt_aucs)), ] == max_auc,
+                    arr.ind = TRUE) + c(min_k - 1L, 0L)
   # predictions on testing data
   lmk_test_dists <- proxy::dist(unit_pred[train[lmks], ], unit_pred[test, ],
                                 method = "cosine")
@@ -116,11 +122,10 @@ for (i in seq(6L)) for (j in seq(6L)) {
   test_auc <- auc_fun(response = unit_resp[test, ],
                       predictor = as.vector(test_preds))
   # augment data frame
-  evaluation <- bind_rows(evaluation, tibble(
+  auc_stats <- bind_rows(auc_stats, tibble(
     outer = i, inner = j,
-    opt_auc = max_auc,
     k_opt = k_wt_opt[[1L]], wt_opt = names(wt_funs)[[k_wt_opt[[2L]]]],
-    test_auc = test_auc
+    opt_auc = max_auc, test_auc = test_auc
   ))
 }
 ```
