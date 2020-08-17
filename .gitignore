@@ -8,4 +8,7 @@
 *.tex
 *.html
 *.pdf
+*.rds
+*.rda
+*.RData
 
