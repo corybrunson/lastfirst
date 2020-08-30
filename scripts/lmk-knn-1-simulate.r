@@ -53,24 +53,29 @@ auc_fun <- function(response, predictor) {
   ))))
 }
 
-# uniform 6-by-6-fold cross-validation split
-folds <- data.frame(outer = rep(seq(o_folds), times = i_folds),
-                    inner = rep(seq(i_folds), each = o_folds))
-
 # initialize list and data frame
 auc_stats <- tibble()
 
 # loop over all care units
 for (careunit in careunits) {
+  print(careunit)
   
-  # binary data with cross-validation indices
+  # add stratified cross-validation indices to binary data
   file.path(rt_data, str_c("mimic-", tolower(careunit), "-cases.rds")) %>%
     read_rds() %>%
-    bind_cols(folds[sample(nrow(folds), nrow(.), replace = TRUE), ]) %>%
+    group_by(mortality_hosp) %>%
+    mutate(row = row_number()) %>%
+    mutate(outer = (sample(row) %% o_folds) + 1L) %>%
+    group_by(mortality_hosp, outer) %>%
+    mutate(row = row_number()) %>%
+    mutate(inner = (sample(row) %% i_folds) + 1L) %>%
+    select(-row) %>%
     print() -> unit_cases
+  unit_cases %>% select(mortality_hosp, outer, inner) %>% table() %>% print()
   
   # loop over folds
   for (i in seq(o_folds)) for (j in seq(i_folds)) {
+    print(c(careunit, i, j))
     
     # training, optimizing, and testing indices
     train <- which(unit_cases$outer != i & unit_cases$inner != j)
@@ -87,6 +92,49 @@ for (careunit in careunits) {
       select(mortality_hosp) %>%
       mutate_all(as.integer) %>%
       as.matrix()
+    
+    # nearest training neighbors of each optimizing datum
+    nbrs <- proxy::dist(unit_pred[train, ], unit_pred[opt, ],
+                        method = "cosine") %>%
+      unclass() %>% as.data.frame() %>% as.list() %>% unname() %>%
+      lapply(enframe, name = "id", value = "dist") %>%
+      lapply(mutate, rank = rank(dist, ties.method = "min")) %>%
+      lapply(filter, rank <= max_k)
+    # predictions for each landmark using each neighborhood size
+    k_opt_preds <- sapply(nbrs, function(df) {
+      vapply(seq(max_k),
+             function(k) mean(unit_resp[train[df$id[df$rank <= k]], ]),
+             FUN.VALUE = 1)
+    })
+    
+    # predictive accuracy on optimizing data
+    k_aucs <- apply(k_opt_preds, 1L, auc_fun, response = unit_resp[opt, ])
+    
+    # (first) best parameters subject to neighborhoods of size at least 12
+    max_auc <- max(k_aucs[seq(min_k, length(k_aucs))])
+    k_opt <- which(k_aucs[seq(min_k, length(k_aucs))] == max_auc,
+                   arr.ind = TRUE)[1L] + (min_k - 1L)
+    
+    # predictions on testing data
+    test_preds <- proxy::dist(unit_pred[train, ], unit_pred[test, ],
+                              method = "cosine") %>%
+      unclass() %>% as.data.frame() %>% as.list() %>% unname() %>%
+      lapply(enframe, name = "id", value = "dist") %>%
+      lapply(mutate, rank = rank(dist, ties.method = "min")) %>%
+      lapply(filter, rank <= k_opt) %>%
+      sapply(function(df) mean(unit_resp[train[df$id[df$rank <= k_opt]], ]))
+    test_auc <- auc_fun(response = unit_resp[test, ],
+                        predictor = as.vector(test_preds))
+    
+    # augment data frame
+    auc_stats <- bind_rows(auc_stats, tibble(
+      careunit = careunit,
+      outer = i, inner = j,
+      sampler = NA_character_, landmarks = NA_integer_,
+      k_wt_auc = list(k_aucs),
+      k_opt = k_opt, wt_opt = NA_character_,
+      opt_auc = max_auc, test_auc = test_auc
+    ))
     
     # loop over landmark-generating functions and numbers of landmarks
     for (l in seq_along(lmk_funs)) for (n_lmks in ns_lmks) {
@@ -129,7 +177,7 @@ for (careunit in careunits) {
       # (first) best parameters subject to neighborhoods of size at least 12
       max_auc <- max(k_wt_aucs[seq(min_k, nrow(k_wt_aucs)), ])
       k_wt_opt <- which(k_wt_aucs[seq(min_k, nrow(k_wt_aucs)), ] == max_auc,
-                        arr.ind = TRUE)[1, ] + c(min_k - 1L, 0L)
+                        arr.ind = TRUE)[1L, ] + c(min_k - 1L, 0L)
       
       # predictions on testing data
       lmk_test_dists <- proxy::dist(unit_pred[train[lmks], ],
