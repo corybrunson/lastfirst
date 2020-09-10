@@ -8,6 +8,8 @@ rt_data <- "~/Desktop/rt-data"
 careunits <- read_rds(file.path(rt_data, "mimic-units.rds"))
 careunits <- setdiff(careunits, c("NICU", "NWARD"))
 
+# sleep intervals
+sleep_sec <- 15
 # folds in cross-validation
 o_folds <- 6L
 i_folds <- 6L
@@ -29,7 +31,7 @@ wt_funs <- list(
   }
 )
 # numbers of landmarks
-ns_lmks <- c(36L, 60L, 180L)
+ns_lmks <- c(36L, 60L, 180L, 360L)
 # landmark generators
 lmk_funs <- list(
   random = function(x, num) {
@@ -70,12 +72,12 @@ for (careunit in careunits) {
     mutate(row = row_number()) %>%
     mutate(inner = (sample(row) %% i_folds) + 1L) %>%
     select(-row) %>%
+    ungroup() %>%
     print() -> unit_cases
   unit_cases %>% select(mortality_hosp, outer, inner) %>% table() %>% print()
   
   # loop over folds
   for (i in seq(o_folds)) for (j in seq(i_folds)) {
-    print(c(careunit, i, j))
     
     # training, optimizing, and testing indices
     train <- which(unit_cases$outer != i & unit_cases$inner != j)
@@ -92,6 +94,8 @@ for (careunit in careunits) {
       select(mortality_hosp) %>%
       mutate_all(as.integer) %>%
       as.matrix()
+    
+    print(c(careunit, i, j))
     
     # nearest training neighbors of each optimizing datum
     nbrs <- proxy::dist(unit_pred[train, ], unit_pred[opt, ],
@@ -135,6 +139,7 @@ for (careunit in careunits) {
       k_opt = k_opt, wt_opt = NA_character_,
       opt_auc = max_auc, test_auc = test_auc
     ))
+    Sys.sleep(sleep_sec)
     
     # loop over landmark-generating functions and numbers of landmarks
     for (l in seq_along(lmk_funs)) for (n_lmks in ns_lmks) {
@@ -198,11 +203,12 @@ for (careunit in careunits) {
         k_opt = k_wt_opt[[1L]], wt_opt = names(wt_funs)[[k_wt_opt[[2L]]]],
         opt_auc = max_auc, test_auc = test_auc
       ))
+      Sys.sleep(sleep_sec)
       
     }
     
   }
   
+  write_rds(auc_stats, "data/auc-stats.rds")
+  
 }
-
-write_rds(auc_stats, "data/auc-stats.rds")
