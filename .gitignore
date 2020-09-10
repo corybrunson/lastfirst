@@ -12,3 +12,5 @@
 *.rda
 *.RData
 
+ignore/
+
