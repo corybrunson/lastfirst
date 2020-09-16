@@ -159,7 +159,7 @@ for (entidad in unique(covid19mx_model$entidad_um)) {
     
     # augment data frame
     auc_stats <- bind_rows(auc_stats, tibble(
-      outer = i, inner = j,
+      entidad = entidad, semana = i, inner = j,
       sampler = NA_character_, landmarks = NA_integer_,
       k_wt_auc = list(k_aucs),
       k_opt = k_opt, wt_opt = NA_character_,
@@ -224,7 +224,7 @@ for (entidad in unique(covid19mx_model$entidad_um)) {
       
       # augment data frame
       auc_stats <- bind_rows(auc_stats, tibble(
-        outer = i, inner = j,
+        entidad = entidad, semana = i, inner = j,
         sampler = names(lmk_funs)[[l]], landmarks = n_lmks,
         k_wt_auc = list(k_wt_auc_data),
         k_opt = k_wt_opt[[1L]], wt_opt = names(wt_funs)[[k_wt_opt[[2L]]]],
