@@ -3,10 +3,11 @@
 library(tidyverse)
 library(landmark)
 # source directories
-covid19mx_data <- "~/Desktop/covid19-mx/data"
+covid19mx_data <- "~/Desktop/covid19-mx/data" # laptop
+covid19mx_data <- "/blue/rlaubenbacher/jason.brunson/covid19-mx/data" # HPG
 
 # load pre-processed data
-file.path("~/Desktop/covid19-mx/data/covid19mx.rds") %>%
+file.path(covid19mx_data, "covid19mx.rds") %>%
   read_rds() %>%
   print() -> covid19mx_cases
 
