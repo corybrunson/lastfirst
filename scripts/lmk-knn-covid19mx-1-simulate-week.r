@@ -4,7 +4,7 @@ library(tidyverse)
 library(landmark)
 # source directories
 covid19mx_data <- "~/Desktop/covid19-mx/data" # laptop
-covid19mx_data <- "/blue/rlaubenbacher/jason.brunson/covid19-mx/data" # HPG
+#covid19mx_data <- "/blue/rlaubenbacher/jason.brunson/covid19-mx/data" # HPG
 
 # load pre-processed data
 file.path(covid19mx_data, "covid19mx.rds") %>%
@@ -238,5 +238,9 @@ for (entidad in unique(covid19mx_model$entidad_um)) {
   }
   
   write_rds(auc_stats, "data/auc-stats-covid19mx-week.rds")
+  #write_rds(auc_stats, file.path(
+  #  "/blue/rlaubenbacher/jason.brunson",
+  #  "lastfirst/data/auc-stats-covid19mx-week.rds"
+  #))
   
 }
