@@ -8,6 +8,15 @@
 *.tex
 *.html
 *.pdf
+*.rds
+*.rda
+*.RData
 
-ignore/
+# data files
 data/
+
+# special scripts
+HPG/
+
+# ignore
+ignore/
