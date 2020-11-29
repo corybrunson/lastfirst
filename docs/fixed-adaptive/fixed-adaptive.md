@@ -489,7 +489,7 @@ We report validation and benchmark tests in Section~\ref{sec:evaluations}.
 
 \pagebreak
 
-# Evaluations
+# Experiments
 
 ## Data sets
 
@@ -498,6 +498,7 @@ We report validation and benchmark tests in Section~\ref{sec:evaluations}.
 _Choose one (at least moderately) large data set for each combination of the following properties: high- versus low-dimensional, with and without high multiplicities. Have the simulated data sets exceed/bookend the empirical data sets on both sides of each property range._
 
 ### Empirical data
+\label{sec:empirical-data}
 
 * [MIMIC-III Cardiac Care Unit](https://mimic.physionet.org/mimictables/transfers/) under one or both similarity measures
 * [México COVID-19 Comunicado Técnico Diario](https://www.gob.mx/salud/documentos/coronavirus-covid-19-comunicado-tecnico-diario-238449) under one similarity measure
@@ -506,7 +507,7 @@ _Choose one (at least moderately) large data set for each combination of the fol
 
 Our R package includes two implementations each of the maxmin and lastfirst procedures, using C++ (for Euclidean distances only) and R (which calls the proxy function to calculate distances other than Euclidean). We benchmarked the implementations on two types of data set: uniform samples from the unit circle $\Sph^1\subset\R^2$, and samples with duplication from the integer lattice $[0,11]\times[0,5]$ using the probability mass function $p(a,b) \propto 2^{-ab}$. The samples ranged in size over several orders of magnitude.
 
-## Robustness analysis
+## Robustness
 
 We compared the suitability of three landmarking procedures (random, maxmin, lastfirst) on datasets with varying density and duplication patterns by extending an example of @DeSilva2004. Each expriment proceeded as follows: We sampled $n=540$ points from the sphere $\Sph^2\subset\R^3$ and selected $k=12$ landmark points. We then used the landmarks to compute PH and recorded the statistics $R_0,R_1,K_0,K_1$ as well as the length of the most persistent generator of rank-2 PH.
 
@@ -518,46 +519,23 @@ When performed separately, skewed sampling and skewed boosting use $\alpha=\beta
 The landmark points were selected in three ways: uniform random selection (without replacement), the maxmin procedure, and the lastfirst procedure.
 We computed PH in GUDHI, using three implementations: Vietoris–Rips filtrations on the landmarks, alpha complexes on the landmarks, and (Euclidean) witness complexes on the landmarks with the full sample as witnesses.
 
+## Covers and nerves
 
+Cardinality reduction techniques can be used to model a large number of cases represented by a large number of variables as a smaller number of clusters with similarity or overlap relations among them.
+The deterministic sampling procedures maxmin and lastfirst provide clusters (cover sets) defined by proximity to the landmark cases and relations defined by the sharing of cases.
+The clusters obtained by these procedures occupy a middle ground between the regular tiles or quantiles commonly used to cover samples from Euclidean space [@] and the emergent clusters obtained heuristically by penalizing between-cluster similarity and rewarding within-cluster similarity [@].
+The maxmin procedure produces cover sets of fixed radius, analogous to the congruent tiles of overlapping tessellations, while the lastfirst procedure produces cover sets of fixed size, analogous to the quantiles of an adaptive cover [@].
+This makes them natural solutions to the task of covering an arbitrary finite metric space that may or may not contain important geometric or topological structure [@mapper].
 
-\pagebreak
+As a practical test of this potential, we loosely followed the approach of @Dlotko2019 to construct covers and their nerves for two real-world clinical data sets (see Section \ref{sec:empirical-data}), using maxmin and lastfirst.
+We varied the number of landmarks (12, 24, 60) and the multiplicative extension of the cover sets (0, .1, .25).
+We evaluated the procedures in three ways:
 
-## Stability analysis
-
-
-
-### Exercises
-
-1. Let $X^\ast$ be the set of distinguishable points, i.e. the set of equivalence classes of distance-zero points, in a pseudometric space $X$. Show that $X^\ast$ is the terminal object in a (relatively small) category that also includes $X$ as an object.
-
-2. Define the radius $r(X) = \min\{ D_X(x, X\wo\{x\}) \mid x\in X \}$.
-    a) Prove that $r : \mathsf{FinPMet} \to \mathbb{R}_{\geq 0}$ is continuous with respect to a suitable pseudometric on $\mathsf{FinPMet}$.
-    b) Rigorously restate the assertion that $\max\{d_X(\minmax(X),x) \mid x\in X\wo \{\minmax(X)\}\}$ varies continuously with perturbations in $X$. Prove that this rigorous statement is correct.
-
-3. Let $\mathcal{D}$ be the set of finite decompositions of $[0,1]$ into intervals of non-negative length, i.e. $0 = a_0 \leq a_1 \leq a_2 \leq \cdots \leq a_n = 1$ for some $n \in \N$.
-    a) Prove by construction that every $D\in\mathcal{D}$ is obtained as the (nonincreasing) sequence $m_i=\max\{\min\{d(x,\ell) \mid \ell \in  L_i\} \mid x \in X^\ast \wo L_i\}$ of a maxmin procedure on a finite pseudometric space $X$ seeded with $\ell_0$ so that $\max\{d(x,\ell_0) \mid x \in X^\ast \wo \{\ell_0\}\}=1$. Is it enough to consider only finite metric spaces?
-    b) Define a reasonable metric or pseudometric on $\mathcal{D}$. Which is more appropriate?
-    c) Prove that the map $(X,\ell_0) \mapsto D$ from part (a) is stable when $\abs{X} \leq 3$.
-
-4. Let $\operatorname{Par}(n)$ denote the set of _partitions_ of $n$, $\operatorname{Par}=\bigsqcup_{n}{\operatorname{Par}(n)}$, and $\operatorname{Par}_{m \times n}$ denote the set of partitions whose Young diagrams are contained in the $m \times n$ rectangle; and let $\operatorname{Comp}(n)$ denote the set of _compositions_ of $n$.
-    a) Prove that, for any $x \in X \in \mathsf{FinPMet}$ with $N = \abs{X}$, $Q^\pm(x, X) \in \operatorname{Par}_{N \times N}$.
-    b) Furthermore prove that $Q^+(x, X) \in \operatorname{Comp}(N)$.
-
-5. Define a _move_ in $\operatorname{Comp}(n)$ to be of one of the forms
-    $$(\ldots, m, 1, n-1, \ldots) \leftrightarrow (\ldots, m, n, \ldots) \leftrightarrow (\ldots, m-1, 1, n, \ldots)$$
-Define the "rank-radius" $s(X) = \min\{ Q^+(x, X) \mid x\in X\}$.
-    a) Prove that a sufficiently small perturbation of any $x \in X\wo\fl(X)$ produces at most one move difference in $Q^+(x, X)$, and that there exists such a perturbation for each such $x$.
-    b) Suppose that $X^\ast$ is in general position. Prove that then a sufficiently small perturbation of any $x \in X$ produces at most one move difference in $s(X)$, and that there exists such a perturbation for each such $x$.
-
-\pagebreak
-
-# Applications
-
-## Data visualization
-
-### CCU data
-
-### CTD data
+- **Clustering quality:** While not designed for clustering, both procedures yield _fuzzy_ clusters---that is to say, clusters that allow for some overlap. We do not expect these coverings to be competitive with clustering methods, but we think it reasonable to consider the two basic measures of clustering quality---compactness and separation---in our comparisons. A significant hindrance is that most clustering validation measures, including almost all that have been proposed for fuzzy clusterings, rely not only on inter-point distances but on coordinate-wise calculations (specifically, data and cluster centroids) [@Bouguessa2006; @Wang2007; @Falasconi2010]. To our knowledge, the sole exception to have appeared in a comprehensive comparison of such measures is the modified partition coefficient [@Dave1996], defined as $$\operatorname{MPC}=1-\frac{k}{k-1}(1-\frac{1}{n}\sum_{i=1}^{n}{\sum_{j=1}^{k}{{u_{ij}}^2}})$$ where $U=(u_{ij})$ is the $n\times k$ fuzzy partition matrix: $u_{ij}$ encodes the extent of membership of point $x_i$ in cluster $c_j$, and $\sum_{j=1}^{k}{u_{ij}}=1$ for all $i$. When a point $x_i$ is contained in $m$ cover sets $c_j$, we equally distribute its membership so that $u_{ij}=\frac{1}{m}$ when $x_i\in c_j$ and $u_{ij}=0$ otherwise.
+- **Discrimination of risk:** For purposes of clinical phenotyping, patient clusters are more useful that discriminate between low- and high-risk subgroups. We calculate a cover-based risk estimate from individual outcomes $y_i$ as follows: For each cover set $c_j\subset X$, let $p_j=\frac{1}{\abs{c_j}}\sum_{x_i\in c_j}{y_i}$ be the incidence of the outcome in that set. Then compute the weighted sum $q_i=\sum_{x_i\in c_j}{u_{ij}p_j}$ of these incidence rates for each case. We measure how well the cover discriminates risk as the area under the receiver operating curve (AUC).
+<!--
+- **Homological richness:** Independent of the "true" topological structure of a data set, a simplicial complex model is more useful when it is not too sparse to be connected (or nearly so) and not too dense to visualize or contain low-degree cycles. We compare the $0$- and total $>0$-degree Betti numbers of the simplicial complex models from the perspective of optimizing $-\beta_0+\sum_{i>0}{\beta_i}$.
+-->
 
 ## Interpolative prediction
 
