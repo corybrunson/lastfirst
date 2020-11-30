@@ -7,11 +7,8 @@ output:
   pdf_document:
     fig_caption: yes
     keep_tex: yes
-    number_sections: no
 header-includes:
-  - \usepackage{natbib}
-  - \usepackage{format}
-  - \setcitestyle{numbers}
+  \usepackage{format}
 ---
 
 <!--
@@ -27,7 +24,7 @@ header-includes:
 
 Topological data analysis (TDA) is a maturing field at the interface of statistics, computer science, and mathematics---the domain of data science. Topology is often described as the mathematical study of shape but can also be defined as the study of continuity, and TDA consists in the use of computational theories of continuity to model the shape of data. While TDA is most commonly associated with persistent homology (PH) and mapper, it encompasses and often generalizes many conventional and even classical techniques, including cluster analysis, association network analysis, and $k$-nearest neighbors (kNN) prediction.
 
-Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of functions (such as annotations or hashes) that nearby cases or points in the domain have nearby images in the codomain. This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of kNN prediction and the locally-sensitive hashing used in its implementations. We use the term \emph{cardinality reduction}\footnote{The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@Micci-Barreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is that of [@Byczkowska-Lipinska2017]: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$.}, in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of cases or points rather than the number of variables or spatial dimensions used to represent them. Cardinality reduction describes the classical fields of cluster analysis and association (co-occurrence or correlation) network analysis, for example.
+Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of functions (such as annotations or hashes) that nearby cases or points in the domain have nearby images in the codomain. This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of kNN prediction and the locally-sensitive hashing used in its implementations. We use the term \emph{cardinality reduction}\footnote{The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@MicciBarreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is that of [@Byczkowska-Lipinska2017]: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$.}, in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of cases or points rather than the number of variables or spatial dimensions used to represent them. Cardinality reduction describes the classical fields of cluster analysis and association (co-occurrence or correlation) network analysis, for example.
 
 More elaborate TDA techniques combine locality preservation and cardinality reduction, often through the use of covering methods, as with the approximation of PH through witness complexes or in the mapper construction. Covering methods, in turn, can be enhanced by strategic sampling from large data sets, as can other spatial techniques like kNN. The maxmin procedure is often used for this purpose, as it is computationally efficient and generates more evenly distributed samples than random selection. However, maxmin comes with its own limitations, which may be particularly consequential to the analysis of data that vary greatly in density or have multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite metric spaces using similarity measures rather than vector space embeddings.
 
@@ -565,14 +562,15 @@ We replicated the procedure for each combination of procedure (random, maxmin, l
 <!--
 # To generate the LaTeX file, execute the following:
 pandoc fixed-adaptive.md \
--o fixed-adaptive.tex \
--s \
---number-sections \
---bibliography=../lastfirst.bib
+  -s \
+  --number-sections \
+  --bibliography=../lastfirst.bib \
+  -o fixed-adaptive.tex
 # To generate the PDF directly, execute the following:
 pandoc fixed-adaptive.md \
--o fixed-adaptive.pdf \
--s \
---number-sections \
---bibliography=../lastfirst.bib
+  -t latex \
+  --number-sections \
+  --bibliography=../lastfirst.bib \
+  --citeproc \
+  -o fixed-adaptive.pdf
 -->
