@@ -3,12 +3,19 @@ library(tidyverse)
 #remotes::install_github("peekxc/simplextree",
 #                        ref = "6e34926b3e6c7c990226e23ba075e29e9a374365")
 library(simplextree)
-# source directory
-rt_data <- "~/Desktop/rt-data" # laptop
-#rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data" # HPG
-# store directory
-#save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst"
-save_dir <- "data/cover"
+
+# source and store directories
+if (str_detect(here::here(), "corybrunson")) {
+  # laptop
+  rt_data <- "~/Desktop/rt-data"
+  save_dir <- "data/cover"
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # HiPerGator
+  rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
+  save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
+} else {
+  stop("Cannot recognize working directory.")
+}
 
 # calculate simplex summaries from case values
 summarize_nerve <- function(cover, values, funs, k = 1L) {

@@ -1,21 +1,27 @@
 # session library
 library(tidyverse)
-#library(tidymodels)
 library(landmark)
-# source directory
-rt_data <- "~/Desktop/rt-data" # laptop
-#rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data" # HPG
-# store directory
-#save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst"
-save_dir <- "data/cover"
+
+# source and store directories
+if (str_detect(here::here(), "corybrunson")) {
+  # laptop
+  rt_data <- "~/Desktop/rt-data"
+  save_dir <- "data/cover"
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # HiPerGator
+  rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
+  save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
+} else {
+  stop("Cannot recognize working directory.")
+}
 
 # all care units
 careunits <- read_rds(file.path(rt_data, "mimic-units.rds"))
 careunits <- setdiff(careunits, c("NICU", "NWARD"))
 # numbers of landmarks
-ns_lmks <- c(12L, 24L, 36L, 48L, 60L, 120L, 180)
+ns_lmks <- c(6L, 12L, 24L, 36L, 48L, 60L, 120L)
 # multiplicative extensions
-exts_mult <- c(0, .1, .25)
+exts_mult <- c(0, .1, .2)
 
 for (careunit in careunits) {
   
