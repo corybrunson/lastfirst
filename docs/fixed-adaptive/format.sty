@@ -21,6 +21,10 @@
 \usepackage{tikz-cd} % number lines, arrow diagrams, networks
 
 %%%%%%%%%%%%%%%%%%%% custom commands %%%%%%%%%%%%%%%%%%%%
+%% general text commands
+\newcommand{\nbs}{\nobreakspace} % because Markdown does not recognize `~`
+% https://tex.stackexchange.com/a/186002
+
 %% general math commands
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -51,7 +55,7 @@
 \newcommand{\uniq}[1]{\abs{\supp{#1}}}
 \newcommand{\minmax}{\operatorname{minmax}}
 \newcommand{\maxmin}{\operatorname{maxmin}}
-\newcommand{\fl}{\operatorname{fl}}
+\newcommand{\fl}{\operatorname{f\hspace{0pt}l}}
 \newcommand{\lf}{\operatorname{lf}}
 
 %% custom colors
@@ -108,93 +112,37 @@
 %%%%%%%%%%%%%%%%%%%% def/ex/thm formatting %%%%%%%%%%%%%%%%%%%%
 \makeatletter
 
-\newtheoremstyle{myThm}
-  {\topsep}%   Space above
-  {12pt}%   Space below
-  {\slshape}%          Body font
-  {}%          Indent amount (empty = no indent, \parindent = para indent)
-  {\bfseries}% Thm head font
-  {}%         Punctuation after thm head
-  {0.5em}%     Space after thm head: " " = normal interword space;
-     %         \newline = linebreak
-  {}%          Thm head spec (can be left empty, meaning `normal')
-\makeatother
-
 \newtheoremstyle{myDef}
   {\topsep}%   Space above
-  {12pt}%   Space below
+  {6pt}%       Space below
   {}%          Body font
   {}%          Indent amount (empty = no indent, \parindent = para indent)
   {\bfseries}% Thm head font
-  {}%         Punctuation after thm head
+  {.}%         Punctuation after thm head
   {0.5em}%     Space after thm head: " " = normal interword space;
-     %         \newline = linebreak
+  %            \newline = linebreak
   {}%          Thm head spec (can be left empty, meaning `normal')
 \makeatother
 
-\theoremstyle{myThm}
-\newtheorem{proposition}{Proposition}
+\newtheoremstyle{myThm}
+  {\topsep}%   Space above
+  {6pt}%       Space below
+  {\slshape}%  Body font
+  {}%          Indent amount (empty = no indent, \parindent = para indent)
+  {\bfseries}% Thm head font
+  {.}%         Punctuation after thm head
+  {0.5em}%     Space after thm head: " " = normal interword space;
+  %            \newline = linebreak
+  {}%          Thm head spec (can be left empty, meaning `normal')
+\makeatother
 
 \theoremstyle{myDef}
 \newtheorem{definition}{Definition}
-\newtheorem{example}{Example}
-\newtheorem{remark}{Remark}
+\newtheorem{example}[definition]{Example}
+\newtheorem{remark}[definition]{Remark}
 
-%% set up custom definitions
-\newtcbtheorem
-    [] % init options
-    {Definition} % name
-    {Definition} % title
-    {%
-        enhanced,
-        sharp corners,
-        attach boxed title to top left={
-            xshift=-1mm,
-            yshift=-5mm,
-            yshifttext=-1mm
-        },
-        top=1.5em,
-        colback=white,
-        colframe=light-grey,
-        fonttitle=\color{dark-grey}\bfseries,
-        boxed title style={
-            sharp corners,
-            size=small,
-            colback=light-grey,
-            colframe=dark-grey,
-        }
-    } % options
-    {def} % prefix
-\newenvironment{boxDef}[2]{\vspace*{3mm}\begin{Definition}[adjusted title=Definition (#1)]{}{}}{\end{Definition}\vspace*{3mm}}
-
-%% set up custom examples
-\newtcbtheorem
-    [] % init options
-    {Example} % name
-    {Example} % title
-    {%
-        breakable, % allow examples to span >1 page
-        enhanced, % remove border at bottom of page breaks
-        sharp corners,
-        attach boxed title to top left={
-            xshift=-1mm,
-            yshift=-5mm,
-            yshifttext=-1mm
-        },
-        top=1.5em,
-        colback=white,
-        colframe=light-grey,
-        fonttitle=\color{dark-grey}\bfseries,
-        boxed title style={
-            sharp corners,
-            size=small,
-            colback=light-grey,
-            colframe=dark-grey,
-        }
-    } % options
-    {ex} % prefix
-\newenvironment{boxEx}[2]{\vspace*{3mm}\begin{Example}[adjusted title= Ex #1]{}{}}{\end{Example}\vspace*{3mm}}
-
+\theoremstyle{myThm}
+\newtheorem{proposition}[definition]{Proposition}
 
 %% (auto generated)
 %%%%%%%%%%%%%%%%%%%% deal with pdfs, latex versions %%%%%%%%%%%%%%%%%%%%
