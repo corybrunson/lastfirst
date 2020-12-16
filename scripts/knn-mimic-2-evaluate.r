@@ -69,7 +69,7 @@ auc_stats %>%
   #coord_flip() +
   facet_wrap(~ careunit) +
   geom_boxplot() +
-  labs(x = "Number of landmarks", y = "AUC", color = "Procedure")
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure")
 
 # compare performance to basic nearest-neighbors prediction
 auc_stats %>%
@@ -77,7 +77,7 @@ auc_stats %>%
   #coord_flip() +
   facet_wrap(~ careunit) +
   geom_boxplot() +
-  labs(x = "Number of landmarks", y = "AUC", color = "Procedure") ->
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc.pdf"),
        auc_stats_plot,

@@ -43,7 +43,7 @@ eval_data %>%
   facet_grid(. ~ proc) +
   geom_line(size = .5) +
   scale_color_brewer(type = "qual") +
-  labs(x = "Number of landmarks", y = "AUC",
+  labs(x = "Number of landmarks", y = "AUROC",
        linetype = "Extension", color = "Care unit")
 
 # partition coefficient and c-statistic
@@ -51,7 +51,7 @@ eval_data %>%
   select(careunit, n_lmks, ext_mult, proc, part_coef, auc) %>%
   pivot_longer(c(part_coef, auc), names_to = "stat", values_to = "value") %>%
   mutate(stat = fct_inorder(fct_recode(stat,
-                                       MPC = "part_coef", AUC = "auc"))) %>%
+                                       MPC = "part_coef", AUROC = "auc"))) %>%
   ggplot(aes(x = n_lmks, y = value,
              linetype = as.factor(ext_mult), color = careunit)) +
   facet_grid(stat ~ proc, scales = "free_y") +

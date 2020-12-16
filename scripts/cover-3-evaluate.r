@@ -42,7 +42,7 @@ if (file.exists(file.path(lastfirst_dir, "data/eval-data.rds"))) {
   list.files(save_dir, full.names = FALSE) %>%
     enframe(name = NULL, value = "file") %>%
     mutate(
-      careunit = toupper(str_replace(file, "^.*-([A-Z]+)-.*$", "\\1")),
+      careunit = toupper(str_replace(file, "^.*-([a-zA-Z]+)-.*$", "\\1")),
       n_lmks = as.integer(str_replace(file, "^.*-lmk([0-9]+)-.*$", "\\1")),
       ext_mult = as.double(str_replace(file, "^.*-ext([0-9]+)-.*$", "\\1")) /
         100,
