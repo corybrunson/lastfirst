@@ -233,28 +233,5 @@ betti %>%
 #  filter(hom0 == 1L & hom1 == 0L & hom2 == 1L) %>%
 #  filter(persistence == max(persistence))
 
-dominance %>%
-  select(iter, distribution, duplication, landmarks, complex, relative) %>%
-  ggplot(aes(y = relative)) +
-  #facet_grid(complex ~ type) +
-  facet_grid(complex ~ distribution + duplication) +
-  geom_boxplot(aes(x = landmarks)) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(y = "Relative dominance", x = "Procedure") ->
-  dominance_relative_plot
-ggsave(here::here("docs/figures/homology-sphere-relative.pdf"),
-       dominance_relative_plot,
-       width = textwidth, height = textwidth / phi)
-
-dominance %>%
-  select(iter, distribution, duplication, landmarks, complex, absolute) %>%
-  ggplot(aes(y = absolute)) +
-  #facet_grid(complex ~ type) +
-  facet_grid(complex ~ distribution + duplication) +
-  geom_boxplot(aes(x = landmarks)) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(y = "Absolute dominance", x = "Procedure") ->
-  dominance_absolute_plot
-ggsave(here::here("docs/figures/homology-sphere-absolute.pdf"),
-       dominance_absolute_plot,
-       width = textwidth, height = textwidth / phi)
+write_rds(dominance,
+          file.path(lastfirst_dir, str_c("data/sphere-dominance.rds")))

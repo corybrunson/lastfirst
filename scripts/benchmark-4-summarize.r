@@ -42,6 +42,14 @@ file.path(lastfirst_dir, "data") %>%
   print() -> mark_lattice
 # MIMIC-III care units
 mark_mimic <- read_rds(file.path(lastfirst_dir, "data/mark-mimic.rds"))
+if (! "denom" %in% names(mark_mimic)) {
+  mark_mimic %>%
+    group_by(expression, implementation, procedure, data) %>%
+    mutate(num_rank = rank(num)) %>%
+    ungroup() %>%
+    mutate(denom = c(1024L, 512L, 256L, 128L)[num_rank]) ->
+    mark_mimic
+}
 
 # evaluate circle and lattice experiments
 bind_rows(mark_circle, mark_lattice) %>%
@@ -67,6 +75,7 @@ benchmark_circle_lattice %>%
   group_by(implementation) %>%
   summarize(factor = median(factor, na.rm = TRUE))
 benchmark_circle_lattice %>%
+  filter(implementation != "original") %>%
   ggplot(aes(x = n, y = value,
              group = interaction(procedure, num, implementation))) +
   facet_grid(stat ~ data, scales = "free_y") +
@@ -76,7 +85,8 @@ benchmark_circle_lattice %>%
   scale_color_brewer(palette = "Set1") +
   labs(x = "Size of point cloud", y = "Benchmark statistic",
        color = "Implementation",
-       linetype = "Procedure", shape = "Procedure") ->
+       linetype = "Procedure", shape = "Procedure") +
+  theme(legend.box = "horizontal") ->
   benchmark_circle_lattice_plot
 ggsave(here::here("docs/figures/benchmark-circle-lattice.pdf"),
        benchmark_circle_lattice_plot,
@@ -91,7 +101,7 @@ mark_mimic %>%
   mutate(stat = fct_recode(stat,
                            `Median execution time` = "median",
                            `Total memory allocation` = "mem_alloc")) %>%
-  select(data, n, num, procedure, stat, value) %>%
+  select(data, n, num, denom, procedure, stat, value) %>%
   print() -> benchmark_mimic
 benchmark_mimic %>%
   group_by(stat) %>%
@@ -102,18 +112,20 @@ benchmark_mimic %>%
   mutate(label = ifelse(row_number() == 1L, as.character(data), NA)) %>%
   ungroup() %>%
   # rank of `num`
-  group_by(data, procedure, stat) %>%
-  mutate(num_rank = as.factor(rank(num))) %>%
+  #group_by(data, procedure, stat) %>%
+  #mutate(num_rank = as.factor(rank(num))) %>%
+  mutate(fraction = fct_inorder(str_c("1/", denom))) %>%
   ggplot(aes(x = n, y = value,
-             group = interaction(procedure, num_rank))) +
+             group = interaction(procedure, fraction))) +
   facet_grid(stat ~ ., scales = "free_y") +
-  geom_line(aes(color = num_rank, linetype = procedure)) +
-  geom_point(aes(color = num_rank, shape = procedure)) +
+  geom_line(aes(color = fraction, linetype = procedure)) +
+  geom_point(aes(color = fraction, shape = procedure)) +
   scale_y_log10() +
   scale_color_brewer(palette = "Set2") +
   geom_text(aes(x = n, y = label_value, label = label),
-            size = 3, angle = 90, hjust = 1) +
+            size = 3, angle = 90, hjust = .8) +
   labs(x = "Size of cohort", y = "Benchmark statistic",
+       color = "Fraction",
        linetype = "Procedure", shape = "Procedure") ->
   benchmark_mimic_plot
 ggsave(here::here("docs/figures/benchmark-mimic.pdf"),

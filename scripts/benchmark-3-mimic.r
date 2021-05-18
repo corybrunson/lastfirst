@@ -68,7 +68,10 @@ for (careunit in careunits) {
     # numbers of landmark points
     num <- as.integer(nrow(x) / denom)
     # benchmarks
-    marks <- procedure_benchmark(x, dist_method = "cosine", num = num)
+    marks <- procedure_benchmark(
+      x, dist_method = "cosine",
+      denom = as.integer(denom), num = num
+    )
     marks <- mutate(marks, data = careunit, distance = "cosine")
     marks <- mutate(marks, expression = as.character(names(expression)))
     print(marks)

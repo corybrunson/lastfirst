@@ -25,7 +25,7 @@ source(file.path(lastfirst_dir, "code/settings.r"))
 
 # bind all results
 file.path(lastfirst_dir, "data") %>%
-  list.files("^auc-stats", full.names = TRUE) %>%
+  list.files("^auc-stats-[a-z]+\\.rds", full.names = TRUE) %>%
   enframe(name = NULL, value = "file") %>%
   mutate(data = map(file, read_rds)) %>%
   select(-file) %>%
@@ -69,7 +69,11 @@ auc_stats %>%
   #coord_flip() +
   facet_wrap(~ careunit) +
   geom_boxplot() +
-  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure")
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
+  auc_stats_plot
+ggsave(here::here("docs/figures/knn-auc-1.pdf"),
+       auc_stats_plot,
+       width = textwidth, height = textwidth / phi)
 
 # compare performance to basic nearest-neighbors prediction
 auc_stats %>%
@@ -79,6 +83,28 @@ auc_stats %>%
   geom_boxplot() +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
-ggsave(here::here("docs/figures/knn-auc.pdf"),
+ggsave(here::here("docs/figures/knn-auc-2.pdf"),
        auc_stats_plot,
        width = textwidth, height = textwidth / phi)
+
+auc_stats %>%
+  mutate(careunit = str_c(
+    careunit, " (n = ", format(size, big.mark = ","), ")", sep = ""
+  )) %>%
+  mutate(careunit = fct_reorder(careunit, size)) %>%
+  mutate(sampler = fct_recode(
+    sampler,
+    Random = "random",
+    `Similarity threshold` = "maxmin",
+    `Case count` = "lastfirst"
+  )) %>%
+  ggplot(aes(x = factor(landmarks), y = test_auc, color = sampler)) +
+  facet_grid(~ careunit) +
+  geom_boxplot() +
+  labs(x = "Number of landmarks",
+       y = "AUROC (mortality)",
+       color = "Procedure") ->
+  auc_stats_plot
+ggsave(here::here("docs/figures/knn-auc.jpg"),
+       auc_stats_plot,
+       width = textwidth, height = textwidth / 4)
