@@ -5,9 +5,9 @@
 .Rproj.user
 
 # generated files
-*.tex
+#*.tex
 *.html
-*.pdf
+#*.pdf
 *.rds
 *.rda
 *.RData
