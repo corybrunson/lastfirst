@@ -274,6 +274,22 @@ Taking the $k^\pm_i$ as defined above,
 \end{align*}
 \end{proposition}
 
+\begin{lemma}\label{lem:out-rank}
+If $Q = Q^+(x,L)$, then $Q_i \geq i$.
+\end{lemma}
+
+\begin{proof}
+For convenience, assume that $d(x,\ell_0) \leq d(x,\ell_1) \leq \cdots \leq d(x,\ell_{k-1})$, and consider $i>1$.
+If $d(x,\ell) \leq d(x,\ell_{i-1})$, then $q(x,\ell) = \abs{\{ \ell' \in L \mid d(x,\ell') < d(x,\ell) \}} + 1 \leq \abs{\{ \ell' \in L \mid d(x,\ell') < d(x,\ell_{i-1}) \}} + 1 \leq \abs{\{ \ell_0, \ldots, \ell_{i-2} \}} + 1 = i$;
+whereas, if $d(x,\ell) > d(x,\ell_{i-1})$, then $q(x,\ell) = \abs{\{ \ell' \in L \mid d(x,\ell') < d(x,\ell) \}} + 1 > \abs{\{ \ell' \in L \mid d(x,\ell') < d(x,\ell) \} \wo \{ \ell_{i-1} \}} + 1 \geq \abs{\{ \ell' \in L \mid d(x,\ell') < d(x,\ell_{i-1}) \}} + 1 = \abs{\{ \ell_0, \ldots, \ell_{i-2} \}} + 1 = i$.
+(The reader may check that $q(x,\ell) \leq 1$ if and only if $d(x,\ell) \leq d(x,\ell_0)$.)
+In the first instance, then, $Q_i = \abs{N^+_i(x,L)} = \abs{\{\ell \in L \mid q(x,\ell) \leq i\}} = \abs{\{\ell \in L \mid d(x,\ell) \leq d(x,\ell_{i-1})\}} \geq \abs{\{ \ell_0, \ldots, \ell_{i-1} \}} = i$.
+\end{proof}
+
+\begin{corollary}\label{cor:out-rank}
+Given $L=\{ \ell_0, \ldots, \ell_{k-1} \}$, the maximum possible out-rank sequence $Q^+(x,L)$ is $Q=(1,2,\ldots,k)$.
+\end{corollary}
+
 An example of this computation is shown in Example\nbs\ref{ex:rank-sequence}.
 
 \begin{example}\label{ex:rank-sequence}
@@ -350,30 +366,70 @@ Replacing each $Q^\pm(x,X\wo\{x\})$ with $Q^\pm(x)$ would simply increase the in
 ### Algorithms
 
 For illustration, we provide a complete algorithm to identify the firstlast set of $X$ and a simplified algorithm to obtain a lastfirst landmark set using specified parameters. The former requires first calculating $Q^+(x,L)$ from $x$ and $L$, which is done in Algorithm\nbs\ref{alg:outnbhdseq}.
+This algorithm uses the notation $[a,b]$ as shorthand for the arithmetic sequence $(a,a+1,\ldots,b)$ of indices.
 Making use of these out-rank sequences, the recovery of a firstlast set proceeds as in Algorithm\nbs\ref{alg:firstlast}.
 
 \begin{algorithm}
 \caption{Compute the out-rank sequence of a point with respect to a proper subset.}
 \label{alg:outnbhdseq}
 \begin{algorithmic}
-\REQUIRE finite metric space $(X,d)$
+\REQUIRE finite pseudometric space $(X,d)$
 \REQUIRE landmark set $L=\{\ell_0,\ldots,\ell_{k-1}\}\subset X$
 \REQUIRE point $x\in X$
-\STATE $D \leftarrow (d(x,\ell_0),\ldots,d(x,\ell_{k-1}))$
-\STATE $D \leftarrow \verb|sort|(D)=(d_1\leq\cdots\leq d_k)$
-\STATE $d_0 \leftarrow -\infty$; $Q \leftarrow (0,\ldots,0)\in\N^k$; $j \leftarrow 0$
-\FOR{$i=1$ to $k$}
-    \IF{$d_i > d_{i-1}$}
+\STATE $D \leftarrow \verb|sort|(d(x,\ell_0),\ldots,d(x,\ell_{k-1}))=(d_1\leq\cdots\leq d_k)$
+\STATE $\tilde{D} \leftarrow (\tilde{d}_0=-\infty, \tilde{d}_1=d_1, \ldots, \tilde{d}_k=d_k, \tilde{d}_{k+1}=+\infty)$
+\STATE $\tilde{Q} \leftarrow (0,\ldots,0)\in\N^{[0,k+1]}$
+\STATE $j \leftarrow 0$
+\FOR{$i=1$ to $k+1$}
+    \IF{$\tilde{d}_i > \tilde{d}_{i-1}$}
         \WHILE{$j<i$}
             \STATE $j \leftarrow j+1$
-            \STATE $Q_j \leftarrow Q_{j-1}$
+            \STATE $\tilde{Q}_j \leftarrow \tilde{Q}_{j-1}$
         \ENDWHILE
     \ENDIF
-    \STATE $Q_j \leftarrow Q_j+1$
+    \STATE $\tilde{Q}_j \leftarrow \tilde{Q}_j+1$
 \ENDFOR
+\STATE $Q \leftarrow \tilde{Q}_{[1,k]}$
 \RETURN out-rank sequence $Q$
 \end{algorithmic}
 \end{algorithm}
+
+\begin{lemma}
+Algorithm\nbs\ref{alg:outnbhdseq} returns the out-rank sequence.
+\end{lemma}
+
+\begin{proof}
+The algorithm takes $k+1$ steps, which we consider in three groups.
+At any step $i$, $j$ never decreases and increases at most to $j=i$, so the value of $\tilde{Q}_{j'}$ is fixed once $j>j'$.
+
+\begin{itemize}
+\item[$i = 1$.]
+In this step, $\tilde{d}_i = \tilde{d}_1 \geq 0 > -\infty = \tilde{d}_0 = \tilde{d}_{i-1}$, so the \verb|while| loop is run.
+The loop begins with $j=0$ and ends with $j=1$, so it has only the vacuous effect $\tilde{Q}_1 \leftarrow \tilde{Q}_0$ on $\tilde{Q}$.
+The only effect in this case is the final increment $\tilde{Q}_1 \leftarrow \tilde{Q}_1 + 1$, so that the step ends with $\tilde{Q} = (0,1,0,\ldots,0)$.
+\item[$1 < i \leq k$.]
+The intermediate steps proceed in two ways, depending on whether $d_i = \tilde{d}_i > \tilde{d}_{i-1} = d_{i-1}$---that is, whether the next-closest point in $L$ is farther from $x$ than the previous.
+For convenience, let $i' \leq i-1$ denote the previous value of $i$ at which the distance from $x$ increased.
+\begin{itemize}
+\item[$d_i = d_{i-1}$.]
+In this case, the only change to $\tilde{Q}$ is to increase $\tilde{Q}_{i'}$ by $1$.
+Thus, at the end of the step, $\tilde{Q}$ equals the number of members of $L$ up to index $i$ at distance at most $d_{i'} = d_i$ from $x$.
+\item[$d_i > d_{i-1}$.]
+In this case, $j$ starts out at $i'$.
+If $i' < i-1$, then the \verb|while| loop copies the value $\tilde{Q}_{i'}$ to the values of $\tilde{Q}_{[i'+1,i-1]}$.
+By the same reasoning as in the previous case plus the fact that $d_i > d_{i-1}$, $\tilde{Q}_{i'}$ at this step equals $\abs{N^+_{i'}(x,L)} = \abs{N^+_{i-1}(x,L)}$.
+Therefore, at the end of this step, $\tilde{Q}_{[i',i-1]}=(Q^+(x,L))_{[i',i-1]}$ and $j>i-1$, so that the returned values $Q_{[i',i-1]}$ will be correct.
+Regardless, this value is also copied to $\tilde{Q}_i$, and $\tilde{Q}_i$ is incremented by $1$, so that $\tilde{Q}_i = \tilde{Q}_{i-1} + 1$.
+\end{itemize}
+Regardless of the case, at each step $\max\tilde{Q}$ increases by $1$, so that after step $i = k$ we have $\max\tilde{Q} = k$.
+The last step wraps up the process in the case that $d_k = d_{k-1}$.
+\item[$i = k + 1$.]
+In this step, $\tilde{d}_i = \tilde{d}_{k+1} = +\infty > d_k = \tilde{d}_{i-1}$, so the \verb|while| loop is run.
+If $d_k > d_{k-1}$, then this has no effect on $Q=\tilde{Q}_{[1,k]}$.
+If, instead, $d_k = d_{k-1}$, then the effect is to copy $\tilde{Q}_{i'}$ to $\tilde{Q}_{[i'+1,k]}$.
+As in the previous step, this makes $\tilde{Q}_{[i'+1,k]}=(Q^+(x,L))_{[i',k]}$, which ensures that the returned $Q_{[i',k]}$ are correct.
+\end{itemize}
+\end{proof}
 
 \begin{algorithm}
 \caption{Identify a firstlast set with respect to a proper subset.}
@@ -385,7 +441,7 @@ Making use of these out-rank sequences, the recovery of a firstlast set proceeds
 \STATE $Q \leftarrow (k,\ldots,k)\in\N^{k}$
 \FOR{$x\in X$}
     \STATE $Q' \leftarrow Q^+(x,L)\in\N^{k}$ (Algorithm\nbs\ref{alg:outnbhdseq})
-    \STATE $j=k$
+    \STATE $j \leftarrow k$
     \WHILE{$Q'_j = Q_j$}
         \STATE $j \leftarrow j-1$
     \ENDWHILE
@@ -403,11 +459,13 @@ Making use of these out-rank sequences, the recovery of a firstlast set proceeds
 \end{algorithm}
 
 \begin{proposition}
-Algorithm\nbs\ref{alg:firstlast} returns the set of firstlast points.
+Algorithm\nbs\ref{alg:firstlast} returns the firstlast set.
 \end{proposition}
 
 \begin{proof}
-Prove this!
+In the algorithm, $Q$ begins at what we know from Corollary\nbs\ref{cor:out-rank} to be the maximum possible out-rank sequence.
+The algorithm then simply computes the out-rank sequence of every point $x \in X$ and either stores it in a list, if it is equal to the current minimum, or resets and replaces the stored list, if it is smaller.
+Once all points have been considered, those in the stored list will constitute the firstlast set.
 \end{proof}
 
 The construction of a lastfirst landmark set proceeds as follows, and as outlined in Algorithm\nbs\ref{alg:lastfirst-landmarks}.
