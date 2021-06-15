@@ -593,12 +593,12 @@ When performed separately, skewed sampling and skewed boosting use $\alpha=\beta
 The landmark points were selected in three ways: uniform random selection (without replacement), the maxmin procedure, and the lastfirst procedure.
 We computed PH in Python GUDHI, using three implementations: Vietoris–Rips (VR) filtrations on the landmarks, alpha complexes on the landmarks, and witness complexes on the landmarks with the full sample as witnesses [@Maria2021; @Rouvreau2021; @Kachanovich2021].
 
-The skewed data sets are dense or multiple at the south pole and sparse or singular at the north pole. We expect lastfirst to be more sensitive to this variation and place more landmarks toward the south. As measured by dominance, therefore, we hypothesized that lastfirst would be competitive with maxmin when samples are uniform and inferior to maxmin when samples are skewed.
-Put differently, we expected lastfirst to better detect the statistical void at the north pole.
+The skewed data sets are dense (or multiple) at the south pole and sparse (or singular) at the north pole. We expect lastfirst to be more sensitive to this variation and place more landmarks toward the south. As measured by dominance, therefore, we hypothesized that lastfirst would be competitive with maxmin when samples are uniform and inferior to maxmin when samples are skewed.
+Put differently, we expected lastfirst to better reject the homology of $\Sph^2$, i.e. to detect the statistical void at the north pole.
 
 Figure\nbs\ref{fig:sphere} compares the relative dominance of the shperical homology groups in each case.
-When PH is computed using VR or alpha complexes, maxmin better recovers the homology of the sphere except on uniform samples, while lastfirst and random selection better reject this homology.
-Random selection usually better rejects spherical homology than lastfirst selection when samples are non-uniform, which indicates that lastfirst selection still oversamples from less dense regions.
+When PH is computed using VR or alpha complexes, maxmin better recovers the homology of the sphere except on uniform samples, while lastfirst and random selection better detect the void.
+Random selection is usually better than lastfirst selection at detecting this void when samples are non-uniform, which indicates that lastfirst selection still oversamples from less dense regions.
 Lastfirst and maxmin perform similarly when PH is computed using witness complexes.
 
 \begin{figure}
@@ -622,7 +622,7 @@ We varied the number of landmarks (6, 12, 24, 36, 48, 60, 120) and the multiplic
 We evaluated the procedures in three ways:
 
 - **Clustering quality:** Both procedures yield _fuzzy_ clusters---that is to say, clusters that allow for some overlap. While clustering quality measures might be useful, most, including almost all that have been proposed for fuzzy clusterings, rely on coordinate-wise calculations, specifically data and cluster centroids [@Bouguessa2006; @Wang2007; @Falasconi2010]. To our knowledge, the sole exception to have appeared in a comprehensive comparison of such measures is the _modified partition coefficient_ [@Dave1996], defined as $$\operatorname{MPC}=1-\frac{k}{k-1}(1-\frac{1}{n}\sum_{i=1}^{n}{\sum_{j=1}^{k}{{u_{ij}}^2}})$$ where $U=(u_{ij})$ is the $n\times k$ fuzzy partition matrix: $u_{ij}$ encodes the extent of membership of point $x_i$ in cluster $c_j$, and $\sum_{j=1}^{k}{u_{ij}}=1$ for all $i$. When a point $x_i$ is contained in $m$ cover sets $c_j$, we equally distribute its membership so that $u_{ij}=\frac{1}{m}$ when $x_i\in c_j$ and $u_{ij}=0$ otherwise. Thus, the MPC quantifies the extent of overlap between all pairs of clusters. Like the partition coefficient from which it is adapted, the MPC takes the value $1$ on crisp partitions and is penalized by membership sharing, but it is standardized so that its range does not depend on $k$.
-- **Discrimination of risk:** For purposes of clinical phenotyping, patient clusters are more useful that discriminate between low- and high-risk subgroups. We calculate a cover-based risk estimate from individual outcomes $y_i$ as follows: For each cover set $c_j\subset X$, let $p_j=\frac{1}{\abs{c_j}}\sum_{x_i\in c_j}{y_i}$ be the incidence of the outcome in that set. Then compute the weighted sum $q_i=\sum_{x_i\in c_j}{u_{ij}p_j}$ of these incidence rates for each case. We measure how well the cover discriminates risk as the area under the receiver operating characteristic curve (AUROC).
+- **Discrimination of risk:** For purposes of clinical phenotyping, patient clusters are more useful that better discriminate between low- and high-risk subgroups. We calculate a cover-based risk estimate from individual outcomes $y_i$ as follows: For each cover set $c_j\subset X$, let $p_j=\frac{1}{\abs{c_j}}\sum_{x_i\in c_j}{y_i}$ be the incidence of the outcome in that set. Then compute the weighted sum $q_i=\sum_{x_i\in c_j}{u_{ij}p_j}$ of these incidence rates for each case. We measure how well the cover discriminates risk as the area under the receiver operating characteristic curve (AUROC).
 <!--
 - **Homological richness:** Independent of the "true" topological structure of a data set, a simplicial complex model is more useful when it is not too sparse to be connected (or nearly so) and not too dense to visualize or contain low-degree cycles. We compare the $0$- and total $>0$-degree Betti numbers of the simplicial complex models from the perspective of optimizing $-\beta_0+\sum_{i>0}{\beta_i}$.
 -->
@@ -630,12 +630,12 @@ We evaluated the procedures in three ways:
 We hypothesized that lastfirst covers would exhibit less overlap than maxmin covers by virtue of their greater sensitivity to local density, and that they would outperform maxmin covers at risk prediction by reducing the sizes of cover sets in denser regions of the data (taking advantage of more homogeneous patient cohorts).
 
 Figure\nbs\ref{fig:cover-mimic} presents the sizes of the nerves of the covers and the two evaluation statistics as functions of the number of landmarks.
-The numbers of 1- and of 2-simplices grew at most roughly quadratically and roughly cubically, respectively. This suggests that the densities of the simplicial complex models was at most roughly constant, regardless of the number of landmarks.
+The numbers of 1- and of 2-simplices grew at most roughly quadratically and roughly cubically, respectively. This suggests that the densities of the simplicial complex models were at most roughly constant, regardless of the number of landmarks.
 Landmark covers grew fuzzier and generated more accurate predictions until the number of landmarks reached around 60, beyond which point most covers grew crisper while performance increased more slowly (and in one case decreased). This pattern held for covers with any fixed multiplicative extension.
 Naturally, these extensions produced fuzzier clusters, but they also reduced the overall accuracy of the predictive model.
-In addition to (i.e. independently of) thee patterns, models fitted to smaller care units tended to outperform those fitted to larger care units.
-Again contrary to expectations, maxmin covers were usually crisper than their counterparts and yielded more accurate predictions.
-Maxmin covers also varied more widely than lastfirst covers in density, crispness, and accuracy.
+In addition to (i.e. independently of) these patterns, models fitted to smaller care units tended to outperform those fitted to larger care units.
+Contrary to expectations, unextended maxmin covers were usually crisper than their lastfirst counterparts and yielded more accurate predictions, though extensions reduced the crispness of maxmin covers more dramatically than of lastfirst covers.
+The same patterns were observed in the risk discrimination of maxmin versus lastfirst covers, with maxmin covers yielding the most accurate predictions when unextended but lastfirst covers retaining more accuracy after extension.
 
 \begin{figure}
 \includegraphics[width=.5\textwidth]{../figures/cover-simplices}
@@ -652,7 +652,7 @@ Figure\nbs\ref{fig:cover-mx} presents the same evaluations for covers of the MXD
 In contrast to the MIMIC experiments, lastfirst-based nerves of the MXDH data grow sub-polynomially and are significantly sparser than maxmin-based nerves.
 Lastfirst covers tend to be crisper, especially as the number of landmarks and the extension factors increase.
 This indicates that the nearest neighborhoods form a more parsimonious cover of the data than the centered balls.
-The predictive accuracies of the maxmin- and lastfirst-selected cover-based models converge with increasing landmarks[^We should increase the maximum number of landmarks to be sure.], though for smaller numbers different selection procedures perform best for different outcomes.
+The predictive accuracies of the maxmin- and lastfirst-selected cover-based models converge with increasing landmarks^[We should increase the maximum number of landmarks to be sure.], though for smaller numbers different selection procedures perform best for different outcomes.
 
 \begin{figure}
 \includegraphics[width=.5\textwidth]{../figures/cover-simplices-mx}
@@ -698,7 +698,7 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 }
 \end{figure}
 
-Over the course of the COVID-19 pandemic, hospitals and other centers experienced periods of overburden and resource depletion, and best practices were continually learned and disseminated.
+Over the course of the COVID-19 pandemic, hospitals and other facilities experienced periods of overburden and resource depletion, and best practices were continually learned and disseminated.
 As a result, outcomes in the MXDH data reflect institutional- as well as population-level factors.
 We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a nested-longitudinal CV approach:
 We partitioned the data by week, beginning with Week\nbs11 (March\nbs11--17) and ending with Week\nbs19 (May\nbs6--9, the last dates for which data were available).
@@ -726,21 +726,28 @@ The maxmin and lastfirst procedures implicitly construct a minimal cover whose s
 The rank-based procedures are more combinatorially complex and computationally expensive, primarily because rank-distances are asymmetric, which doubles (in the best case) or squares (in the worst case) the number of distances that must be calculated.
 Nevertheless, the procedure can be performed in a reasonable time for many real-world uses.
 
-We ran an experiment to compare maxmin and lastfirst landmarks at expediting the computation of persistent homology, extending a previously published experiment using maxmin [@deSilva2004]. In addition to a uniform sample from a sphere, we drew skewed and bootstrapped samples from the sphere in order to simulate data sets with variable density and multiplicity. The resulting data sets were dense or multiple toward one pole of the sphere and sparse or singular toward the other.
+We ran an experiment to compare maxmin and lastfirst landmarks at expediting the computation of persistent homology, extending an experiment of @deSilva2004. In addition to a uniform sample from a sphere, we drew skewed and bootstrapped samples in order to simulate data sets with variable density and multiplicity, in this case exhibiting a statistical void at one pole of the sphere, opposite a concentration at the other pole.
 Whereas the maxmin procedure would sample more uniformly across the sphere despite this skew, the lastfirst procedure would concentrate landmarks toward the south.
-Classical persistent homology is notoriously sensitive to outliers, and maxmin better recovered spherical homology than lastfirst, as expected. Though this is likely due in part to the filtration itself being based on distances rather than rank-distances between landmarks (and other points as witnesses).
+Classical persistent homology is notoriously sensitive to outliers, and maxmin better recovered spherical homology than lastfirst, as expected. This is likely due in part to the filtration itself being based on distances rather than rank-distances between landmarks (and other points as witnesses).
+Yet, compared to random sampling, lastfirst still oversampled from less dense regions. This is desirable for settings, such as healthcare, in which regions of missingness often indicate limitations of the data collection rather than rarity of case types in the population.
 
 We also ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.
 Because we designed lastfirst to produce cover sets of equal size despite variation in the density or multiplicity of the data, we expected it to outperform maxmin with respect to the crispness of clusters and to the accuracy of predictions.
 In particular, we expected that the optimal neighborhood size for outcome prediction would be roughly equal across our data; as a result, by assigning each landmark case an equally-sized cohort of similar cases, we expected predictions based on these cohorts to outperform those based on cohorts using a fixed similarity threshold.
-Instead, maxmin produced crisper clusterings on average, though those of lastfirst were more consistent in their crispness.
-More surprising still, in terms of mortality risk, the maxmin procedure yielded more homogeneous clusters and more accurate nearest neighbor–based predictions than lastfirst.
 
-One explanation for this unexpected result may be that our data were not sufficiently variable, in terms of density and multiplicity, and that data with more severe skews would benefit from lastfirst landmark selection.
-What seems more likely is that the RT-similarity measure is in fact more meaningful across the data than might be expected: Whatever the baseline presentation of a patient, rather than a cohort of similar patients of some fixed size, their prognosis would be better guided by a cohort cut off at a fixed minimum similarity (or maximum distance).
+Contrary to expectations, maxmin produced crisper clusterings on average, and in the case of MIMIC-III more accurate predictions.
+However, when the sets of these covers had their radii or cardinalities extended by a fixed proportion, those of lastfirst better preserved these qualities.
+Additionally, in the case of MXDH, neither landmark selection procedure produced consistently more accurate predictions.
+
+A possible explanation for the stronger performance of maxmin on MIMIC is that the data did not exhibit very strongly the patterns for which the lastfirst procedure is designed to account, namely variation in density and multiplicity.
+As a result, the RT-similarity measure is in fact meaningful across the population: Whatever the baseline presentation of a patient, rather than a cohort of similar patients of some fixed size, their prognosis would be better guided by a cohort cut off at a fixed minimum similarity (or maximum distance).
 This suggests that the use of personalized cohorts to improve predictive modeling, as employed by @Lee2015, may be strengthened by optimizing a fixed similarity threshold rather than a fixed cohort size.
 It is worth noting that @Park2006 reached a similar conclusion.
-We will compare these approaches in ongoing work.
+In contrast, this stronger performance was not evident on MXDH, which contained fewer variables and as a result exhibited many more occurrences of duplication.
+
+Another way to think about these results is in terms of a balance between relevance and pwoer, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
+With sufficiently rich data, relevance can be more precisely measured and becomes more important to cohort definition, as with MIMIC.
+When variables are fewer, as with MXDH, relevance is more difficult to measure, so that larger samples can improve performance even at the expense of such a measure.
 
 
 # References
