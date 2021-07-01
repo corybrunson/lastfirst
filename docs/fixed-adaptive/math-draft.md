@@ -495,7 +495,7 @@ At each iteration, $\lf(L)$ is computed and the next landmark point $\ell_i$ is 
     \STATE $F \leftarrow \lf(L)$
     \STATE $\ell_i \leftarrow \verb|pick|(F)$
     \STATE $q_{\operatorname{max}} \leftarrow q(\ell_i,L)$
-\UNTIL $q_{\operatorname{max}} < k$ and $\abs{L} \geq n$
+\UNTIL $q_{\operatorname{max}} \leq k$ and $\abs{L} \geq n$
 \RETURN lastfirst landmark set $L$
 \end{algorithmic}
 \end{algorithm}
