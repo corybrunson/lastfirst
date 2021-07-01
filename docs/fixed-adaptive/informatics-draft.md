@@ -37,34 +37,23 @@ Two basic maneuvers in TDA are locality preservation and cardinality reduction. 
 [^cardinality-reduction]: The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@MicciBarreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is that of @ByczkowskaLipinska2017: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction method is data reduction.
 
 More elaborate TDA techniques combine both maneuvers, often through the use of covering methods, as with the approximation of PH through witness complexes [@deSilva2004] or in the mapper construction [@Singh2007]. Covering methods, in turn, can be enhanced by strategic sampling from large data sets [@], as can other proximity-based techniques like nearest neighbors. The maxmin procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection. However, maxmin comes with its own potential limitations in the analysis of data that vary greatly in density or have multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
+One example of this scenario is the problem of clinical outcome prediction on a diverse population of patients, many of whom are at similarly high risk for an outcome such as mortality. This particular use case contributed to our initial motivation to develop the alternative approach discussed in this paper.
 
-In this paper, we develop a landmark sampling procedure complementary to maxmin, based on the rankings of points by a distance or similarity measure rather than on the raw values of such a measure. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting this procedure from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods. We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}. In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
+In Section\nbs\ref{sec:procedures}, we briefly describe a landmark sampling procedure we developed to complement maxmin, describe some of its basic properties, and report the results of our validation studies and benchmark tests on simulated and empirical data. We then describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments} in an effort to showcase the potential utility of such algorithms in the setting of biomedical informatics.
 
-## Conventions
 
-$(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\R_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
-$(X,d_X)$ may be shortened to $X$, and $d_X$ to $d$, when clear from context.
-If $x\neq y$ but $d(x,y)=0$ then $x$ and $y$ are said to be indistinguishable or co-located.
-The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, and the set of distinguishable points of $Y$---or of equivalence classes under co-location---is denoted $\supp{Y}$.
-When $Y,Z\subseteq X$, let $Y\wo Z$ denote the set of points in $Y$ (with multiplicities) that are distinguishable from all points in $Z$. This means that, when defined, $\min_{y\in Y\wo Z,z\in Z}{d(y, z)}>0$.
 
-We use the ball notation $B_{\eps}(x)$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \mid d(x,y) < \eps \}$.
-We use an overline to also include points exactly distance $\eps$ from $x$: $\cl{B_{\eps}}(x) = \{ y \mid d(x,y) \leq \eps \}$. (While these connote openness and closedness in the discrete topology, every such ball is both open and closed.)
-If $\abs{\cl{B_\eps}(x)}\geq k$ and $\eps'<\eps\implies\abs{\cl{B_\eps'}(x)}<k$, then we say that $N^+_k(x)=\cl{B_\eps}(x)$ is the $k$-nearest neighborhood of $x$. When $X$ is in general position, therefore, $\abs{N_k(x)}=k$.
-
-Throughout, let $N=\abs{X}$.
-For convenience, we assume $0\in\N$.
 
 ## Background
 
 We designed the lastfirst procedure to addresses an issue with the maxmin procedure that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases. These render the finite metric space representation of the data non-Hausdorff. While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common. Because our procedure is motivated by the same practical needs as the maxmin procedure, we begin with a discussion of those needs.
 
-The earliest appearance of the maxmin[^maxmin] procedure of which we are aware is by @deSilva2004. The authors propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use the maxmin procedure, which we define in Section\nbs\ref{sec:maxmin}, as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
-While the procedure improved little upon uniform random selection in most use cases, on some tasks it far outperformed.
+The earliest appearance of the maxmin[^maxmin] procedure of which we are aware is by @deSilva2004, where it is used as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed. While the procedure improved little upon uniform random selection in most use cases, on some tasks it far outperformed.
+Subsequent uses of maxmin include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019]. In addition to approximating persistent homology [@deSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
 
 [^maxmin]: This procedure is distinct from many other uses of "maxmin" and related terms.
 
-Subsequent uses of maxmin include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019]. In addition to approximating persistent homology [@deSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
+
 
 ## Motivation
 
@@ -93,7 +82,9 @@ In this section we review the maxmin procedure and introduce the lastfirst proce
 
 We restrict ourselves to general, non-technical descriptions of the algorithms here but we plan to include a more mathematically rigorous discussion in the upcoming article [INSERT TITLE].
 
-## Maxmin procedure
+## Overview of Algorithms
+
+### Maxmin procedure
 \label{sec:maxmin}
 
 [Fill in non-mathematical description of the algorithm.]
@@ -125,7 +116,7 @@ We restrict ourselves to general, non-technical descriptions of the algorithms h
 
 
 
-## Lastfirst procedure
+### Lastfirst procedure
 
 The lastfirst procedure is defined analogously to the maxmin procedure, substituting "rank-distance" for the pseudometric $d_X$.
 
@@ -164,20 +155,18 @@ The lastfirst procedure is defined analogously to the maxmin procedure, substitu
 
 
 
-# Implementation
+## Implementation
 \label{sec:implementation}
 
-We have implemented the firstlast and lastfirst procedures, together with minmax and maxmin, in the R package landmark [@Brunson2021a]. Each procedure is implemented in C++ using Rcpp [@Eddelbuettel2011] and separately in R. For rank-distance--based procedures, the user can choose between $\check{q}$ and $\hat{q}$.
-The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set (ball or neighborhood) centered at each landmark.
-In addition to the number of landmarks $m$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $m$ and for $\eps$ or $k$. These will produce additional landmarks ($m$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order (for example) to construct more robust nerve complexes.
+We have implemented all four procedures (firstlast, lastfirst, minmax, and maxmin) in the R package landmark [@Brunson2021a], both in C++ using Rcpp [@Eddelbuettel2011] and separately in R. Users can specify all relevant parameters, including the number and size (meaning radius or cardinality) of the desired cover sets. Additional optional parameters can be used to extend the covers to include more and larger sets with increased overlaps, which may produce more illustrative output in certain scenarios. Any of the algorithms will return the resulting landmarks, optionally together with the sets of points in the cover set (ball or neighborhood) centered at each landmark.
 
-## Validation
 
-We validated the firstlast and lastfirst procedures against several small example data sets, including that of Example\nbs\ref{ex:rank-distance}.
-We also implemented each of the maxmin and lastfirst procedures, using C++ (for Euclidean distances only) and R (which uses the proxy package [@Meyer2021] to calculate distances other than Euclidean), and validated these against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
-We invite readers to install the package and experiment with new cases, as well as to request or write any desired additional features.
 
-## Benchmark tests
+## Validation \& Benchmarking
+
+We validated the firstlast and lastfirst procedures against several small example data sets as well as on several larger data sets. We invite readers to install the package and experiment with new test cases, as well as to request or write any desired additional features.
+
+### Benchmark tests
 
 We benchmarked the C++ and R implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using the RT-similarity measure (Section\nbs\ref{sec:data}).
 We conducted benchmarks using the bench package [@Hester2020] on the University of Florida high-performance cluster HiPerGator.
@@ -195,7 +184,15 @@ Benchmark results are reported in Figure\nbs\ref{fig:benchmark}.
 R implementations used orders of magnitude more memory and took slightly longer. They appeared to scale slightly better in terms of time and slightly worse in terms of memory.
 The additional calculations required for the lastfirst procedure increase runtimes by a median factor of 2.5 in our R implementations. The C++ implementation of lastfirst is based on combinatorial definitions and not optimized for speed, and as a result takes much longer---a median factor of almost 2000 relative to maxmin in C++---and failed to complete in many of our tests.
 
-# Experiments
+
+
+
+
+
+
+
+
+# Applications
 \label{sec:experiments}
 
 ## Empirical data
@@ -326,6 +323,11 @@ AUROCs of the sliding-window interpolative predictive models of intubation and m
 \label{fig:knn-mx}
 }
 \end{figure}
+
+
+
+
+
 
 # Discussion
 
