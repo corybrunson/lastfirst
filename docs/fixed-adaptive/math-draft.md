@@ -510,7 +510,7 @@ The landmark set $L$ returned by Algorithm\nbs\ref{alg:lastfirst-landmarks} give
     \[
         \max_{x \in X\wo L} Q^-_k(x,L) := \max_{x \in X\wo L} |N^-_k(x,L)| \leq k
     \]
-    \item If $n$ is given and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning it has the smallest cardinality required for $k$-neighborhoods of the points in $L$ to cover the space $X$.
+    \item If $n$ is given and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning that no proper subset of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{enumerate}
 \end{proposition}
 
@@ -536,6 +536,7 @@ Recall that for the algorithm to terminate its loop and subsequently return the 
         Therefore, $n$ is set to $0$ before the loop, meaning (2) $|L| \geq n = 0$ always holds, so the algorithm returns $L$ as soon as (1) is satisfied, i.e. when $q_{\max} := q(\ell_i, L) \leq k$ for any $\ell_i \in \mathrm{lf}(L)$.
         This means the point $\ell_i \in \mathrm{lf}(L)$ that is farthest from any $\ell_j \in L$ by $q$ is still within a $k$-neighborhood of some landmark $\ell_j$.
         Since this occurs and causes the loop to exit as soon as the space $X$ can be covered by $k$-neighborhoods of points in $L$, $|L|$ is as small as possible.
+        Further, $q_{\max} > k$ at any previous iteration before (1) is met, meaning there is at least one point in $X \wo L$ that would \textit{not} be covered by a $k$-neighborhood of any landmark in $L$. This smaller set $L$ is therefore insufficient cover the space, so no proper subset of $L$ can yield a cover of $X$ by $k$-nearest neighborhoods.
 \end{enumerate}
         
 \end{proof}
