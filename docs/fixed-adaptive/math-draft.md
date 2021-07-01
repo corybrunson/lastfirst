@@ -494,7 +494,7 @@ At each iteration, $\lf(L)$ is computed and the next landmark point $\ell_i$ is 
     \STATE $i \leftarrow i+1$
     \STATE $F \leftarrow \lf(L)$
     \STATE $\ell_i \leftarrow \verb|pick|(F)$
-    \STATE $q_{\operatorname{max}} \leftarrow q(\ell_i,L)$
+    \STATE $q_{\operatorname{max}} \leftarrow \operatorname{min}\limits_{\ell \in L} q(\ell,\ell_i)$
 \UNTIL $q_{\operatorname{max}} \leq k$ and $\abs{L} \geq n$
 \RETURN lastfirst landmark set $L$
 \end{algorithmic}
@@ -504,40 +504,28 @@ The implementation of $\lf$ is more involved: Because an in-rank sequence $Q^-(x
 Our (partially vectorized) R implementation uses some combinatorial identities to expedite this calculation.
 
 \begin{proposition}
-The landmark set $L$ returned by Algorithm\nbs\ref{alg:lastfirst-landmarks} gives the following properties:
-\begin{enumerate}
-    \item If $k$ is given, the $k$-th term in the $Q^-(x,L)$ sequence, denoted $Q^-_k(x,L)$, is at most $k$. Equivalently,
-    \[
-        \max_{x \in X\wo L} Q^-_k(x,L) := \max_{x \in X\wo L} |N^-_k(x,L)| \leq k
-    \]
-    \item If $n$ is given and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning that no proper subset of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
-\end{enumerate}
+Let $L$ denote the landmark set returned by Algorithm\nbs\ref{alg:lastfirst-landmarks}. If $n$ is given as input and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning that no proper subset of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{proposition}
 
 \begin{proof}
 Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
     
 Recall that for the algorithm to terminate its loop and subsequently return the resulting landmark set $L$, both of the following exit conditions must hold: (1) $q_{\max} \leq k$ and (2) $|L| \geq n$.
+  
+Suppose first that $n$ is given.
+Regardless of whether $k$ is provided, (2) must always hold for the algorithm to terminate, so $|L| \geq n$ for any $k$.
+If $k$ is not given, it is set to $|X|$ before the loop, which means (1) holds from the first iteration onward since $|X|$ is by definition the maximum value $q$ can attain.
+Then the algorithm terminates as soon as condition (2) is first met, which is when $|L| = n$.
+\footnote{Note that $|L| > n$ if and only if $q_{\max} \leq k$ is not satisfied when $|L| = n$, meaning $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so more landmarks must be chosen to guarantee the algorithm produces a valid cover by neighborhoods of size $k$.}
 
-\begin{enumerate}
-        \item Suppose $k$ is given.
-        By (1), $q_{\max} := \min\limits_{\ell_j \in L} q(\ell_i, \ell_j) \leq k$, where $\ell_i \in \mathrm{lf}(L)$.
-        
-        \textbf{No longer sure this part is true.}
-        
-        
-        \item Suppose $n$ is given.
-        Regardless of whether $k$ is provided, (2) must always hold for the algorithm to terminate, so $|L| \geq n$ for any $k$.
-        If $k$ is not given, it is set to $|X|$ before the loop, which means (1) holds from the first iteration onward since $|X|$ is by definition the maximum value $q$ can attain.
-        Then the algorithm terminates as soon as condition (2) is first met, which is when $|L| = n$.
-        \footnote{Note that $|L| > n$ if and only if $q_{\max} \leq k$ is not satisfied when $|L| = n$, meaning $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so more landmarks must be chosen to guarantee the algorithm produces a valid cover by neighborhoods of size $k$.}
-        
-        Now suppose $n$ is not given. Then $k$ must be given since the algorithm requires at least one of the two parameters $n,k$ to be provided.
-        Therefore, $n$ is set to $0$ before the loop, meaning (2) $|L| \geq n = 0$ always holds, so the algorithm returns $L$ as soon as (1) is satisfied, i.e. when $q_{\max} := q(\ell_i, L) \leq k$ for any $\ell_i \in \mathrm{lf}(L)$.
-        This means the point $\ell_i \in \mathrm{lf}(L)$ that is farthest from any $\ell_j \in L$ by $q$ is still within a $k$-neighborhood of some landmark $\ell_j$.
-        Since this occurs and causes the loop to exit as soon as the space $X$ can be covered by $k$-neighborhoods of points in $L$, $|L|$ is as small as possible.
-        Further, $q_{\max} > k$ at any previous iteration before (1) is met, meaning there is at least one point in $X \wo L$ that would \textit{not} be covered by a $k$-neighborhood of any landmark in $L$. This smaller set $L$ is therefore insufficient cover the space, so no proper subset of $L$ can yield a cover of $X$ by $k$-nearest neighborhoods.
-\end{enumerate}
+Now suppose $n$ is not given. Then $k$ must be given since the algorithm requires at least one of the two parameters $n,k$ to be provided.
+Therefore, $n$ is set to $0$ before the loop, meaning (2) $|L| \geq n = 0$ always holds, so the algorithm returns $L$ as soon as (1) is satisfied, i.e. when % $q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k$ for any $\ell_i \in \mathrm{lf}(L)$.
+\[
+    q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k \quad\A \ell_i \in \mathrm{lf}(L)
+\]
+This means the point $\ell_i \in \mathrm{lf}(L)$ that is farthest from any $\ell_j \in L$ by $q$ is still within a $k$-neighborhood of some landmark $\ell_j$.
+Since this occurs and causes the loop to exit as soon as the space $X$ can be covered by $k$-neighborhoods of points in $L$, $|L|$ is as small as possible.
+Further, $q_{\max} > k$ at any previous iteration before (1) is met, meaning there is at least one point in $X \wo L$ that would \textit{not} be covered by a $k$-neighborhood of any landmark in $L$. This smaller set $L$ is therefore insufficient cover the space, so no proper subset of $L$ can yield a cover of $X$ by $k$-nearest neighborhoods.
         
 \end{proof}
 
