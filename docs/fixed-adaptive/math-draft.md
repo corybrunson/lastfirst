@@ -504,12 +504,23 @@ The implementation of $\lf$ is more involved: Because an in-rank sequence $Q^-(x
 Our (partially vectorized) R implementation uses some combinatorial identities to expedite this calculation.
 
 \begin{proposition}
-Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a sequence of lastfirst landmark points.
+The landmark set $L$ returned by Algorithm\nbs\ref{alg:lastfirst-landmarks} gives the following properties:
+\begin{enumerate}
+    \item If $k$ is given, the $k$-th term in the $Q^-(x,L)$ sequence, denoted $Q^-_k(x,L)$, is at most $k$. Equivalently,
+    \[
+        \max_{x \in X\wo L} Q^-_k(x,L) := \max_{x \in X\wo L} |N^-_k(x,L)| \leq k
+    \]
+    \item If $n$ is given and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning it has the smallest cardinality required for $k$-neighborhoods of the points in $L$ to cover the space $X$.
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}
 Prove this!
 \end{proof}
+
+
+
+
 
 ### Tie handling
 
