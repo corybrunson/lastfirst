@@ -521,6 +521,7 @@ Recall that for the algorithm to terminate its loop and subsequently return the 
 
 \begin{enumerate}
         \item Suppose $k$ is given.
+        By (1), $q_{\max} := \min\limits_{\ell_j \in L} q(\ell_i, \ell_j) \leq k$, where $\ell_i \in \mathrm{lf}(L)$.
         
         \textbf{No longer sure this part is true.}
         
