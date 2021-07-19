@@ -217,7 +217,7 @@ betti %>%
   rename(`0` = r0, `1` = r1) %>%
   mutate(space = case_when(space == "sphere" ~ "R", space == "point" ~ "K")) %>%
   pivot_wider(names_from = c(space), values_from = c(`0`, `1`),
-                     names_glue = "{space}_{.value}") %>%
+              names_glue = "{space}_{.value}") %>%
   left_join(diam %>%
               separate(sample, c("distribution", "duplication")) %>%
               mutate(distribution = fct_inorder(distribution),
