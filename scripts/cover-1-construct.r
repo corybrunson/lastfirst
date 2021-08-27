@@ -25,7 +25,7 @@ exts_mult <- c(0, .1, .2)
 
 for (careunit in careunits) {
   
-  # binary data with cross-validation indices
+  # binary data
   file.path(rt_data, str_c("mimic-", tolower(careunit), "-cases.rds")) %>%
     read_rds() %>%
     print() -> unit_cases

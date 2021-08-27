@@ -1,17 +1,25 @@
 library(bench)
 library(dplyr)
-# installed version of landmark package
-library(landmark)
 
-# MIMIC-III RT-data sets
+# source and store directories
 if (stringr::str_detect(here::here(), "corybrunson")) {
   # laptop
+  machine <- "Cory's MacBook Air"
   rt_data <- "~/Desktop/rt-data"
   lastfirst_dir <- here::here()
-} else if (stringr::str_detect(here::here(), "jason.brunson")) {
+  library(landmark)
+} else if (stringr::str_detect(here::here(), "Users/jason.brunson")) {
+  # desktop
+  machine <- "Cory's UF iMac"
+  rt_data <- "~/Desktop/rt-data"
+  lastfirst_dir <- here::here()
+  devtools::load_all("~/Documents/proj-active/tda/landmark/")
+} else if (stringr::str_detect(here::here(), "home/jason.brunson")) {
   # HiPerGator
+  machine <- "HiPerGator cluster"
   rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
   lastfirst_dir <- "~/lastfirst"
+  library(landmark)
 } else {
   stop("Cannot recognize working directory.")
 }
@@ -71,6 +79,7 @@ for (careunit in careunits) {
     marks <- procedure_benchmark(x, dist_method = "cosine", num = num)
     marks <- mutate(marks, data = careunit, distance = "cosine")
     marks <- mutate(marks, expression = as.character(names(expression)))
+    marks <- mutate(marks, machine = machine)
     print(marks)
     lmk_marks <- bind_rows(lmk_marks, marks)
     readr::write_rds(lmk_marks, file.path(lastfirst_dir, "data/mark-mimic.rds"))
