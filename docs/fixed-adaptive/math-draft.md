@@ -353,42 +353,79 @@ An initial point $\ell_0$ is selected and added to the landmark set so that $L =
 At each iteration, $\lf(L)$ is computed and the next landmark point $\ell_i$ is selected from this set. The procedure terminates when $X=\bigcup_{j\leq i}N^+_1(\ell_j)$, hence $\supp{L}=\supp{X}$.
 
 \begin{algorithm}
-\caption{Select a lastfirst landmark set.}
+\caption{Calculate the lastfirst landmark sequence from a seed point.}
 \label{alg:lastfirst-landmarks}
 \begin{algorithmic}
-\REQUIRE finite metric space $(X,d)$
-\REQUIRE at least one parameter $k>0$ or $n\in\N$
+\REQUIRE finite pseudometric space $(X,d)$
+\REQUIRE at least one parameter $k>0$ (target cover set cardinality) or $n\in\N$ (number of landmarks)
 \REQUIRE seed point $\ell_0 \in X$
 \REQUIRE selection procedure \verb|pick|
-\IF{only $k$ is given}
-    \STATE $n \leftarrow 0$
-\ENDIF
-\IF{only $n$ is given}
-    \STATE $k \leftarrow \abs{X}$
-\ENDIF
-\STATE $L \leftarrow \varnothing$
-\STATE $i \leftarrow 0$
-\REPEAT
-    \STATE $L \leftarrow L\cup\{\ell_i\}$
-    \STATE $i \leftarrow i+1$
-    \STATE $F \leftarrow \lf(L)$
+\STATE $L \leftarrow \{ \ell_0 \}$ landmark set
+\STATE $F \leftarrow L$ initial lastfirst set
+\STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
+\FOR{$i$ from $1$ to $\uniq{X}$}
     \STATE $\ell_i \leftarrow \verb|pick|(F)$
-    \STATE $q_{\operatorname{max}} \leftarrow q(\ell_i,L)$
-\UNTIL $q_{\operatorname{max}} < k$ and $\abs{L} \geq n$
-\RETURN lastfirst landmark set $L$
+    \STATE $L \leftarrow L \cup \{\ell_i\}$
+    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ij} = d(\ell_i, x_j)$
+    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$, so that $Q = (q_{i1},\ldots,q_{iN})$, where $q_{ij} = q(\ell_i, x_j)$
+    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times i}$
+    \STATE $k_{\min} \leftarrow \max\{ \min_{j=1,i}{ R_{ij} } \}_{1 \leq i \leq N}$ (the minimum cardinality required for sets centered at $L$ to cover $X$)
+    \IF{$D(L, X \wo L) = 0$}
+        \STATE \textbf{break}
+    \ENDIF
+    \IF{$i \geq n$ and $k_{\min} \leq k$}
+        \STATE \textbf{break}
+    \ENDIF
+    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}}^\top) \cdots \verb|sort|({R_{N,\bullet}}^\top) ]^\top \in \N^{N \times i}$
+    \STATE $F \leftarrow X \wo \uniq{L}$
+    \FOR{$j$ from $1$ to $i$}
+        \STATE $F \leftarrow \{x_i \in F \mid R_{ij} = \max_{i'}{R_{i'j}}\}$
+    \ENDFOR
+\ENDFOR
+\RETURN lastfirst landmark set $L$ with at least $n$ cover sets of cardinality at most $k$
 \end{algorithmic}
 \end{algorithm}
 
-The implementation of $\lf$ is more involved: Because an in-rank sequence $Q^-(x)$ cannot be calculated from the distances $\{d(x,y)\mid y\in X\}$ alone, much more computation is required to generate $Q^-(x,L)$ at each step.
-Our (partially vectorized) R implementation uses some combinatorial identities to expedite this calculation.
-
 \begin{proposition}
-Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a sequence of lastfirst landmark points.
+Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
+If $n$ is given as input and $k$ is not, $\abs{L} = n$. If $n$ and $k$ are both given, $\abs{L} \geq n$. Otherwise $L$ is minimal, meaning that no proper prefix (subset?) of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{proposition}
 
 \begin{proof}
-Prove this!
+
 \end{proof}
+
+\textbf{Old versions below.}
+
+\begin{proposition}
+Let $L$ denote the landmark set returned by Algorithm\nbs\ref{alg:lastfirst-landmarks}. If $n$ is given as input and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning that no proper subset of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
+\end{proposition}
+
+\begin{proof}
+Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
+
+Recall that for the algorithm to terminate its loop and subsequently return the resulting landmark set $L$, both of the following exit conditions must hold: (1) $q_{\max} \leq k$ and (2) $|L| \geq n$.
+
+Suppose first that $n$ is given.
+Regardless of whether $k$ is provided, (2) must always hold for the algorithm to terminate, so $|L| \geq n$ for any $k$.
+If $k$ is not given, it is set to $|X|$ before the loop, which means (1) holds from the first iteration onward since $|X|$ is by definition the maximum value $q$ can attain.
+Then the algorithm terminates as soon as condition (2) is first met, which is when $|L| = n$.
+\footnote{Note that $|L| > n$ if and only if $q_{\max} \leq k$ is not satisfied when $|L| = n$, meaning $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so more landmarks must be chosen to guarantee the algorithm produces a valid cover by neighborhoods of size $k$.}
+
+Now suppose $n$ is not given. Then $k$ must be given since the algorithm requires at least one of the two parameters $n,k$ to be provided.
+Therefore, $n$ is set to $0$ before the loop, meaning (2) $|L| \geq n = 0$ always holds, so the algorithm returns $L$ as soon as (1) is satisfied, i.e. when % $q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k$ for any $\ell_i \in \mathrm{lf}(L)$.
+\[
+    q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k \quad\A \ell_i \in \mathrm{lf}(L)
+\]
+This means the point $\ell_i \in \mathrm{lf}(L)$ that is farthest from any $\ell_j \in L$ by $q$ is still within a $k$-neighborhood of some landmark $\ell_j$.
+Since this occurs and causes the loop to exit as soon as the space $X$ can be covered by $k$-neighborhoods of points in $L$, $|L|$ is as small as possible.
+Further, $q_{\max} > k$ at any previous iteration before (1) is met, meaning there is at least one point in $X \wo L$ that would \textit{not} be covered by a $k$-neighborhood of any landmark in $L$. This smaller set $L$ is therefore insufficient cover the space, so no proper subset of $L$ can yield a cover of $X$ by $k$-nearest neighborhoods.
+
+\end{proof}
+
+
+
+
 
 ### Tie handling
 

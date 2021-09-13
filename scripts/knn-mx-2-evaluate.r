@@ -105,12 +105,22 @@ auc_stats %>%
 
 # compare performance across samplers, numbers of landmarks, and week
 auc_stats %>%
-  filter(! is.na(sampler)) %>%
   ggplot(aes(x = landmarks, y = test_auc, color = sampler)) +
-  #coord_flip() +
-  facet_grid(outcome ~ semana, scales = "free_y") +
+  facet_grid(outcome ~ semana, scales = "fixed") +
   geom_line(data = filter(auc_means, ! is.na(sampler)), size = .5) +
-  #geom_boxplot() +
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
+  auc_stats_plot
+ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
+       auc_stats_plot,
+       width = textwidth, height = textwidth / phi)
+
+# compare performance across samplers, no. landmarks, and week (& w/o sampling)
+auc_stats %>%
+  ggplot(aes(x = landmarks, y = test_auc, color = sampler)) +
+  facet_grid(outcome ~ semana) +
+  geom_line(data = filter(auc_means, ! is.na(sampler)), size = .5) +
+  geom_hline(data = filter(auc_means, is.na(sampler)),
+             aes(yintercept = test_auc), size = .5, color = "darkgrey") +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
