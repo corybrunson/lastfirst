@@ -116,7 +116,7 @@ Note that $\maxmin(\,\cdot\,)$ is nonempty and that, when $X$ is in ego-general 
 \begin{algorithm}
 \caption{Select a maxmin landmark set.}
 \label{alg:maxmin}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \REQUIRE finite metric space $(X,d)$
 \REQUIRE at least one parameter $\eps\geq 0$ or $n\in\N$
 \REQUIRE seed point $\ell_0 \in X$
@@ -338,94 +338,112 @@ We now define counterparts to the minmax and maxmin procedures using these total
 
 ### Algorithms
 
-Algorithm\nbs\ref{alg:lastfirst} calculates a lastfirst set from a seed point, subject to parameters analogous to $n$ and $\epsilon$ in Algorithm\nbs\ref{alg:maxmin}.
+Algorithm\nbs\ref{alg:lastfirst-landmarks} calculates a lastfirst set from a seed point, subject to parameters analogous to $n$ and $\epsilon$ in Algorithm\nbs\ref{alg:maxmin}.
+The algorithm is tailored to the vectorized arithmetic of R, and Lemma\nbs\ref{lem:revlex-lex} provides a shortcut between $Q^-$ and the more compact way that the ego-rank data are stored.
 
-#### Resume here!
-
-\begin{lemma}
-Let $X$ be a finite pseudometric space and $Y \subseteq X$.
-Then, for $x,y \in Y$ or $x,y \in X \wo Y$, $Q(x,Y;X) \leq Q(y,Y;X) \leftrightarrow Q(x;Y) \leq Q(y;Y)$.
+\begin{lemma}\label{lem:revlex-lex}
+For $L = \{ \ell_0, \ldots, \ell_n \} \subset X$, write $S(x,L) = ( q(\ell_{\pi^{-1}(1)},x) \leq \cdots \leq q(\ell_{\pi^{-1}(n)},x) )$, where $\pi$ is any suitable permutation on $[n]$.
+Then $Q^-(x,L) < Q^-(y,L) \Leftrightarrow S(x,L) < S(y,L)$.
 \end{lemma}
 
-The construction of a lastfirst landmark set proceeds as follows, and as outlined in Algorithm\nbs\ref{alg:lastfirst-landmarks}.
-Let $L$ denote the set of landmark points. At the start of the algorithm, $L = \varnothing$.
-An initial point $\ell_0$ is selected and added to the landmark set so that $L = \{\ell_0\}$. This point seeds the procedure.
-At each iteration, $\lf(L)$ is computed and the next landmark point $\ell_i$ is selected from this set. The procedure terminates when $X=\bigcup_{j\leq i}N^+_1(\ell_j)$, hence $\supp{L}=\supp{X}$.
+\begin{proof}
+Write $Q(x) = Q^-(x,L)$ and $Q(y) = Q^-(y,L)$ and suppose that $Q(x) < Q(y)$.
+This means that $Q_i(x) > Q_i(y)$ for some index $i \in [N]$ while $Q_j(x) = Q_j(y)$ for all $j < i$.
+There are then, for each $j < i$, equal numbers of $\ell \in L$ for which $q(\ell,x) = j$ and for which $q(\ell,y) = j$; while there are more $\ell \in L$ for which $q(\ell,x) = i$ than for which $q(\ell,y) = i$.
+When the sets $\{ q(\ell,x) \}_{\ell in L}$ and $\{ q(\ell,y) \}_{\ell in L}$ are arranged in order to get $S(x,L)$ and $S(y,L)$, therefore, the leftmost position at which they differ is $Q_1(y) + \cdots + Q_i(Y) + 1$, at which $q(\ell,x) = i$ while $q(\ell,y) \geq i + 1$.
+Thus $S(x,L) <_{\operatorname{lex}} S(y,L)$.
+
+The reverse implication is similarly straightforward.
+\end{proof}
 
 \begin{algorithm}
 \caption{Calculate the lastfirst landmark sequence from a seed point.}
 \label{alg:lastfirst-landmarks}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \REQUIRE finite pseudometric space $(X,d)$
-\REQUIRE at least one parameter $k>0$ (target cover set cardinality) or $n\in\N$ (number of landmarks)
 \REQUIRE seed point $\ell_0 \in X$
+\REQUIRE number of landmarks $n \in \N$ or cover set cardinality $k \in \N$
 \REQUIRE selection procedure \verb|pick|
-\STATE $L \leftarrow \{ \ell_0 \}$ landmark set
-\STATE $F \leftarrow L$ initial lastfirst set
+\STATE if $n$ is not given, set $n \leftarrow 0$
+\label{line:n}
+\STATE if $k$ is not given, set $k \leftarrow \infty$
+\label{line:k}
+\STATE $L \leftarrow \varnothing$ initial landmark set
+\STATE $F \leftarrow \{ \ell_0 \}$ initial lastfirst set
 \STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
-\FOR{$i$ from $1$ to $\uniq{X}$}
+\FOR{$i$ from $0$ to $\uniq{X} - 1$}
     \STATE $\ell_i \leftarrow \verb|pick|(F)$
     \STATE $L \leftarrow L \cup \{\ell_i\}$
-    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ij} = d(\ell_i, x_j)$
-    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$, so that $Q = (q_{i1},\ldots,q_{iN})$, where $q_{ij} = q(\ell_i, x_j)$
-    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times i}$
-    \STATE $k_{\min} \leftarrow \max\{ \min_{j=1,i}{ R_{ij} } \}_{1 \leq i \leq N}$ (the minimum cardinality required for sets centered at $L$ to cover $X$)
+    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
+    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
+    \label{line:rank}
+    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times (i+1)}$
+    \STATE $k_{\min} \leftarrow \max_{r=1}^{N}{ \min_{j=1,i+1}{ R_{r,j} } }$ (minimum $k$ for which neighborhoods centered at $L$ cover $X$)
+    \label{line:kmin}
     \IF{$D(L, X \wo L) = 0$}
         \STATE \textbf{break}
+        \label{line:nonempty}
     \ENDIF
     \IF{$i \geq n$ and $k_{\min} \leq k$}
         \STATE \textbf{break}
+        \label{line:check}
     \ENDIF
-    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}}^\top) \cdots \verb|sort|({R_{N,\bullet}}^\top) ]^\top \in \N^{N \times i}$
-    \STATE $F \leftarrow X \wo \uniq{L}$
+    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \N^{N \times (i+1)}$
+    \label{line:sort}
+    \STATE $F \leftarrow X \wo L$
     \FOR{$j$ from $1$ to $i$}
-        \STATE $F \leftarrow \{x_i \in F \mid R_{ij} = \max_{i'}{R_{i'j}}\}$
+    \label{line:maximize}
+        \STATE $F \leftarrow \{x_r \in F \mid R_{rj} = \max_{r'}{R_{r'j}}\}$
+        \label{line:lastfirst}
+        \IF{$\abs{F} = 1$}
+            \STATE \textbf{break}
+        \ENDIF
     \ENDFOR
 \ENDFOR
+\RETURN $L$
 \RETURN lastfirst landmark set $L$ with at least $n$ cover sets of cardinality at most $k$
 \end{algorithmic}
 \end{algorithm}
 
 \begin{proposition}
 Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
-If $n$ is given as input and $k$ is not, $\abs{L} = n$. If $n$ and $k$ are both given, $\abs{L} \geq n$. Otherwise $L$ is minimal, meaning that no proper prefix (subset?) of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
+If $n \leq \uniq{X}$ is given as input and $k$ is not, then $\abs{L} = n$.
+If $n$ and $k$ are both given, then $\abs{L} \geq n$.
+Otherwise, $L$ is minimal in the sense that no proper prefix ({\bfseries subset?}) of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{proposition}
 
 \begin{proof}
+Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point, as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
+Note that, for the algorithm to terminate its loop and subsequently return $L$, either there must be no points in $X \wo L$ distinguishable from $L$ (line\nbs\ref{line:nonempty}), or both of two exit conditions must hold (line\nbs\ref{line:check}):
+  (1) $k_{\min} \leq k$ and
+  (2) $\abs{L} \geq n$.
 
+Because the seed point is arbitrary, for the main result it is enough to show that, at each step $i$, $F = \lf(\{ \ell_0, \ldots, \ell_{i-1} \})$.
+When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the ego-ranks $q(\ell_i, x_r)$ in increasing order.
+Because $D(L, X \wo L) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
+By Lemma\nbs\ref{lem:revlex-lex}, then, $Q^-(x_r, L)$ is maximized (in revlex) when $R_r$ is maximized in lex, and this is exactly what the loop that begins on line\nbs\ref{line:maximize} does.
+
+Suppose first that $n \leq \uniq{X}$ is given.
+The loop will only break on line\nbs\ref{line:nonempty} if $D(L, X \wo L) = 0$, which is only possible if $\abs{L} = \uniq{X} \geq n$.
+The loop will only break on line\nbs\ref{line:check} if both $\abs{L} = i \geq n$ and $k_{\min} \leq k$.
+Since these are the only two possible breaks, $\abs{L} \geq n$ is a necessary condition.
+\footnote{Note that $\abs{L} > n$ if and only if $k_{\min} \leq k$ is not satisfied when $\abs{L} = n$, meaning that $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so that more landmarks must be chosen to guarantee the algorithm produces a valid $k$-neighborhood cover.}
+
+If $k$ is not given, then $k$ is set to $\infty$ on line\nbs\ref{line:k}, which means that (1) holds throughout the loop.
+Then the algorithm terminates as least as soon as (2) is satisfied, when $\abs{L} = n$, and as discussed above it cannot terminate any sooner.
+
+Now suppose $n$ is not given.
+Then $k$ must be given, and $n$ is set to $0$ (line\nbs\ref{line:n}).
+This means that (2) always holds, so the algorithm terminates as soon as (1) is satisfied, i.e.\ when $k \geq k_{\min}$ with $k_{\min}$ as defined on line\nbs\ref{line:kmin}.
+We claim that
+\[ k_{\min} = \max_{x \in X}{ \min_{\ell \in L}{ q(\ell, x) } } \]
+which means that every point in $x$ is within a $k$-neighborhood of some existing landmark $\ell \in L$, i.e.\ that the $k$-neighborhoods at $L$ constitute a cover of $X$.
+For this to have not been true for $L$ at previous iterations, there must have been $x \in X$ with $q(\ell, x) > k$ for all $\ell \in L$, meaning that the $k$-neighborhoods at $L$ did not cover $X$.
+
+To prove the claim, note that the maximum is taken over all rows of $R$, which at no point in the algorithm are permuted---that is, the entries of row $R_{r,\bullet}$ at each iteration consist of $q(\ell_0,x_r),\ldots,q(\ell_i,x_r)$ in some order.
+Therefore, $\min_{j=1}^{i}{R_{r,j}} = \min_{\ell \in L}{ q(\ell, x_r) }$.
+Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (line\nbs\ref{line:sort}), this minimum only needs to be taken over $j=1,i$, which gives the formula on line\nbs\ref{line:kmin}.
 \end{proof}
-
-\textbf{Old versions below.}
-
-\begin{proposition}
-Let $L$ denote the landmark set returned by Algorithm\nbs\ref{alg:lastfirst-landmarks}. If $n$ is given as input and $k$ is not, $|L| = n$. If $n$ and $k$ are both given, $|L| \geq n$. Otherwise $L$ is minimal, meaning that no proper subset of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
-\end{proposition}
-
-\begin{proof}
-Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
-
-Recall that for the algorithm to terminate its loop and subsequently return the resulting landmark set $L$, both of the following exit conditions must hold: (1) $q_{\max} \leq k$ and (2) $|L| \geq n$.
-
-Suppose first that $n$ is given.
-Regardless of whether $k$ is provided, (2) must always hold for the algorithm to terminate, so $|L| \geq n$ for any $k$.
-If $k$ is not given, it is set to $|X|$ before the loop, which means (1) holds from the first iteration onward since $|X|$ is by definition the maximum value $q$ can attain.
-Then the algorithm terminates as soon as condition (2) is first met, which is when $|L| = n$.
-\footnote{Note that $|L| > n$ if and only if $q_{\max} \leq k$ is not satisfied when $|L| = n$, meaning $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so more landmarks must be chosen to guarantee the algorithm produces a valid cover by neighborhoods of size $k$.}
-
-Now suppose $n$ is not given. Then $k$ must be given since the algorithm requires at least one of the two parameters $n,k$ to be provided.
-Therefore, $n$ is set to $0$ before the loop, meaning (2) $|L| \geq n = 0$ always holds, so the algorithm returns $L$ as soon as (1) is satisfied, i.e. when % $q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k$ for any $\ell_i \in \mathrm{lf}(L)$.
-\[
-    q_{\max} := \min_{\ell \in L} q(\ell, \ell_i) \leq k \quad\A \ell_i \in \mathrm{lf}(L)
-\]
-This means the point $\ell_i \in \mathrm{lf}(L)$ that is farthest from any $\ell_j \in L$ by $q$ is still within a $k$-neighborhood of some landmark $\ell_j$.
-Since this occurs and causes the loop to exit as soon as the space $X$ can be covered by $k$-neighborhoods of points in $L$, $|L|$ is as small as possible.
-Further, $q_{\max} > k$ at any previous iteration before (1) is met, meaning there is at least one point in $X \wo L$ that would \textit{not} be covered by a $k$-neighborhood of any landmark in $L$. This smaller set $L$ is therefore insufficient cover the space, so no proper subset of $L$ can yield a cover of $X$ by $k$-nearest neighborhoods.
-
-\end{proof}
-
-
-
-
 
 ### Tie handling
 
@@ -435,14 +453,13 @@ We might have defined two \textit{ego-ranks} $\check{q}, \hat{q} : X \times X \l
 & \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}}
 \end{align*}
 In this notation, $\check{q}=q$, while $\hat{q}(x,y)$ is the cardinality of the smallest ball centered at $x$ that contains $y$.
-Letting $\dot{q}$ stand in for either $\check{q}$ or $\hat{q}$, we can define $\dot{N}^\pm_k(x)$ and $\dot{Q}^\pm(x)$ as before and arrive at corresponding notions of firstlast and lastfirst sets.
+Then $\check{N}^\pm_1(x) \subseteq  \{x\} \subseteq \hat{N}^\pm_1(x)$ and $\hat{q}(x,x)>1$ when $x$ has multiplicity.
+The two ego-ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates. For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(1,2,2,4)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(1,3,3,4)$.
+Indeed, any tie-handling rule could be used, and the choice becomes more consequential with greater multiplicity in the data.
 
-Note that then $\check{N}^\pm_1(x) \subseteq  \{x\} \subseteq \hat{N}^\pm_1(x)$, and that $\hat{q}(x,x)>1$ when $x$ has multiplicity.
-These two ego-ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates: For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(1,2,2,4)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(1,3,3,4)$.
-
-Conceptually, these tools would produce landmark sets that yield neighborhood covers with smaller, rather than larger, neighborhoods in regions of high multiplicity.
-While we do not use these ideas in this study, they may be suitable in some settings or for some purposes, for example when high multiplicity indicates a failure to distinguish similar but distinct cases that the analyst wishes to maintain greater separation between.
-They may also play a role in stability analyses, e.g. by producing an interleaving sequence of nerves of covers.
+Conceptually, the lastfirst procedure based on $\hat{q}$ would produce landmark sets that yield neighborhood covers with smaller, rather than larger, neighborhoods in regions of high multiplicity.
+While we do not use these ideas in this study, they may be suitable in some settings or for some purposes, for example when high multiplicity indicates a failure to discriminate between important categories.
+It is also possible that $\check{q}$- and $\hat{q}$-based covers could be used to produce interveaving sequences of nerves useful for stability analysis.
 
 \begin{example}\label{ex:ego-rank-max}
 
@@ -495,19 +512,20 @@ Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ to obtain $\
 # Implementation
 \label{sec:implementation}
 
-We have implemented the firstlast and lastfirst procedures, together with minmax and maxmin, in the R package landmark [@Brunson2021a]. Each procedure is implemented in C++ using Rcpp [@Eddelbuettel2011] and separately in R. For ego-rank--based procedures, the user can choose between $\check{q}$ and $\hat{q}$.
-The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set (ball or neighborhood) centered at each landmark.
-In addition to the number of landmarks $m$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $m$ and for $\eps$ or $k$. These will produce additional landmarks ($m$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order (for example) to construct more robust nerve complexes.
+We have implemented the lastfirst procedure, together with maxmin, in the R package landmark [@Brunson2021a]. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
+For ego-rank--based procedures, the user can choose any tie-handling rule.
+The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
+In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more redundant covers.
 
 ## Validation
 
 We validated the firstlast and lastfirst procedures against several small example data sets, including that of Example\nbs\ref{ex:ego-rank}.
-We also implemented each of the maxmin and lastfirst procedures, using C++ (for Euclidean distances only) and R (which uses the proxy package [@Meyer2021] to calculate distances other than Euclidean), and validated these against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
-We invite readers to install the package and experiment with new cases, as well as to request or write any desired additional features.
+We also validated the C++ and R implementations against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
+We invite readers to experiment with new cases and to request or contribute additional features.
 
 ## Benchmark tests
 
-We benchmarked the C++ and R implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using the RT-similarity measure (Section\nbs\ref{sec:data}).
+We benchmarked the C++ and R implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using RT-transformed data and cosine similarity (Section\nbs\ref{sec:data}).
 We conducted benchmarks using the bench package [@Hester2020] on the University of Florida high-performance cluster HiPerGator.
 
 \begin{figure}
@@ -520,7 +538,7 @@ Benchmark results for computing landmarks on two families of artificial data (ci
 \end{figure}
 
 Benchmark results are reported in Figure\nbs\ref{fig:benchmark}.
-R implementations used orders of magnitude more memory and took slightly longer. They appeared to scale slightly better in terms of time and slightly worse in terms of memory.
+The R implementation of maxmin used orders of magnitude more memory and took slightly longer. They appeared to scale slightly better in terms of time and slightly worse in terms of memory.
 The additional calculations required for the lastfirst procedure increase runtimes by a median factor of 2.5 in our R implementations. The C++ implementation of lastfirst is based on combinatorial definitions and not optimized for speed, and as a result takes much longer---a median factor of almost 2000 relative to maxmin in C++---and failed to complete in many of our tests.
 
 # Experiments
@@ -533,16 +551,19 @@ The additional calculations required for the lastfirst procedure increase runtim
 
 The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016].
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
-For each patient admission, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion (Catholic, unspecified/unobtainable/missing, Protestant Quaker, Jewish, other, Episcopalian, Greek Orthodox, Christian Scientist, Buddhist, Muslim, Jehovah's Witness, Unitarian-Universalist, 7th Day Adventist, Hindu, Romanian Eastern Orthodox, Baptist, Hebrew, Methodist, or Lutheran), marital status (married, single, widowed, divorced, unknown/missing, separated, or life partner), and type of medical insurance (Medicare, private, Medicaid, povernment, or self pay).
+For each patient admission, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
 Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ suitable for the cosine similarity measure, which was converted to a distance measure by subtraction from 1.
 Because cosine similarity is monotonically related to the angle metric, our topological results will be the same up to this rescaling, so for simplicity we use cosine similarity in our experiments.
 
 [^mimic-units]: <https://mimic.physionet.org/mimictables/transfers/>
 [^ethnicity]: White, Black/African American, Unknown/Not Specified, Hispanic or Latino, Other, Unable to Obtain, Asian, Patient Declined to Answer, Asian – Chinese, Hispanic Latino – Puerto Rican, Black/Cape Verdean, White – Russian, Multi Race Ethnicity, Black/Haitian, Hispanic/Latino – Dominican, White – Other European, Asian – Asian Indian, Portuguese, White – Brazilian, Asian – Vietnamese, Black/African, Middle Eastern, Hispanic/Latino – Guatemalan, Hispanic/Latino – Cuban, Asian – Filipino, White – Eastern European, American Indian/Alaska Native, Hispanic/Latino – Salvadoran, Asian – Cambodian, Native Hawaiian or Other Pacific Islander, Asian – Korean, Asian – Other, Hispanic/Latino – Mexican, Hispanic/Latino – Central American (Other), Hispanic/Latino – Colombian, Caribbean Island, South American, Asian – Japanese, Hispanic/Latino – Honduran, Asian – Thai, American Indian/Alaska Native Federally Recognized Tribe
+[^religion]: Catholic, unspecified/unobtainable/missing, Protestant Quaker, Jewish, other, Episcopalian, Greek Orthodox, Christian Scientist, Buddhist, Muslim, Jehovah's Witness, Unitarian-Universalist, 7th Day Adventist, Hindu, Romanian Eastern Orthodox, Baptist, Hebrew, Methodist, Lutheran
+[^marital]: married, single, widowed, divorced, unknown/missing, separated, life partner
+[^insurance]: Medicare, private, Medicaid, povernment, self pay
 
 ### Mexican Department of Health
 
-The Mexican Department of Health (MXDH) has released official open-access data containing an assortment of patient-level clinical variables related to COVID-19 infection and outcomes. These data have been compiled into a database and made freely available on Kaggle[^kaggle], a collaborative data science platform, where they are maintained and updated regularly. The database includes information regarding over 724,000 patients confirmed to be COVID-positive via diagnostic laboratory testing. Two main types of information are present for each patient: (1) temporal data, and (2) categorical or binary variables. The temporal data consist of key dates associated with the clinical course of infection such as date of symptom onset, date of admission to a healthcare institution, and date of death (if applicable). The categorical or binary fields encode clinical factors likely to be associated with COVID-19 infection, severity, or outcome. These variables include information such as sex, state of patient residence, and intubation status, as well as binary fields encoding the presence or absence of a wide variety of comorbidities such as asthma, hypertension, cardiovascular disease. (For a full description of each field included in the data set, see Kaggle.*) Though these variables are categorical rather than continuous/numeric, there are sufficiently many of them (~50) to distinguish between many phenotypic subtypes of COVID-19 patients. Further, this data set is very complete in that every patient is required to contain a valid value for every field, which minimizes concerns around missing data.
+The Mexican Department of Health (MXDH) has released official open-access data containing an assortment of patient-level clinical variables related to COVID-19 infection and outcomes. These data have been compiled into a database and made freely available on Kaggle[^kaggle], a collaborative data science platform. The data we obtained includes information regarding over 724,000 patients confirmed to be COVID-positive via diagnostic laboratory testing. Two main types of information are present for each patient: (1) dates, and (2) categorical or binary variables. The former are dates associated with key moments in the clinical course of infection such as symptom onset, admission to a healthcare institution, and death (if applicable). The categorical and binary fields encode clinical factors likely to be associated with COVID-19 infection, severity, or outcome. These variables include information such as sex, state of patient residence, and intubation status, as well as binary fields encoding the presence or absence of a wide variety of comorbidities such as asthma, hypertension, cardiovascular disease. (For a full description of each field included in the data set, see Kaggle.*) Though these variables are categorical rather than continuous/numeric, there are sufficiently many of them ($\approx 50$) to potentially distinguish between many patient phenotypes. Further, this data set is very complete in that every patient is required to contain a valid value for every field, which minimizes concerns around missing data.
 
 [^kaggle]: <https://www.kaggle.com/lalish99/covid19-mx>
 
@@ -557,9 +578,10 @@ We hypothesized that, as measured by the fraction of their parameter ranges, the
 ### Spherical sample with variable density
 -->
 
-We compared the suitability of three landmarking procedures (uniformly random, maxmin, lastfirst) on datasets with varying density and duplication patterns by extending an example of @deSilva2004. Each expriment proceeded as follows: We sampled $n=540$ points from the sphere $\Sph^2\subset\R^3$ and selected $k=12$ landmark points. We then used the landmarks to compute PH and recorded the statistics $R_0,R_1,K_0,K_1$ as defined by @deSilva2004. From these statistics we compute the _relative dominance_ $(R_1 - R_0) / K_0$ and _absolute dominance_ $(R_1 - R_0) / K_1$ of the last interval over which all Betti numbers are correctly calculated.
+We compared the suitability of three landmarking procedures (uniformly random, maxmin, lastfirst) on datasets with varying density and duplication patterns by extending an example of @deSilva2004. Each expriment proceeded as follows: We sampled $n=540$ points from the sphere $\Sph^2\subset\R^3$ and in different experiments selected $k=12,36,60$ landmark points. We then used the landmarks to compute PH and computed the _relative dominance_ $(R_1 - R_0) / K_0$ and _absolute dominance_ $(R_1 - R_0) / K_1$ of the last interval over which all Betti numbers agreed with those of $\Sph^2$.
+These statistics provide an indication of how successfully PH recovered the homology of the manifold from which the points were sampled.
 
-The points $x=(r,\theta,\phi)$ were sampled using four procedures: uniform sampling, skewed sampling, uniform sampling with skewed boosting, and skewed sampling with skewed boosting. The first procedure was used by @deSilva2004 and here serves as a baseline case. For a sample $S$ (with multiplicities) generated from each of the other three procedures, the expected density $\lim_{\eps\to 0}\lim_{n\to\infty}\frac{1}{n}\abs{\{x=(r,\theta,\phi)\in S\mid \alpha-\eps<\phi<\alpha+\eps\}}$ of points near a given latitude $\alpha\in[0,\pi]$ is proportional to the quartic function $p:[0,1]\to[0,1]$ defined by $p(x)=(\frac{\phi}{\pi})^4$.
+The points $x=(r,\theta,\phi)$ were sampled using four procedures: uniform sampling, skewed sampling, uniform sampling with skewed boosting, and skewed sampling with skewed boosting. The first procedure was used by @deSilva2004 and here serves as a baseline. For a sample $S$ (with multiplicities) generated from each of the other three procedures, the expected density $\lim_{\eps\to 0}\lim_{n\to\infty}\frac{1}{n}\abs{\{x=(r,\theta,\phi)\in S\mid \alpha-\eps<\phi<\alpha+\eps\}}$ of points near a given latitude $\alpha\in[0,\pi]$ is proportional to the quartic function $p:[0,1]\to[0,1]$ defined by $p(x)=(\frac{\phi}{\pi})^4$.^[Should this be analytically shown or confirmed using large samples?]
 Skewed sampling is performed via rejection sampling: Points $x_i=(r_i,\theta_i,\phi_i)$ are sampled uniformly and rejected at random if a uniform random variable $t_i\in[0,1]$ satisfies $(\frac{\phi_i}{\pi})^\alpha<t_i$ until $n$ points have been kept [@Diaconis2013].
 Skewed boosting is performed by first obtaining a (uniform or skewed) sample $T$ of size a fraction $\frac{n}{6}$ of the total, then sampling $n$ points (with replacement) from $T$ using the probability mass function satisfying $P(x_i)\propto(\frac{\phi_i}{\pi})^\beta$.
 When performed separately, skewed sampling and skewed boosting use $\alpha=\beta=4$; when performed in sequence, they use $\alpha=\beta=2$.
@@ -567,10 +589,10 @@ When performed separately, skewed sampling and skewed boosting use $\alpha=\beta
 The landmark points were selected in three ways: uniform random selection (without replacement), the maxmin procedure, and the lastfirst procedure.
 We computed PH in Python GUDHI, using three implementations: Vietoris–Rips (VR) filtrations on the landmarks, alpha complexes on the landmarks, and witness complexes on the landmarks with the full sample as witnesses [@Maria2021; @Rouvreau2021; @Kachanovich2021].
 
-The skewed data sets are dense (or multiple) at the south pole and sparse (or singular) at the north pole. We expect lastfirst to be more sensitive to this variation and place more landmarks toward the south. As measured by dominance, therefore, we hypothesized that lastfirst would be competitive with maxmin when samples are uniform and inferior to maxmin when samples are skewed.
+The skewed data sets are dense at the south pole and sparse at the north pole. We expect lastfirst to be more sensitive to this variation and place more landmarks toward the south. As measured by dominance, therefore, we hypothesized that lastfirst would be competitive with maxmin when samples are uniform and inferior to maxmin when samples are skewed.
 Put differently, we expected lastfirst to better reject the homology of $\Sph^2$, i.e. to detect the statistical void at the north pole.
 
-Figure\nbs\ref{fig:sphere} compares the relative dominance of the shperical homology groups in each case.
+Figure\nbs\ref{fig:sphere} compares the relative dominance of the spherical homology groups in each case.
 When PH is computed using VR or alpha complexes, maxmin better recovers the homology of the sphere except on uniform samples, while lastfirst and random selection better detect the void.
 Random selection is usually better than lastfirst selection at detecting this void when samples are non-uniform, which indicates that lastfirst selection still oversamples from less dense regions.
 Lastfirst and maxmin perform similarly when PH is computed using witness complexes.
@@ -586,7 +608,7 @@ Relative dominance of the spherical homology groups in the persistent homology o
 ## Covers and nerves
 
 Cardinality reduction techniques can be used to model a large number of cases represented by a large number of variables as a smaller number of clusters with similarity or overlap relations among them.
-The deterministic sampling procedures maxmin and lastfirst provide clusters (cover sets) defined by proximity to the landmark cases and relations defined by their overlap.
+The deterministic maxmin and lastfirst procedures provide clusters (cover sets) defined by proximity to the landmark cases and relations defined by their overlap.
 The clusters obtained by these procedures occupy a middle ground between the regular intervals or quantiles commonly used to cover samples from Euclidean space and the emergent clusters obtained heuristically by penalizing between-cluster similarity and rewarding within-cluster similarity.
 The maxmin procedure produces cover sets of (roughly) fixed radius, analogous to overlapping intervals of fixed length, while the lastfirst procedure produces cover sets of fixed size, analogous to the quantiles of an adaptive cover.
 This makes them natural solutions to the task of covering an arbitrary finite metric space that may or may not contain important geometric or topological structure [@Singh2007].
@@ -603,7 +625,7 @@ We evaluated the procedures in three ways:
 
 We hypothesized that lastfirst covers would exhibit less overlap than maxmin covers by virtue of their greater sensitivity to local density, and that they would outperform maxmin covers at risk prediction by reducing the sizes of cover sets in denser regions of the data (taking advantage of more homogeneous patient cohorts).
 
-Figure\nbs\ref{fig:cover-mimic} presents the sizes of the nerves of the covers and the two evaluation statistics as functions of the number of landmarks.
+Figure\nbs\ref{fig:cover-mimic} presents, for the analysis of the five MIMIC-III care units, the sizes of the nerves of the covers and the two evaluation statistics as functions of the number of landmarks.
 The numbers of 1- and of 2-simplices grew at most roughly quadratically and roughly cubically, respectively. This suggests that the densities of the simplicial complex models were at most roughly constant, regardless of the number of landmarks.
 Landmark covers grew fuzzier and generated more accurate predictions until the number of landmarks reached around 60, beyond which point most covers grew crisper while performance increased more slowly (and in one case decreased). This pattern held for covers with any fixed multiplicative extension.
 Naturally, these extensions produced fuzzier clusters, but they also reduced the overall accuracy of the predictive model.
@@ -623,10 +645,10 @@ Right: the modified partition coefficient (MPC) and the c-statistic of the risk 
 \end{figure}
 
 Figure\nbs\ref{fig:cover-mx} presents the same evaluations for covers of the MXDH data.
-In contrast to the MIMIC experiments, lastfirst-based nerves of the MXDH data grow sub-polynomially and are significantly sparser than maxmin-based nerves.
-Lastfirst covers tend to be crisper, especially as the number of landmarks and the extension factors increase.
-This indicates that the nearest neighborhoods form a more parsimonious cover of the data than the centered balls.
-The predictive accuracies of the maxmin- and lastfirst-selected cover-based models converge with increasing landmarks^[We should increase the maximum number of landmarks to be sure.], though for smaller numbers different selection procedures perform best for different outcomes.
+In contrast to the MIMIC experiments, lastfirst-based nerves of the MXDH data grew sub-polynomially and were significantly sparser than maxmin-based nerves.
+Lastfirst covers tended to be crisper, especially as the number of landmarks and the extension factors increased.
+This indicates that the nearest neighborhoods formed a more parsimonious cover of the data than the centered balls.
+The predictive accuracies of the cover set–based models converged with increasing numbers of landmarks^[We should increase the maximum number of landmarks to be sure.], though for smaller numbers different selection procedures performed best for different outcomes.
 
 \begin{figure}
 \includegraphics[width=.5\textwidth]{../figures/cover-simplices-mx}
@@ -716,8 +738,8 @@ Additionally, in the case of MXDH, neither landmark selection procedure produced
 A possible explanation for the stronger performance of maxmin on MIMIC is that the data did not exhibit very strongly the patterns for which the lastfirst procedure is designed to account, namely variation in density and multiplicity.
 As a result, the RT-similarity measure is in fact meaningful across the population: Whatever the baseline presentation of a patient, rather than a cohort of similar patients of some fixed size, their prognosis would be better guided by a cohort cut off at a fixed minimum similarity (or maximum distance).
 This suggests that the use of personalized cohorts to improve predictive modeling, as employed by @Lee2015, may be strengthened by optimizing a fixed similarity threshold rather than a fixed cohort size.
-It is worth noting that @Park2006 reached a similar conclusion.
 In contrast, this stronger performance was not evident on MXDH, which contained fewer variables and as a result exhibited many more occurrences of duplication.
+It is worth noting that @Park2006, to our knowledge the only other investigators who have compared predictive models based on cohorts bounded by a radius versus a cardinality, reached a similar conclusion.
 
 Another way to think about these results is in terms of a balance between relevance and pwoer, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
 With sufficiently rich data, relevance can be more precisely measured and becomes more important to cohort definition, as with MIMIC.
