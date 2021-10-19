@@ -40,40 +40,19 @@ More elaborate TDA techniques combine both maneuvers, often through the use of c
 
 In this paper, we develop a landmark sampling procedure complementary to maxmin, based on the rankings of points by a distance or similarity measure rather than on the raw values of such a measure. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting this procedure from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods. We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}. In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
 
-## Conventions
+## Maxmin
 
-$(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\R_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
-$(X,d_X)$ may be shortened to $X$, and $d_X$ to $d$, when clear from context.
-If $x\neq y$ but $d(x,y)=0$ then $x$ and $y$ are said to be indistinguishable or co-located.
-The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, and the set of distinguishable points of $Y$---or of equivalence classes under co-location---is denoted $\supp{Y}$.
-When $Y,Z\subseteq X$, let $Y\wo Z$ denote the set of points in $Y$ (with multiplicities) that are distinguishable from all points in $Z$. This means that, when defined, $\min_{y\in Y\wo Z,z\in Z}{d(y, z)}>0$.
+The maxmin procedure is defined in Section\nbs\ref{sec:maxmin}.[^maxmin]
+We designed the lastfirst procedure to addresses an issue with maxmin that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases.
+While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common.
 
-We denote the diameter of $Y$ as $D(Y)=\max_{x,y\in Y}{d(x,y)}$, and we write:
-\begin{align*}
-d(Y,Z) &= \min_{y\in Y,z\in Z}{d(y,z)} & D(Y,Z) &= \max_{y\in Y,z\in Z}{(y,z)} \\
-d(x,Y) &= d(\{x\},Y)                   & D(x,Y) &= D(\{x\},Y) \\
-\end{align*}
-If $d(x,y)=d(x,z)\implies y=z$, then $X$ is considered to be in _ego-general position_, even if $d(x,y)=d(z,w)\nimplies \{x,y\}=\{z,w\}$. This is condition implies that $X$ is Hausdorff: $d(x,y)=0\implies x=y$.
-$f:X \to Y$ will denote a morphism of pseudometric spaces, meaning a function (or morphism of sets) that preserves locality in the sense that $d_X(x,y)\geq d_Y(f(x),f(y))$.
-
-We use the ball notation $B_{\eps}(x)$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \mid d(x,y) < \eps \}$.
-We use an overline to also include points exactly distance $\eps$ from $x$: $\cl{B_{\eps}}(x) = \{ y \mid d(x,y) \leq \eps \}$. (While these connote openness and closedness in the discrete topology, every such ball is both open and closed.)
-If $\abs{\cl{B_\eps}(x)}\geq k$ and $\eps'<\eps\implies\abs{\cl{B_\eps'}(x)}<k$, then we say that $N^+_k(x)=\cl{B_\eps}(x)$ is the $k$-nearest neighborhood of $x$. When $X$ is in general position, therefore, $\abs{N_k(x)}=k$.
-
-Throughout, let $N=\abs{X}$.
-For convenience, we assume $0\in\N$.
-We use the notation $[a,b]$ with $a < b$ as shorthand for the arithmetic sequence $(a,a+1,\ldots,b)$ and $a^b$ with $b \in \N$ for the sequence $(a,\ldots,a)$ of length $b$.
-
-## Background
-
-We designed the lastfirst procedure to addresses an issue with the maxmin procedure that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases. These render the finite metric space representation of the data non-Hausdorff. While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common. Because our procedure is motivated by the same practical needs as the maxmin procedure, we begin with a discussion of those needs.
-
-The earliest appearance of the maxmin[^maxmin] procedure of which we are aware is by @deSilva2004. The authors propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use the maxmin procedure, which we define in Section\nbs\ref{sec:maxmin}, as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
-While the procedure improved little upon uniform random selection in most use cases, on some tasks it far outperformed.
+Maxmin has been used recently in topological data analytic settings.
+@deSilva2004 propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
 
 [^maxmin]: This procedure is distinct from many other uses of "maxmin" and related terms.
 
-Subsequent uses of maxmin include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019]. In addition to approximating persistent homology [@deSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
+Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
+In addition to approximating persistent homology [@deSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
 
 ## Motivation
 
@@ -100,15 +79,44 @@ This motivates us to produce a counterpart to the ball cover that we call the _n
 
 In this section we review the maxmin procedure and introduce the lastfirst procedure as a complement to it.
 
+## Conventions
+
+$(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\R_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
+$(X,d_X)$ may be shortened to $X$, and $d_X$ to $d$, when clear from context.
+If $x\neq y$ but $d(x,y)=0$ then $x$ and $y$ are said to be indistinguishable or co-located.
+The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, the set of points co-located with those in $Y$ is denoted $\cl{Y}$, and the set of equivalence classes of $Y$ under co-location is denoted $\supp{Y}$.
+When $Y,Z\subseteq X$, let $Y\wo Z$ denote the set difference $\{x \mid x \in Y \wedge x \notin Z\}$. Then $Y \wo \cl{Z}$ is the set of points in $Y$ (with multiplicities) that are distinguishable from all points in $Z$. This means that, when defined, $\min_{y\in Y\wo \cl{Z},z\in Z}{d(y, z)}>0$.
+
+We denote the diameter of $Y$ as $D(Y)=\max_{x,y\in Y}{d(x,y)}$, and we write:
+\begin{align*}
+d(Y,Z) &= \min_{y\in Y,z\in Z}{d(y,z)} & D(Y,Z) &= \max_{y\in Y,z\in Z}{d(y,z)} \\
+d(x,Y) &= d(\{x\},Y)                   & D(x,Y) &= D(\{x\},Y) \\
+\end{align*}
+If, for any $x,y,z,w \in X$, $d(x,y)=d(z,w) \implies \{x,y\}=\{z,w\}$---that is, if no two pairs of points in $X$ have equal distance---then $X$ is said to be in general position.
+We also say that $X$ is in _ego-general position_ if, for any $x,y,z \in X$, $d(x,y)=d(x,z) \implies y=z$---a weaker condition, since there may exist $w \in X$ for which $d(x,y)=d(z,w)$ but $\{x,y\}\neq\{z,w\}$.^[This terminology is borrowed from graph theory. It is meant to evoke the importance of the common point $x$, the ego, from which both other points, the alters, are distant.]
+Either condition implies that $X$ is Hausdorff ($d(x,y)=0\implies x=y$).
+$f:X \to Y$ will denote a morphism of pseudometric spaces, which we take to be a $1$-Lipschitz map ($d_X(x,y)\geq d_Y(f(x),f(y))$).
+
+We use the ball notation $B_{\eps}(x)$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \mid d(x,y) < \eps \}$.
+We use an overline to also include points exactly distance $\eps$ from $x$: $\cl{B_{\eps}}(x) = \{ y \mid d(x,y) \leq \eps \}$.
+(Every such ball is both open and closed.)
+If $\abs{\cl{B_\eps}(x)} \geq k$ and $\eps'<\eps \implies \abs{\cl{B_{\eps'}}(x)} < k$, then we call $N_k(x) = \cl{B_\eps}(x)$ the $k$-nearest neighborhood of $x$.
+When $X$ is in ego-general position, $\abs{N_k(x)} = k$.
+
+Throughout, let $N=\abs{X}$.
+For convenience, we assume $0\in\N$.
+For $a,b \in \N$ with $a<b$, we use $[a,b]$ to denote the arithmetic sequence $(a,a+1,\ldots,b)$.
+For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $b$.
+
 ## Maxmin procedure
 \label{sec:maxmin}
 
-Maxmin takes as input a proper subset $Y\subset X$ and returns as output a point $x\in X\wo Y$. To build intuition, consider its calculation also with reference to $X$ itself:
+Each step of the maxmin procedure receives a proper subset $L\subset X$ and returns a point $x\in X\wo \cl{L}$. We also define such a step without reference to $L$:
 
-Given $L\subset X$ and $x\in X\wo L$, define the \emph{maxmin sets}
+Given $L\subset X$ and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
 \begin{align*}
-    \maxmin(L) &= \{x\in X\wo L\mid d(x,L) = \max_{y\in X\wo L}{d(y,L)}\} \\
-    \maxmin(X) &= \{x\in X\mid d(x,X\wo\{x\}) = \max_{y\in X}{d(y,X\wo\{y\})}\}
+    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid d(x,L) = \max_{y\in X\wo \cl{L}}{d(y,L)}\} \\
+    \maxmin(X) &= \{x\in X\mid d(x,X \wo \cl{\{x\}}) = \max_{y\in X}{d(y,X \wo \cl{\{y\}})}\}
 \end{align*}
 consisting of \emph{maxmin points}.
 Note that $\maxmin(\,\cdot\,)$ is nonempty and that, when $X$ is in ego-general position, it has cardinality $1$.
@@ -139,36 +147,76 @@ Note that $\maxmin(\,\cdot\,)$ is nonempty and that, when $X$ is in ego-general 
 \end{algorithm}
 
 The \emph{maxmin procedure} for generating a landmark set $L\subseteq X$ proceeds as follows (see Algorithm\nbs\ref{alg:maxmin}):
-First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\cl{B_{\eps}}(\ell)$ minimally cover $X$.
-Choose a first landmark point $\ell_0\in X$. This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and (random selection from) $\minmax(X)$.
-Inductively over $i\in\N$, if ever $i\geq n$ or $d(L,X\wo L)\leq\eps$, then stop.
-Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, again according to a preferred rule.
-If a fixed number $n$ of landmarks was prescribed, then set $\eps=d(L,X\wo L)$; if $\eps$ was prescribed, then set $n=\abs{L}$.
+First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\cl{B_{\eps}}(\ell)$ cover $X$.
+Choose a first landmark point $\ell_0\in X$.
+<!--This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and (random selection from) $\minmax(X)$.-->
+Inductively over $i\in\N$, if ever $i\geq n$ or $d(L,X\wo \cl{L})\leq\eps$, then stop.
+Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, according to a preferred selection procedure (discussed below).
+If a fixed number $n$ of landmarks was prescribed, then set $\eps=\eps(n)=d(L,X\wo \cl{L})$; if $\eps$ was prescribed, then set $n=n(\eps)=\abs{L}$.
+Write $\mathcal{B}_\eps(\ell_0)=\{\cl{B_{\eps}(\ell_i)}\}_{i=0}^{n}$ for the resulting \emph{landmark cover of $X$}.
 
 We will write the elements of landmark sets $L=\{\ell_0,\ldots,\ell_{n-1}\}$ in the order in which they were generated.
-Note that, if $n=\uniq{X}$ or $\eps=0$, then $L=\supp{X}$.
+Note that, if $n=\uniq{X}$ or $\eps=0$, then $\cl{L}=X$.
 When the procedure stops, $X=\bigcup_{i=0}^{n-1}{\cl{B_{\eps}}(\ell_i)}$.
-This cover is minimal in the sense that both the removal of any $\cl{B_\eps}(\ell_i)$ and any decrease in $\eps$ will yield a collection of sets that fail to cover $X$.^[We have not investigated whether or when a landmark cover set is a minimal cover.]
-More generally, a non-minimal cover can be obtained by specifying both $n$ and $\eps$ in a compatible way. In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters implemented in our software package that make these choices easier.
+This cover is not, in general, a minimal cover, but it is a minimal landmark cover in the sense thta the removal of any $\cl{B_\eps}(\ell_i)$ and any decrease in $\eps$ will yield a collection of sets that fail to cover $X$.
+A "thickened" cover can be obtained by specifying both $n$ and $\eps$ in such a way that $n \geq n(\eps)$ and $\eps \geq \eps(n)$.
+In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters implemented in our software package that make these choices easier.
 
-## Lastfirst procedure
+### Selection procedures
 
-The lastfirst procedure is defined analogously to the maxmin procedure, substituting "ego-rank" for the pseudometric $d_X$.
+When $X$ is not in ego-general position, the choice of selection procedure from among the maxmin set is consequential.
+For simplicity, let $\maxmin(L;X)$ take the value $\varnothing$ if $\cl{L}=X$ and the value $X$ if $L=\varnothing$.
+Then write $\graph{\maxmin, X} \subset \order{X} \times \power{X}$ for the graph of the unary function $\maxmin(\,\cdot\,;X): \order{X} \to \power{X}$.
+Then a selection procedure is a function $\sigma: \graph{\maxmin, X} \to X$ subject to $\sigma((L,\Gamma)) \in \Gamma = \maxmin(L;X)$.
+Importantly, $\sigma$ may depend not only on the maxmin set $\Gamma$ but also on the ordered sequence $L$.
 
-### Ego-ranks
+We assume the following choice of $\sigma$:
+Take $d_L = \max_{y \in X \wo \cl{L}}{d(y,L)}$.
+For each $y \in \maxmin(L;X)$, choose $\ell_y \in L$ for which $d(y,\ell_y) = d_L$.
+Then take $\maxmin^{(1)}(L;X) = \{y \in \maxmin(L;X) \mid d(y,L \wo \{\ell_y\}) = \max_{z \in \maxmin(L;X)}{d(z,L \wo \{\ell_z\})}\}$.
+While $\abs{\maxmin^{(j)}(L;X)} > 1$, continue in this way until either a singleton is reached or $j=\abs{L}=i$.
+If the latter, then the choice $\sigma$ is arbitrary among the remaining $y$.
 
-Ego-rank is an adaptive notion of distance with respect to nearest neighborhoods.[^ego-rank] It relies on the underlying pseudometric $d_X$ but takes values in $\N$ given by the ordinal of one point's distance from another.
+## Ego-ranks
 
-[^ego-rank]: As used here, ego-rank is distinct from the _rank-distance_ between permutations, which is used to define rank correlation coefficients, and from the _ordinal distance_ proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.
+Ego-stances are a much more general notion of metric that encompasess ranks in nearest neighborhoods.
 
-\begin{definition} (ego-rank)
-    For $x,y\in X$, define the \textit{ego-rank} $q_X : X \times X \longrightarrow \N$ as follows:
-    \begin{equation*}
-        q_X(x,y)=\abs{\{z\in X\mid d_X(x,z)<d_X(x,y)\}}+1%>
-    \end{equation*}
+<!--As used here, ego-rank is unrelated to the _rank-distance_ between permutations, which is used to define rank correlation coefficients, and from the _ordinal distance_ proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.-->
+
+\begin{definition}[ego-stance]
+    An \emph{ego-stance} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
+    \begin{equation}\label{eqn:ego-stance}
+        d(x,x) \leq d(x,y) for all x,y \in X
+    \end{equation}
 \end{definition}
 
-As with $d$, we allow ourselves to write $q=q_X$ when clear from context. Note that $q(x,x)=1$ and $q(x,y)\leq N$, and that $q$ is not, in general, symmetric (or, therefore, a pseudometric).^[Yara: These images might be made larger, with less or no transparency.]
+Ego-stances can be used as the basis for a much more general maxmin procedure, taking care in particular to account for asymmetry.
+
+\begin{definition}[maxmin under an ego-stance]
+Given an ego-stance $q$ on $X$, write
+\begin{align*}
+    q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
+    q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
+    q(Y,x) &= q(Y,\{x\})                   & Q(x,Y) &= Q(Y,\{x\}) \\
+\end{align*}
+Given $L\subset X$, and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
+\begin{align*}
+    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid q(L,x) = \max_{y\in X\wo \cl{L}}{q(L,y)}\} \\
+    \maxmin(X) &= \{x\in X\mid q(X \wo \cl{\{x\}},x) = \max_{y\in X}{q(X \wo \cl{\{y\}},y)}\}
+\end{align*}
+consisting of \emph{maxmin points}.
+\end{definition}
+
+A pseudometric $d_X$ induces an ego-stance that we call the ego-rank, which takes values in $\N$ given by the ordinal of one point's distance from another.
+
+\begin{definition}[ego-rank]
+    For $x,y\in X$ with pseudometric $d$, define the \emph{ego-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
+    \begin{equation}\label{eqn:ego-rank}
+        q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
+    \end{equation}
+\end{definition}
+
+As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. Note that $q(x,x)=0$, that $q(x,y) = 0$ when $d(x,y) = 0$, and that $q(x,y) < N$.
 
 \begin{example}\label{ex:ego-rank}
     Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
@@ -189,73 +237,95 @@ As with $d$, we allow ourselves to write $q=q_X$ when clear from context. Note t
 
     Lack of symmetry of $q$ is shown by points $b$ and $c$ :
     \begin{align*}
-        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} + 1 &
-        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} + 1 \\
-               &= \abs{\{a, b\}} + 1 &&= \abs{\{b, c, d\}} + 1 \\
-               &= 3 &&= 4
+        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} &
+        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} \\
+               &= \abs{\{a, b\}} &&= \abs{\{b, c, d\}} \\
+               &= 2 &&= 3
     \end{align*}
 
-    Observe in particular that $\max_{x\in X}{q(a,x)}=3<\abs{X}$; $q(x,\,\cdot\,)$ will not max out at $N$ when the most distant points from $x$ have multiplicity.
+    Observe in particular that $\max_{x\in X}{q(a,x)}=2<\abs{X}-1$; $q(x,\,\cdot\,)$ will not max out at $N-1$ when the most distant points from $x$ have multiplicity.
 
-    However, $q(x,x) = 1$ whether $x$ has multiplicity or not:
+    However, $q(x,x) = 0$ whether $x$ has multiplicity or not:
     \begin{align*}
-        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} + 1 &
-        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} + 1 \\
-               &= \abs{\varnothing} + 1 &&= \abs{\varnothing} + 1 \\
-               &= 1 &&= 1
+        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} &
+        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} \\
+               &= \abs{\varnothing} &&= \abs{\varnothing} \\
+               &= 0 &&= 0
     \end{align*}
 \end{example}
 
-We term the unary rankings $q(x,\,\cdot\,)$ and $q(\,\cdot\,,x)$ the \emph{out- (from $x$)} and \emph{in- (to $x$) rankings} of $X$, respectively. These can then be used to define \textit{out-} and \textit{in-neighborhoods} of $x$.[^out-in]
+We term the unary rankings $q(x,\,\cdot\,)$ and $q(\,\cdot\,,x)$ the \emph{out- (from $x$)} and \emph{in- (to $x$) rankings} of $X$, respectively.[^out-in]
+These can be used to define \emph{out-} and \emph{in-neighborhoods} of $x$.
 
-[^out-in]: The terminology and notation are adapted from the theory of directed graphs. These definitions are the same as those for a complete directed graph on $X$ with directed arcs $x\to y$ weighted by ego-rank $q(x,y)$.
+[^out-in]: The terminology and notation are also adapted from graph theory. These definitions are the same as those for a complete directed graph on $X$ with directed arcs $x\to y$ weighted by ego-rank $q(x,y)$.
 
-\begin{definition} ($k$-neighborhoods)
+\begin{definition}[$k$-neighborhoods]
     For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
     \begin{align*}
         & N^+_k(x)=\{y\in X\mid q(x,y)\leq k\} \\
         & N^-_k(x)=\{y\in X\mid q(y,x)\leq k\}
     \end{align*}
+    Given a subset $Y \subseteq X$, we also define
+    \begin{align*}
+        & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
+        & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
+    \end{align*}
 \end{definition}
 
-Note that $\varnothing \subseteq N^\pm_1(x) \subseteq \cdots \subseteq  N^\pm_N(x) = X$.
-The $k$-out-neighborhoods of $x$ are the sets of points in $X$ that have ego-rank at most $k$ from $x$. This is equivalent to the $k$-nearest neighbors of $x$. The $k$-in-neighborhoods of $x$ are the sets of points in $X$ from which $x$ has ego-rank at most $k$.
-These definitions can be adapted as follows to be relative to a subset $Y \sub X$, using the notation $q_X$ to emphasize that the points in $X\wo (Y\cup\{x\})$ are still involved in the calculation:
-
-\begin{align*}
-    & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
-    & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
-\end{align*}
+Note that $[\{x\}] = N^\pm_0(x) \subseteq \cdots \subseteq  N^\pm_{N-1}(x) = X$.
+The $k$-out-neighborhoods of $x$ are the $k$-nearest neighbors of $x$, i.e. the sets of points in $X$ that have ego-rank at most $k$ from $x$.
+The $k$-in-neighborhoods of $x$ are the sets of points in $X$ from which $x$ has ego-rank at most $k$.
 
 \begin{example}\label{ex:rank-neighborhoods}
 Consider the same $X$ as in Example\nbs\ref{ex:ego-rank}. Compute $N_k^+$ and $N_k^-$ for $a$ and $c$, using $k = 3$:
 \begin{align*}
-    N_3^+ (a) &= \{x \in X \mid q(a,x) \leq 3\} &
-    N_3^+ (c) &= \{x \in X \mid q(c,x) \leq 3\} \\
+    N_3^+ (a) &= \{x \in X \mid q(a,x) \leq 2\} &
+    N_3^+ (c) &= \{x \in X \mid q(c,x) \leq 2\} \\
     &= \{a, b, c, d\} &
     &= \{b, c, d\} \\
     \\
-    N_3^- (a) &= \{x \in X \mid q(x,a) \leq 3\} &
-    N_3^- (c) &= \{x \in X \mid q(x,c) \leq 3\} \\
+    N_3^- (a) &= \{x \in X \mid q(x,a) \leq 2\} &
+    N_3^- (c) &= \{x \in X \mid q(x,c) \leq 2\} \\
     &= \{a, b\} &
     &= \{a, b, c, d\}
 \end{align*}
 \end{example}
 
-Ego-ranks are not as straightforward to compare among subsets of points. For example, for $y\neq x$, $q(x,y)$ takes integer values between $\cl{B_0}(x)+1$ and $N$. To explain and motivate their use, we now intuitively adapt the minmax and maxmin procedures to this setting, then state and prove a formal definition for their analogs.
+\begin{remark}
+If $\abs{N^\pm_k(x)} = n_k$, then $\abs{N^\pm_k(x,X\wo\{x\})} = n_k - 1$.
+\end{remark}
+
+Ego-ranks are not as straightforward to compare among subsets of points. For example, for $y\neq x$, $q(x,y)$ takes integer values between $\abs{\supp{\{x\}}}$ and $N-1$. To explain and motivate their use, we attempt to intuitively adapt the maxmin procedure to this setting, then state and prove a formal definition for their analogs.
+
+## Lastfirst procedure
+
+The lastfirst procedure is defined analogously to the maxmin procedure, substituting "ego-rank" for the pseudometric $d_X$.
 
 ### Rank sequences and landmark selection
 
-Consider the case of choosing the next landmark point given a subset $L=\{\ell_0,\ldots,\ell_{i-1}\}\subset X$ of collected landmark points. For a ball cover, we choose $\ell_i\in X\wo L$ so that the \emph{minimum radius $\eps$} required for some $B_\eps(\ell_j)$ to contain $\ell_i$ is \emph{maximized}.
+<!--
+Consider the case of choosing the next landmark point given a subset $L=\{\ell_0,\ldots,\ell_{i-1}\}\subset X$ of collected landmark points. For a ball cover, we choose $\ell_i\in X\wo \cl{L}$ so that the \emph{minimum radius $\eps$} required for some $B_\eps(\ell_j)$ to contain $\ell_i$ is \emph{maximized}.
 If $X$ is in general position, the choice of $\ell_i$ will be unique; otherwise, $\ell_i$ can be chosen at random from the subset of $X$ that satisfies this criterion.
-Analogously, for a neighborhood cover, we want that the \emph{minimum cardinality $k$} required for some $N^+_k(\ell_j)$ to contain $\ell_i$ is \emph{maximized}. Switching perspective from out- to in- and reversing the roles of $L$ and $\ell_i$, we want $N^-_k(\ell_i,L)=0$ for the latest (largest) $k$ possible, say $k^-_0$.
-When indistinguishable points abound, this may still not uniquely determine $\ell_i$, so we may extend the principle: Among those $\ell\in X\wo L$ for which $N^-_{k^-_0}(\ell_i,L)=0$, choose $\ell_i$ for which $N^-_{k}(\ell_i,L) \leq 1$ for the latest $k$ possible, say $k^-_1 \geq k^-_0$.
+Analogously, for a neighborhood cover, we want that the \emph{minimum cardinality $k$} required for some $N^+_k(\ell_j)$ to contain $\ell_i$ is \emph{maximized}.
+-->
+
+Maxmin is a heuristic, iterative procedure used to select a well-dispersed subset of points from $X$, where dispersion is understood in terms of the interpoint distances of this subset.
+At each step, landmarks $L = \{\ell_0, \ldots, \ell_{i-1}\}$ having been selected, the next point $\ell_i$ is selected to maximize its minimum distance $d(\ell_j,\ell_i)$ from the $\ell_j$, $0 \leq j < 1$.
+Equivalently, $\ell_i \in X \wo L$ is selected so that the minimum radius $\eps$ required for $\ell_i \in \bigcup_{j=0}^{i-1}{\cl{B_\eps}(\ell_j)}$ is maximized.
+This is a useful heuristic for constructing a ball cover $\mathcal{B} = \{\cl{B_\eps}(\ell_j) \mid 0 \leq j < n\}$ centered at a highly mutually distant set of landmarks.
+
+We desire to construct a neighborhoodcover $\mathcal{N} = \{N^+_k(\ell_j) \mid 0 \leq j < n\}$ whose centers are analogously dispersed.
+Suppose $\ell_i$ is selected so that the minimum $k$ required for $\ell_i \in \bigcup_{j=0}^{i-1}{N_k(\ell_j)}$ is maximized.
+This is equivalent to maximizing the minimum ego-rank $q(\ell_j,\ell_i)$ of $\ell_i$ from any $\ell_j$.
+Switching perspective from out- to in- and reversing the roles of $L$ and $\ell_i$, we want $N^-_k(\ell_i,L)=0$ for the latest (largest) $k$ possible, say $k^-_0$.
+When indistinguishable points abound, this may still not uniquely determine $\ell_i$, so we may extend the principle: Among those $\ell\in X\wo \cl{L}$ for which $N^-_{k^-_0}(\ell_i,L)=0$, choose $\ell_i$ for which $N^-_{k}(\ell_i,L) \leq 1$ for the latest $k$ possible, say $k^-_1 \geq k^-_0$.
 (It is possible that $k^-_1 = k^-_0$, in which case no $N^-_k(\ell_i,L) = 1$.)
 Continue this process until only one candidate $\ell$ remains (up to multiplicity), or until $N^-_{k}(\ell,L)=\abs{L}$, in which case all remaining candidates may be considered equivalent.
 
+<!--
 We formalize this procedure, and a companion procedure without reference to $L$, by defining a sequence of neighborhood sizes that encodes the optimized cardinalities $k_i$.
 
-\begin{definition}\label{def:rank-sequence} (Rank sequences)
+\begin{definition}[rank sequences]\label{def:rank-sequence}
     For $x \in X$ and $Y\subset X$, define the \emph{out-rank} ($Q^+$) and \emph{in-rank} ($Q^-$) \emph{sequences} of $k$-neighborhood cardinalities:
     \begin{align*}
         Q^\pm(x) &= (\abs{N^\pm_k(x)})_{k=1}^N &
@@ -264,31 +334,28 @@ We formalize this procedure, and a companion procedure without reference to $L$,
 \end{definition}
 
 \begin{remark}
-If $Q^\pm(x) = (Q_1, \ldots, Q_N)$, then $Q^\pm(x, X \wo \{x\}) = (Q_1 - 1, \ldots, Q_N - 1)$.
-\end{remark}
-
-\begin{remark}
 Taking the $k^\pm_i$ as defined above,
 \begin{align*}
     Q^+(x,L) &= (k^+_1-1, k^+_2-k^+_1, \ldots, k^+_{\abs{L}}-k^+_{\abs{L}-1}, \abs{L}) \\
     Q^-(x,L) &= (0^{k^-_0}, 1^{k^-_1-k^-_0}, \ldots, {(\abs{L}-1)}^{k^-_{\abs{L}-1}-k^-_{\abs{L}-2}}, {\abs{L}}^{N-k^-_{\abs{L}-1}})
 \end{align*}
 \end{remark}
+-->
 
-An example of this computation is shown in Example\nbs\ref{ex:rank-sequence}.
+Example\nbs\ref{ex:rank-sequence} illustrates these computations.
 
 \begin{example}\label{ex:rank-sequence}
-Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_k^+$ and $N_k^-$ to obtain $Q^+$ and $Q^-$ for $a$ and $c$:
+Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\bullet^+$ and $N_\bullet^-$ for $a$ and $c$:
 \begin{align*}
-    Q^+ (a) &= (\abs{N^+_1(a)}, \abs{N^+_2(a)}, \abs{N^+_3(a)}, \abs{N^+_4(a)}) &
-    Q^+ (c) &= (\abs{N^+_1(c)}, \abs{N^+_2(c)}, \abs{N^+_3(c)}, \abs{N^+_4(c)}) \\
+    N_\bullet^+ (a) &= (\abs{N^+_0(a)}, \abs{N^+_1(a)}, \abs{N^+_2(a)}, \abs{N^+_3(a)}) &
+    N_\bullet^+ (c) &= (\abs{N^+_0(c)}, \abs{N^+_1(c)}, \abs{N^+_2(c)}, \abs{N^+_3(c)}) \\
     &= (\abs{\{a\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
     &= (\abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
     &= (1, 2, 4, 4) &
     &= (2, 2, 3, 4) \\
     \\
-    Q^- (a) &= (\abs{N^-_1(a)}, \abs{N^-_2(a)}, \abs{N^-_3(a)}, \abs{N^-_4(a)}) &
-    Q^- (c) &= (\abs{N^-_1(c)}, \abs{N^-_2(c)}, \abs{N^-_3(c)}, \abs{N^-_4(c)}) \\
+    N_\bullet^- (a) &= (\abs{N^-_0(a)}, \abs{N^-_1(a)}, \abs{N^-_2(a)}, \abs{N^-_3(a)}) &
+    N_\bullet^- (c) &= (\abs{N^-_0(c)}, \abs{N^-_1(c)}, \abs{N^-_2(c)}, \abs{N^-_3(c)}) \\
     &= (\abs{\{a\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
     &= (\abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) \\
     &= (1, 2, 2, 4) &
@@ -296,21 +363,31 @@ Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_k
 \end{align*}
 \end{example}
 
-\begin{definition} (Total orders on rank sequences)
+\begin{definition}[total orders on rank sequences]
     Let $a_n = (a_1,\ldots,a_M),b_n = (b_1,\ldots,b_M)\in\N^M$.
     Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i, a_i > b_i \wedge (\forall j<i, a_j = b_j)$.
 \end{definition}
 
-Impose the revlex order on the $Q^+$ and $Q^-$ to emphasize the sizes of smaller neighborhoods.
+Impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$ to emphasize the sizes of smaller neighborhoods.
 Sequences with more large values indicate points with lower ego-ranks to or from more other points.
 
-We now define counterparts to the minmax and maxmin procedures using these totally ordered sequences.
+We now define counterparts to the minmax and maxmin procedures to be used with these totally ordered sequences.
 
-\begin{definition}(Firstlast and lastfirst)
+\begin{lemma}
+    Let $q$ be an ego-stance on $X$ with associated neighborhoods $N_\bullet^\pm$.
+    Then, given $Y\subset X$,
+    \begin{align*}
+        \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
+        \maxmin(X,q) &= \{x\in X\mid N_\bullet^-(x,X \wo \cl{\{x\}}) = \max_{y\in X}{N_\bullet^-(y,X \wo \cl{\{y\}}}\}
+    \end{align*}
+\end{lemma}
+
+\begin{definition}[firstlast and lastfirst]
+    Let $d$ be a pseudometric on $X$ with induced ego-rank $q_d$.
     Given $Y\subset X$, define the \emph{lastfirst sets}
     \begin{align*}
-        \lf(Y;X) = \lf(Y) &= \{x\in X\wo Y\mid Q^-(x,Y) = \max_{y\in X\wo Y}{Q^-(y,Y)}\} \\
-        \lf(X) &= \{x\in X\mid Q^-(x,X\wo\{x\}) = \max_{y\in X}{Q^-(y,X\wo\{y\}}\}
+        \lf(Y;X,d) = \lf(Y) &= \maxmin(Y;X,q_d) \\
+        \lf(X,d) &= \maxmin(X,q_d)
     \end{align*}
     consisting of \emph{lastfirst points}.
 \end{definition}
@@ -320,19 +397,19 @@ We now define counterparts to the minmax and maxmin procedures using these total
     \begin{enumerate}
         \item We have
         \begin{align*}
-            Q^+(a,\{b,c,d\}) &= (0,1,3,3) &
-            Q^+(b,\{a,c,d\}) &= (0,1,3,3) \\
-            Q^+(c,\{a,b,d\}) &= (1,1,2,3) &
-            Q^+(d,\{a,b,c\}) &= (1,1,2,3)
+            N_\bullet^+(a,\{b,c,d\}) &= (0,1,3,3) &
+            N_\bullet^+(b,\{a,c,d\}) &= (0,1,3,3) \\
+            N_\bullet^+(c,\{a,b,d\}) &= (1,1,2,3) &
+            N_\bullet^+(d,\{a,b,c\}) &= (1,1,2,3)
         \end{align*}
-        Under the revlex order, $\argmin_{x\in X}{Q^+(x,X\wo\{x\})}=\{c,d\}$, and we arbitrarily select $\ell_0=c$ and $L=\{c\}$.
-        \item For $x \in X \wo L$ we now have
+        Under the revlex order, $\argmin_{x\in X}{N_\bullet^+(x,X \wo \cl{\{x\}})}=\{c,d\}$, and we arbitrarily select $\ell_0=c$ and $L=\{c\}$.
+        \item For $x \in X \wo \cl{L}$ we now have
         \begin{align*}
-            Q^-(a,\{c\}) &= (0,0,0,1) &
-            Q^-(b,\{c\}) &= (0,0,1,1)
+            N_\bullet^-(a,\{c\}) &= (0,0,0,1) &
+            N_\bullet^-(b,\{c\}) &= (0,0,1,1)
         \end{align*}
-        Under the revlex order, $\argmax_{x\in X\wo\{c\}}{Q^-(x,\{c\})}=\{a\}$; we select $\ell_1=a$, so that now $L=\{c,a\}$.
-        \item Only one point remains in $X\wo L=\{b\}$, so the exhaustive landmark set is $\{c,a,b\}$.
+        Under the revlex order, $\argmax_{x\in X \wo \cl{\{c\}}}{N_\bullet^-(x,\{c\})}=\{a\}$; we select $\ell_1=a$, so that now $L=\{c,a\}$.
+        \item Only one point remains in $X\wo \cl{L}=\{b\}$, so the exhaustive landmark set is $\{c,a,b\}$.
     \end{enumerate}
 \end{example}
 
@@ -380,7 +457,7 @@ The reverse implication is similarly straightforward.
     \STATE $R \leftarrow [R, Q_i] \in \N^{N \times (i+1)}$
     \STATE $k_{\min} \leftarrow \max_{r=1}^{N}{ \min_{j=1,i+1}{ R_{r,j} } }$ (minimum $k$ for which neighborhoods centered at $L$ cover $X$)
     \label{line:kmin}
-    \IF{$D(L, X \wo L) = 0$}
+    \IF{$D(L, X \wo \cl{L}) = 0$}
         \STATE \textbf{break}
         \label{line:nonempty}
     \ENDIF
@@ -390,7 +467,7 @@ The reverse implication is similarly straightforward.
     \ENDIF
     \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \N^{N \times (i+1)}$
     \label{line:sort}
-    \STATE $F \leftarrow X \wo L$
+    \STATE $F \leftarrow X \wo \cl{L}$
     \FOR{$j$ from $1$ to $i$}
     \label{line:maximize}
         \STATE $F \leftarrow \{x_r \in F \mid R_{rj} = \max_{r'}{R_{r'j}}\}$
@@ -409,22 +486,22 @@ The reverse implication is similarly straightforward.
 Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
 If $n \leq \uniq{X}$ is given as input and $k$ is not, then $\abs{L} = n$.
 If $n$ and $k$ are both given, then $\abs{L} \geq n$.
-Otherwise, $L$ is minimal in the sense that no proper prefix ({\bfseries subset?}) of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
+Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{proposition}
 
 \begin{proof}
 Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point, as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
-Note that, for the algorithm to terminate its loop and subsequently return $L$, either there must be no points in $X \wo L$ distinguishable from $L$ (line\nbs\ref{line:nonempty}), or both of two exit conditions must hold (line\nbs\ref{line:check}):
+Note that, for the algorithm to terminate its loop and subsequently return $L$, either there must be no points in $X \wo \cl{L}$ distinguishable from $L$ (line\nbs\ref{line:nonempty}), or both of two exit conditions must hold (line\nbs\ref{line:check}):
   (1) $k_{\min} \leq k$ and
   (2) $\abs{L} \geq n$.
 
 Because the seed point is arbitrary, for the main result it is enough to show that, at each step $i$, $F = \lf(\{ \ell_0, \ldots, \ell_{i-1} \})$.
 When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the ego-ranks $q(\ell_i, x_r)$ in increasing order.
-Because $D(L, X \wo L) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
+Because $D(L, X \wo \cl{L}) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
 By Lemma\nbs\ref{lem:revlex-lex}, then, $Q^-(x_r, L)$ is maximized (in revlex) when $R_r$ is maximized in lex, and this is exactly what the loop that begins on line\nbs\ref{line:maximize} does.
 
 Suppose first that $n \leq \uniq{X}$ is given.
-The loop will only break on line\nbs\ref{line:nonempty} if $D(L, X \wo L) = 0$, which is only possible if $\abs{L} = \uniq{X} \geq n$.
+The loop will only break on line\nbs\ref{line:nonempty} if $D(L, X \wo \cl{L}) = 0$, which is only possible if $\abs{L} = \uniq{X} \geq n$.
 The loop will only break on line\nbs\ref{line:check} if both $\abs{L} = i \geq n$ and $k_{\min} \leq k$.
 Since these are the only two possible breaks, $\abs{L} \geq n$ is a necessary condition.
 \footnote{Note that $\abs{L} > n$ if and only if $k_{\min} \leq k$ is not satisfied when $\abs{L} = n$, meaning that $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so that more landmarks must be chosen to guarantee the algorithm produces a valid $k$-neighborhood cover.}
@@ -447,14 +524,14 @@ Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (
 
 ### Tie handling
 
-We might have defined two \textit{ego-ranks} $\check{q}, \hat{q} : X \times X \longrightarrow \N$ ("$q$-check" and "$q$-hat") as follows:
+We might have defined two \emph{ego-ranks} $\check{q}, \hat{q} : X \times X \longrightarrow \N$ ("$q$-check" and "$q$-hat") as follows:
 \begin{align*}
-& \check{q}(x,y)=\abs{\{z\in X\mid d(x,z)<d(x,y)\}}+1 \\%>
-& \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}}
+& \check{q}(x,y)=\abs{\{z\in X\mid d(x,z)<d(x,y)\}} \\%>
+& \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}} - 1
 \end{align*}
 In this notation, $\check{q}=q$, while $\hat{q}(x,y)$ is the cardinality of the smallest ball centered at $x$ that contains $y$.
-Then $\check{N}^\pm_1(x) \subseteq  \{x\} \subseteq \hat{N}^\pm_1(x)$ and $\hat{q}(x,x)>1$ when $x$ has multiplicity.
-The two ego-ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates. For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(1,2,2,4)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(1,3,3,4)$.
+Then $\check{N}^\pm_1(x) \subseteq  \{x\} \subseteq \hat{N}^\pm_1(x)$, and $\hat{q}(x,x)>0$ when $x$ has multiplicity.
+The two ego-ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates. For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(0,1,1,3)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(0,2,2,3)$.
 Indeed, any tie-handling rule could be used, and the choice becomes more consequential with greater multiplicity in the data.
 
 Conceptually, the lastfirst procedure based on $\hat{q}$ would produce landmark sets that yield neighborhood covers with smaller, rather than larger, neighborhoods in regions of high multiplicity.
@@ -492,17 +569,17 @@ Continuing on as in Example\nbs\ref{ex:rank-neighborhoods}, we can compute $\hat
         &= \{a, b\} &&= \{c, d\}
 \end{align*}
 
-Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ to obtain $\hat{Q}^+$ and $\hat{Q}^-$ for $b$ and $c$:
+Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ for $b$ and $c$:
 \begin{align*}
     \hat{Q}^+ (b) &= (\abs{\hat{N}^+_1(b)}, \abs{\hat{N}^+_2(b)}, \abs{\hat{N}^+_3(b)}, \abs{\hat{N}^+_4(b)}) &
-    \hat{Q}^+ (c) &= (\abs{\hat{N}^+_1(c)}, \abs{\hat{N}^+_2(c)}, \abs{\hat{N}^+_3(c)}, \abs{\hat{N}^+_4(c)}) \\
+    \hat{N}_\bullet^+ (c) &= (\abs{\hat{N}^+_1(c)}, \abs{\hat{N}^+_2(c)}, \abs{\hat{N}^+_3(c)}, \abs{\hat{N}^+_4(c)}) \\
         &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
         &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
         &= (1, 2, 2, 4) &
         &= (0, 2, 3, 4) \\
         \\
-    \hat{Q}^- (b) &= (\abs{\hat{N}^-_1(b)}, \abs{\hat{N}^-_2(b)}, \abs{\hat{N}^-_3(b)}, \abs{\hat{N}^-_4(b)}) &
-    \hat{Q}^- (c) &= (\abs{\hat{N}^-_1(c)}, \abs{\hat{N}^-_2(c)}, \abs{\hat{N}^-_3(c)}, \abs{\hat{N}^-_4(c)}) \\
+    \hat{N}_\bullet^- (b) &= (\abs{\hat{N}^-_1(b)}, \abs{\hat{N}^-_2(b)}, \abs{\hat{N}^-_3(b)}, \abs{\hat{N}^-_4(b)}) &
+    \hat{N}_\bullet^- (c) &= (\abs{\hat{N}^-_1(c)}, \abs{\hat{N}^-_2(c)}, \abs{\hat{N}^-_3(c)}, \abs{\hat{N}^-_4(c)}) \\
         &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
         &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}) \\
         &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
@@ -669,9 +746,9 @@ We took this approach to the prediction of in-hospital mortality for patients wi
 We then implemented the following procedure:
 
 <!--Use time series nested cross-validation for the CTD data?-->
-1. Determine a nested $6 \times 6$–fold split for train–fit–test cross-validation. That is, partition $[n] = \bigsqcup_{i=1}^{6}{I_i}$ into roughly equal parts, and partition each $[n] \wo I_i = \bigsqcup_{j=1}^{6}{J_{ij}}$ into roughly equal parts.
+1. Determine a nested $6 \times 6$–fold split for train–fit–test cross-validation. That is, partition $[n] = \bigsqcup_{i=1}^{6}{I_i}$ into roughly equal parts, and partition each $[n] \wo \cl{I_i} = \bigsqcup_{j=1}^{6}{J_{ij}}$ into roughly equal parts.
 2. Iterate the following steps over each $i,j$:
-    a) Generate a sequence $L$ of landmarks from the points $X_{([n] \wo I_i) \wo J_{ij}}$.
+    a) Generate a sequence $L$ of landmarks from the points $X_{([n] \wo \cl{I_i}) \wo \cl{J_{ij}}}$.
     b) Identify the $180$ nearest neighbors $N^+_{180}(\ell)$ of each landmark $\ell$. This was a fixed parameter, chosen for being slightly larger than the optimal neighborhood size in a previous study of individualized models [@Lee2015].
     c) Find the value of $k \in [180]$ and the weighting function $w$ (among those available) for which the predictions $p_L : X_{J_{ij}} \to [0,1]$ maximize the AUROC.
     d) Use the AUROC to evaluate the performance of the predictions $p_L : X_{I_i} \to [0,1]$ using these $k$ and $w$.
