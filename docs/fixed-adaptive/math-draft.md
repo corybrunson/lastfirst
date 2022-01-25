@@ -30,15 +30,19 @@ header-includes:
 Topological data analysis (TDA) is a maturing field in data science, at the interface of statistics, computer science, and mathematics.
 Topology is the discipline at the interface of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
 TDA consists in the use of computational theories of continuity to investigate the shape or structure of data.
-While TDA is most commonly associated with persistent homology (PH) and mapper, it can be understood to encompass and generalize many conventional and even classical techniques, including cluster analysis, network analysis, and nearest neighbors prediction.
+While TDA is most commonly associated with persistent homology (PH) and mapper-like constructions, it can be understood to generalize many conventional and even classical techniques, including cluster analysis, network analysis, and nearest neighbors prediction.
 
-Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of some functions, such as projections or hashes, that nearby cases or points in the domain have nearby images in the codomain. (Continuity, as defined in analysis and topology, is a type of locality preservation.) This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of nearest neighbors prediction and the locally-sensitive hashing used in its implementations. We use the term _cardinality reduction_[^cardinality-reduction], in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of cases or points rather than the number of variables or dimensions used to represent them. Cardinality reduction describes cluster analysis and association (co-occurrence or correlation) network analysis, for example.
+Two basic maneuvers in TDA are locality preservation and cardinality reduction. \emph{Locality preservation} is the property of some functions, such as projections or hashes, that nearby cases or points in the domain have nearby images in the codomain. (Continuity, as defined in analysis and topology, is a type of locality preservation.) This is the defining property of many non-linear dimensionality reduction techniques, including t-SNE and UMAP, but also an asymptotic property of nearest neighbors prediction and the locally-sensitive hashing used in its implementations. We use the term _cardinality reduction_[^cardinality-reduction], in contrast to dimension reduction, to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of units of analysis rather than the number of variables or dimensions used to represent them. For example, cardinality reduction describes cluster analysis, which maps cases to clusters, and association network analysis, which projects incidences or measurements to co-occurrence or correlation relations.
 
 [^cardinality-reduction]: The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@MicciBarreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is that of @ByczkowskaLipinska2017: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction method is data reduction.
 
-More elaborate TDA techniques combine both maneuvers, often through the use of covering methods, as with the approximation of PH through witness complexes [@deSilva2004] or in the mapper construction [@Singh2007]. Covering methods, in turn, can be enhanced by strategic sampling from large data sets [@], as can other proximity-based techniques like nearest neighbors. The maxmin procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection. However, maxmin comes with its own potential limitations in the analysis of data that vary greatly in density or have multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
+More elaborate TDA techniques combine both maneuvers, often through the use of covering methods, as with the approximation of PH through witness complexes [@deSilva2004] or in the mapper construction [@Singh2007]. Covering methods, in turn, can be enhanced by strategic sampling from large data sets [@], as can other distance-based techniques like nearest neighbors. The maxmin sampling procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection. However, maxmin comes with its own limitations in the analysis of data that vary greatly in density or have many multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
 
-In this paper, we develop a landmark sampling procedure complementary to maxmin, based on the rankings of points by a distance or similarity measure rather than on the raw values of such a measure. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting this procedure from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods. We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}. In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
+In this paper, we develop a sampling procedure complementary to maxmin, based on the rankings of points by a distance or similarity measure rather than on their raw values. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting this procedure from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods.
+We work through an extended example that illustrates some common patterns of clinical data and models, how they cause problems for uses of maxmin landmark selection, and how lastfirst selection addresses these problems.
+We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}.
+This technical discussion is accompanied by a small example in $\Z$ that spotlights edge cases and how they are handled, and it is followed by an example that extends the method from 1 to 2 dimensions.
+In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
 
 ## Maxmin
 
@@ -46,33 +50,31 @@ The maxmin procedure is defined in Section\nbs\ref{sec:maxmin}.[^maxmin]
 We designed the lastfirst procedure to addresses an issue with maxmin that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases.
 While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common.
 
-Maxmin has been used recently in topological data analytic settings.
-@deSilva2004 propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of persistent homology: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
+Maxmin has often been used in TDA.
+@deSilva2004 propose witness complexes, later generalized to alpha complexes [@], for the rapid approximation of PH: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
+Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
+In addition to approximating PH, maxmin was used in these cases to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration.
 
 [^maxmin]: This procedure is distinct from many other uses of "maxmin" and related terms.
 
-Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
-In addition to approximating persistent homology [@deSilva2004; @Dlotko2019], maxmin has been used to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration [@Singh2007; @Dlotko2019].
-
 ## Motivation
 
-The ball covers mentioned above have been proposed as an alternative to mapper [@Dlotko2019], where they exchange complexity for computational cost, and the mapper construction itself relies on a crucial covering step that has received limited theoretical attention.
+The ball covers mentioned above have been proposed as an alternative to mapper [@Dlotko2019], where they exchange discretion for computational cost, and the mapper construction itself relies on a crucial covering step that has received limited theoretical attention.
 Conventionally, mappers rely on covers consisting either of overlapping intervals (when the lens is one-dimensional) or of their cartesian products (higher-dimensional).
 For this purpose, we propose that ball covers, heuristically optimized using the maxmin procedure, have a potential advantage over conventional covers, alongside a potential disadvantage.
 
-Conventionally, mappers use low-dimensional lens spaces $\mathbb{R}^p$ and one of two types of cover, based on overlapping intervals either of fixed length or at fixed quantiles [@Piekenbrock2020].
+Conventionally, mappers use low-dimensional lens spaces $\mathbb{R}^p$ and one of two types of cover, based on overlapping intervals either of fixed-length or at fixed quantiles [@; @Piekenbrock2020].
 We think of this length or quantile as the _resolution_ of the cover.
 When $m>1$, covers for $Y\subset\mathbb{R}^m$ can be obtained as the cartesian products of those of the coordinate projections of $Y$---so, if $\pi_1,\pi_2:\mathbb{R}^2\to\mathbb{R}$ are the coordinate projections, then interval covers $\{I_\alpha\}$ and $\{J_\beta\}$ of $\pi_1(Y)$ and $\pi_2(Y)$ give rise to the rectangle cover $\{I_\alpha \times J_\beta\}$ for $Y$.
 While these cover types are manageable in very few dimensions, the number of sets scales geometrically with $p$, holding the resolution fixed.
 Moreover, eventually most of the resulting cover sets will contain no points of $X$, and additional calculations will be needed to restrict to the non-empty sets.
-
 In contrast, a cover obtained by centering balls at a subset of landmark points in $Y$ will have greater up-front computational cost but will be guaranteed to contain no empty sets, and the number of sets required to capture the topology of $Y$ will increase only with the geometric and topological complexity of $Y$, not with $p$. (We test this hypothesis in Section\nbs\ref{sec:experiments}.)
 
-Nevertheless, the maxmin cover requires a meaningful distance metric: the dissimilarity of cases $x$ and $y$ is captured by their distance $d(x,y)$, regardless of where $x$ and $y$ are located in $X$, and the neighborhoods $B_r(x)$ and $B_r(y)$ about landmarks $x$ and $y$ play an equal role in the cover.^[Is there a term for this property, e.g. something being a "universal constant"?]
-This means that cover sets centered at landmarks in sparse regions of $X$ will be more numerous and of lower cardinality than those centered in dense regions.
-The assumption is violated in many real-world settings, including much of biomedicine. For example, in psychometric terms, this would mean that inter-case distance is an \emph{interval}, not only an \emph{ordinal}, variable, so that the distances between cases in a point cloud representation has a definite meaning independent of which cases are considered. This assumption is often made for convenience, but it generally does not follow from theory.
+Moreover, the maxmin cover requires not a coordinatization but only a distance measure: the dissimilarity of cases $x$ and $y$ is captured by their distance $d(x,y)$, regardless of where $x$ and $y$ are located in $X$, and the neighborhoods $B_r(x)$ and $B_r(y)$ about landmarks $x$ and $y$ play an equal role in the cover.^[Is there a term for this property, e.g. something being a "universal constant"?]
+This means, however, that cover sets centered at landmarks in sparse regions of $X$ will be more numerous and of lower cardinality than those centered in dense regions.
+While this assumption is often made for convenience, it often does not hold in practice, including in much of biomedicine.
 
-This motivates us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (nearly) the same cardinality. Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal. Other representations of high-dimensional data sets are commonly defined by similarity (or dissimilarity) measures such as cosine similarity rather than by coordinates and associated metrics. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
+This motivates us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality. Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than coordinate embeddings. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
 
 # Procedures
 \label{sec:procedures}
@@ -92,16 +94,17 @@ We denote the diameter of $Y$ as $D(Y)=\max_{x,y\in Y}{d(x,y)}$, and we write:
 d(Y,Z) &= \min_{y\in Y,z\in Z}{d(y,z)} & D(Y,Z) &= \max_{y\in Y,z\in Z}{d(y,z)} \\
 d(x,Y) &= d(\{x\},Y)                   & D(x,Y) &= D(\{x\},Y) \\
 \end{align*}
-If, for any $x,y,z,w \in X$, $d(x,y)=d(z,w) \implies \{x,y\}=\{z,w\}$---that is, if no two pairs of points in $X$ have equal distance---then $X$ is said to be in general position.
-We also say that $X$ is in _ego-general position_ if, for any $x,y,z \in X$, $d(x,y)=d(x,z) \implies y=z$---a weaker condition, since there may exist $w \in X$ for which $d(x,y)=d(z,w)$ but $\{x,y\}\neq\{z,w\}$.^[This terminology is borrowed from graph theory. It is meant to evoke the importance of the common point $x$, the ego, from which both other points, the alters, are distant.]
+If, for any $x,y,z,w \in X$, $d(x,y)=d(z,w)$ implies $\{x,y\}=\{z,w\}$---that is, if no two pairs of points in $X$ have equal distance---then $X$ is said to be in general position.
+We also say that $X$ is in _locally general position_ if, for any $x,y,z \in X$, $d(x,y)=d(x,z)$ implies $y=z$---a weaker condition, since there may exist $w \in X$ for which $d(x,y)=d(z,w)$ but $\{x,y\}\neq\{z,w\}$.
 Either condition implies that $X$ is Hausdorff ($d(x,y)=0\implies x=y$).
 $f:X \to Y$ will denote a morphism of pseudometric spaces, which we take to be a $1$-Lipschitz map ($d_X(x,y)\geq d_Y(f(x),f(y))$).
 
-We use the ball notation $B_{\eps}(x)$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \mid d(x,y) < \eps \}$.
+Denote by $\power(X)$ the power set of $X$ and by $\order(X)$ the set of ordered, non-duplicative sequences from $X$.
+We use the ball notation $B_{\eps}(x) \in \power(X)$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \mid d(x,y) < \eps \}$.
 We use an overline to also include points exactly distance $\eps$ from $x$: $\cl{B_{\eps}}(x) = \{ y \mid d(x,y) \leq \eps \}$.
 (Every such ball is both open and closed.)
 If $\abs{\cl{B_\eps}(x)} \geq k$ and $\eps'<\eps \implies \abs{\cl{B_{\eps'}}(x)} < k$, then we call $N_k(x) = \cl{B_\eps}(x)$ the $k$-nearest neighborhood of $x$.
-When $X$ is in ego-general position, $\abs{N_k(x)} = k$.
+When $X$ is in locally general position, $\abs{N_k(x)} = k$.
 
 Throughout, let $N=\abs{X}$.
 For convenience, we assume $0\in\N$.
@@ -119,7 +122,7 @@ Given $L\subset X$ and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
     \maxmin(X) &= \{x\in X\mid d(x,X \wo \cl{\{x\}}) = \max_{y\in X}{d(y,X \wo \cl{\{y\}})}\}
 \end{align*}
 consisting of \emph{maxmin points}.
-Note that $\maxmin(\,\cdot\,)$ is nonempty and that, when $X$ is in ego-general position, it has cardinality $1$.
+Note that $\maxmin(X)$ is nonempty and that, when $X$ is in locally general position, it has cardinality $1$.
 
 \begin{algorithm}
 \caption{Select a maxmin landmark set.}
@@ -147,26 +150,29 @@ Note that $\maxmin(\,\cdot\,)$ is nonempty and that, when $X$ is in ego-general 
 \end{algorithm}
 
 The \emph{maxmin procedure} for generating a landmark set $L\subseteq X$ proceeds as follows (see Algorithm\nbs\ref{alg:maxmin}):
-First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\cl{B_{\eps}}(\ell)$ cover $X$.
+First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\{ \cl{B_{\eps}}(\ell) : \ell \in L \}$ cover $X$.
 Choose a first landmark point $\ell_0\in X$.
 <!--This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and (random selection from) $\minmax(X)$.-->
 Inductively over $i\in\N$, if ever $i\geq n$ or $d(L,X\wo \cl{L})\leq\eps$, then stop.
-Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, according to a preferred selection procedure (discussed below).
-If a fixed number $n$ of landmarks was prescribed, then set $\eps=\eps(n)=d(L,X\wo \cl{L})$; if $\eps$ was prescribed, then set $n=n(\eps)=\abs{L}$.
+Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, according to a preferred procedure $\sigma$.
+If a fixed number $n$ of landmarks was prescribed, then set $\eps=\eps(n)=d(L,X\wo \cl{L})$; if $\eps$ was prescribed and $\sigma$ is understood, then set $n=n(\eps)=\abs{L}$.
 Write $\mathcal{B}_\eps(\ell_0)=\{\cl{B_{\eps}(\ell_i)}\}_{i=0}^{n}$ for the resulting \emph{landmark cover of $X$}.
+
+
 
 We will write the elements of landmark sets $L=\{\ell_0,\ldots,\ell_{n-1}\}$ in the order in which they were generated.
 Note that, if $n=\uniq{X}$ or $\eps=0$, then $\cl{L}=X$.
 When the procedure stops, $X=\bigcup_{i=0}^{n-1}{\cl{B_{\eps}}(\ell_i)}$.
-This cover is not, in general, a minimal cover, but it is a minimal landmark cover in the sense thta the removal of any $\cl{B_\eps}(\ell_i)$ and any decrease in $\eps$ will yield a collection of sets that fail to cover $X$.
-A "thickened" cover can be obtained by specifying both $n$ and $\eps$ in such a way that $n \geq n(\eps)$ and $\eps \geq \eps(n)$.
+This cover is not, in general, a minimal cover, but it is a minimal landmark cover in the sense that the removal of $\cl{B_\eps}(\ell_{n-1})$ and any decrease in $\eps$ will yield a collection of sets that fail to cover $X$.
+A "thickened" cover can be obtained by pre-specifying both $n$ and $\eps$ in such a way that $n \geq n(\eps)$ and $\eps \geq \eps(n)$.
 In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters implemented in our software package that make these choices easier.
 
 ### Selection procedures
 
-When $X$ is not in ego-general position, the choice of selection procedure from among the maxmin set is consequential.
-For simplicity, let $\maxmin(L;X)$ take the value $\varnothing$ if $\cl{L}=X$ and the value $X$ if $L=\varnothing$.
-Then write $\graph{\maxmin, X} \subset \order{X} \times \power{X}$ for the graph of the unary function $\maxmin(\,\cdot\,;X): \order{X} \to \power{X}$.
+The choice of $\ell_i \in \maxmin(L)$ is trivial when $X$ is in locally general position, but this study is specifically interested in cases with a high frequency of violations of this property, and indeed with such violations of Hausdorffness that large numbers of points in $X$ may be co-located.
+When $X$ is not in locally general position, the choice of selection from among the maxmin set is consequential.
+For convenience, let $\maxmin(L;X)$ take the value $\varnothing$ if $\cl{L}=X$ and the value $X$ if $L=\varnothing$.
+Then write $\graph{\maxmin, X} \subset \order{X} \times \power{X}$ for the graph of the unary function $\maxmin(\,\cdot\,;X): \order{X} \to \power{X}$, so that $(L,\Gamma) \in \graph{\maxmin, X}$ if and only if $\maxmin(L;X) = \Gamma$.
 Then a selection procedure is a function $\sigma: \graph{\maxmin, X} \to X$ subject to $\sigma((L,\Gamma)) \in \Gamma = \maxmin(L;X)$.
 Importantly, $\sigma$ may depend not only on the maxmin set $\Gamma$ but also on the ordered sequence $L$.
 
@@ -175,25 +181,25 @@ Take $d_L = \max_{y \in X \wo \cl{L}}{d(y,L)}$.
 For each $y \in \maxmin(L;X)$, choose $\ell_y \in L$ for which $d(y,\ell_y) = d_L$.
 Then take $\maxmin^{(1)}(L;X) = \{y \in \maxmin(L;X) \mid d(y,L \wo \{\ell_y\}) = \max_{z \in \maxmin(L;X)}{d(z,L \wo \{\ell_z\})}\}$.
 While $\abs{\maxmin^{(j)}(L;X)} > 1$, continue in this way until either a singleton is reached or $j=\abs{L}=i$.
-If the latter, then the choice $\sigma$ is arbitrary among the remaining $y$.
+If the latter, then the choice $\sigma$ is arbitrary among the remaining $y$.^[Should this be written up as an algorithm?]
 
-## Ego-ranks
+## Relative ranks
 
-Ego-stances are a much more general notion of metric that encompasess ranks in nearest neighborhoods.
+Relative ranks are a much more general notion of metric that encompasess ranks in nearest neighborhoods.
 
-<!--As used here, ego-rank is unrelated to the _rank-distance_ between permutations, which is used to define rank correlation coefficients, and from the _ordinal distance_ proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.-->
+<!--As used here, relative rank is unrelated to the _rank-distance_ between permutations, which is used to define rank correlation coefficients, and from the _ordinal distance_ proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.-->
 
-\begin{definition}[ego-stance]
-    An \emph{ego-stance} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
-    \begin{equation}\label{eqn:ego-stance}
+\begin{definition}[relative rank]
+    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
+    \begin{equation}\label{eqn:relative-rank}
         d(x,x) \leq d(x,y) for all x,y \in X
     \end{equation}
 \end{definition}
 
 Ego-stances can be used as the basis for a much more general maxmin procedure, taking care in particular to account for asymmetry.
 
-\begin{definition}[maxmin under an ego-stance]
-Given an ego-stance $q$ on $X$, write
+\begin{definition}[maxmin under a relative rank]
+Given a relative rank $q$ on $X$, write
 \begin{align*}
     q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
     q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
@@ -207,18 +213,19 @@ Given $L\subset X$, and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
 consisting of \emph{maxmin points}.
 \end{definition}
 
-A pseudometric $d_X$ induces an ego-stance that we call the ego-rank, which takes values in $\N$ given by the ordinal of one point's distance from another.
+A pseudometric $d_X$ induces a relative rank that we call the relative rank, which takes values in $\N$ given by the ordinal of one point's distance from another.
 
-\begin{definition}[ego-rank]
-    For $x,y\in X$ with pseudometric $d$, define the \emph{ego-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
-    \begin{equation}\label{eqn:ego-rank}
+\begin{definition}[out-rank and in-rank]
+    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
+    \begin{equation}\label{eqn:out-rank}
         q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
     \end{equation}
+    and the \emph{in-rank} $q_{X,d}^\top = q_{X,d} \circ T$, so that $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
 \end{definition}
 
-As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. Note that $q(x,x)=0$, that $q(x,y) = 0$ when $d(x,y) = 0$, and that $q(x,y) < N$.
+As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. Note that $q_{X,d}$ is a relative rank with $q(x,x)=0$, $q(x,y) < N$, and $\forall x,y \in X : q(x,x) \leq q(x,y)$.
 
-\begin{example}\label{ex:ego-rank}
+\begin{example}\label{ex:relative-rank}
     Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
     \begin{centeredTikz}
         [every label/.append style={text=black!60!blue, font=\scriptsize}]
@@ -254,10 +261,10 @@ As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. No
     \end{align*}
 \end{example}
 
-We term the unary rankings $q(x,\,\cdot\,)$ and $q(\,\cdot\,,x)$ the \emph{out- (from $x$)} and \emph{in- (to $x$) rankings} of $X$, respectively.[^out-in]
+We also term the unary rankings $q(x,\,\cdot\,)$ and $q(\,\cdot\,,x)$ the \emph{out- (from $x$)} and \emph{in- (to $x$) rankings} of $X$, respectively.[^out-in]
 These can be used to define \emph{out-} and \emph{in-neighborhoods} of $x$.
 
-[^out-in]: The terminology and notation are also adapted from graph theory. These definitions are the same as those for a complete directed graph on $X$ with directed arcs $x\to y$ weighted by ego-rank $q(x,y)$.
+[^out-in]: The terminology and notation are adapted from graph theory. These definitions are the same as those for a complete directed graph on $X$ with directed arcs $x\to y$ weighted by $q(x,y)$.
 
 \begin{definition}[$k$-neighborhoods]
     For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
@@ -273,11 +280,11 @@ These can be used to define \emph{out-} and \emph{in-neighborhoods} of $x$.
 \end{definition}
 
 Note that $[\{x\}] = N^\pm_0(x) \subseteq \cdots \subseteq  N^\pm_{N-1}(x) = X$.
-The $k$-out-neighborhoods of $x$ are the $k$-nearest neighbors of $x$, i.e. the sets of points in $X$ that have ego-rank at most $k$ from $x$.
-The $k$-in-neighborhoods of $x$ are the sets of points in $X$ from which $x$ has ego-rank at most $k$.
+The $k$-out-neighborhoods of $x$ are the $k$-nearest neighbors of $x$, i.e. the sets of points in $X$ that have out-rank at most $k$ from $x$.
+The $k$-in-neighborhoods of $x$ are the sets of points in $X$ from which $x$ has out-rank at most $k$.
 
 \begin{example}\label{ex:rank-neighborhoods}
-Consider the same $X$ as in Example\nbs\ref{ex:ego-rank}. Compute $N_k^+$ and $N_k^-$ for $a$ and $c$, using $k = 3$:
+Consider the same $X$ as in Example\nbs\ref{ex:relative-rank}. Compute $N_k^+$ and $N_k^-$ for $a$ and $c$, using $k = 3$:
 \begin{align*}
     N_3^+ (a) &= \{x \in X \mid q(a,x) \leq 2\} &
     N_3^+ (c) &= \{x \in X \mid q(c,x) \leq 2\} \\
@@ -295,11 +302,11 @@ Consider the same $X$ as in Example\nbs\ref{ex:ego-rank}. Compute $N_k^+$ and $N
 If $\abs{N^\pm_k(x)} = n_k$, then $\abs{N^\pm_k(x,X\wo\{x\})} = n_k - 1$.
 \end{remark}
 
-Ego-ranks are not as straightforward to compare among subsets of points. For example, for $y\neq x$, $q(x,y)$ takes integer values between $\abs{\supp{\{x\}}}$ and $N-1$. To explain and motivate their use, we attempt to intuitively adapt the maxmin procedure to this setting, then state and prove a formal definition for their analogs.
+Relative ranks are not as straightforward to compare among subsets of points. For example, for $y\neq x$, $q(x,y)$ takes integer values between $\abs{\supp{\{x\}}}$ and $N-1$. To explain and motivate their use, we attempt to intuitively adapt the maxmin procedure to this setting, then state and prove a formal definition for their analogs.
 
 ## Lastfirst procedure
 
-The lastfirst procedure is defined analogously to the maxmin procedure, substituting "ego-rank" for the pseudometric $d_X$.
+The lastfirst procedure is defined analogously to the maxmin procedure, substituting "relative rank" for the pseudometric $d_X$.
 
 ### Rank sequences and landmark selection
 
@@ -316,7 +323,7 @@ This is a useful heuristic for constructing a ball cover $\mathcal{B} = \{\cl{B_
 
 We desire to construct a neighborhoodcover $\mathcal{N} = \{N^+_k(\ell_j) \mid 0 \leq j < n\}$ whose centers are analogously dispersed.
 Suppose $\ell_i$ is selected so that the minimum $k$ required for $\ell_i \in \bigcup_{j=0}^{i-1}{N_k(\ell_j)}$ is maximized.
-This is equivalent to maximizing the minimum ego-rank $q(\ell_j,\ell_i)$ of $\ell_i$ from any $\ell_j$.
+This is equivalent to maximizing the minimum out-rank $q(\ell_j,\ell_i)$ of $\ell_i$ from any $\ell_j$.
 Switching perspective from out- to in- and reversing the roles of $L$ and $\ell_i$, we want $N^-_k(\ell_i,L)=0$ for the latest (largest) $k$ possible, say $k^-_0$.
 When indistinguishable points abound, this may still not uniquely determine $\ell_i$, so we may extend the principle: Among those $\ell\in X\wo \cl{L}$ for which $N^-_{k^-_0}(\ell_i,L)=0$, choose $\ell_i$ for which $N^-_{k}(\ell_i,L) \leq 1$ for the latest $k$ possible, say $k^-_1 \geq k^-_0$.
 (It is possible that $k^-_1 = k^-_0$, in which case no $N^-_k(\ell_i,L) = 1$.)
@@ -369,12 +376,12 @@ Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\
 \end{definition}
 
 Impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$ to emphasize the sizes of smaller neighborhoods.
-Sequences with more large values indicate points with lower ego-ranks to or from more other points.
+Sequences with more large values indicate points with lower out-ranks to or from more other points.
 
 We now define counterparts to the minmax and maxmin procedures to be used with these totally ordered sequences.
 
 \begin{lemma}
-    Let $q$ be an ego-stance on $X$ with associated neighborhoods $N_\bullet^\pm$.
+    Let $q$ be a relative rank on $X$ with associated neighborhoods $N_\bullet^\pm$.
     Then, given $Y\subset X$,
     \begin{align*}
         \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
@@ -383,7 +390,7 @@ We now define counterparts to the minmax and maxmin procedures to be used with t
 \end{lemma}
 
 \begin{definition}[firstlast and lastfirst]
-    Let $d$ be a pseudometric on $X$ with induced ego-rank $q_d$.
+    Let $d$ be a pseudometric on $X$ with induced relative rank $q_d$.
     Given $Y\subset X$, define the \emph{lastfirst sets}
     \begin{align*}
         \lf(Y;X,d) = \lf(Y) &= \maxmin(Y;X,q_d) \\
@@ -393,7 +400,7 @@ We now define counterparts to the minmax and maxmin procedures to be used with t
 \end{definition}
 
 \begin{example}
-    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:ego-rank}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-rank sequence:
+    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-rank sequence:
     \begin{enumerate}
         \item We have
         \begin{align*}
@@ -416,7 +423,7 @@ We now define counterparts to the minmax and maxmin procedures to be used with t
 ### Algorithms
 
 Algorithm\nbs\ref{alg:lastfirst-landmarks} calculates a lastfirst set from a seed point, subject to parameters analogous to $n$ and $\epsilon$ in Algorithm\nbs\ref{alg:maxmin}.
-The algorithm is tailored to the vectorized arithmetic of R, and Lemma\nbs\ref{lem:revlex-lex} provides a shortcut between $Q^-$ and the more compact way that the ego-rank data are stored.
+The algorithm is tailored to the vectorized arithmetic of R, and Lemma\nbs\ref{lem:revlex-lex} provides a shortcut between $Q^-$ and the more compact way that the relative rank data are stored.
 
 \begin{lemma}\label{lem:revlex-lex}
 For $L = \{ \ell_0, \ldots, \ell_n \} \subset X$, write $S(x,L) = ( q(\ell_{\pi^{-1}(1)},x) \leq \cdots \leq q(\ell_{\pi^{-1}(n)},x) )$, where $\pi$ is any suitable permutation on $[n]$.
@@ -440,7 +447,7 @@ The reverse implication is similarly straightforward.
 \REQUIRE finite pseudometric space $(X,d)$
 \REQUIRE seed point $\ell_0 \in X$
 \REQUIRE number of landmarks $n \in \N$ or cover set cardinality $k \in \N$
-\REQUIRE selection procedure \verb|pick|
+\REQUIRE selection procedure $\sigma$
 \STATE if $n$ is not given, set $n \leftarrow 0$
 \label{line:n}
 \STATE if $k$ is not given, set $k \leftarrow \infty$
@@ -449,7 +456,7 @@ The reverse implication is similarly straightforward.
 \STATE $F \leftarrow \{ \ell_0 \}$ initial lastfirst set
 \STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
 \FOR{$i$ from $0$ to $\uniq{X} - 1$}
-    \STATE $\ell_i \leftarrow \verb|pick|(F)$
+    \STATE $\ell_i \leftarrow \sigma(F)$
     \STATE $L \leftarrow L \cup \{\ell_i\}$
     \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
     \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
@@ -496,7 +503,7 @@ Note that, for the algorithm to terminate its loop and subsequently return $L$, 
   (2) $\abs{L} \geq n$.
 
 Because the seed point is arbitrary, for the main result it is enough to show that, at each step $i$, $F = \lf(\{ \ell_0, \ldots, \ell_{i-1} \})$.
-When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the ego-ranks $q(\ell_i, x_r)$ in increasing order.
+When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the in-ranks $q(\ell_i, x_r)$ of $x_r$ in increasing order.
 Because $D(L, X \wo \cl{L}) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
 By Lemma\nbs\ref{lem:revlex-lex}, then, $Q^-(x_r, L)$ is maximized (in revlex) when $R_r$ is maximized in lex, and this is exactly what the loop that begins on line\nbs\ref{line:maximize} does.
 
@@ -524,23 +531,23 @@ Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (
 
 ### Tie handling
 
-We might have defined two \emph{ego-ranks} $\check{q}, \hat{q} : X \times X \longrightarrow \N$ ("$q$-check" and "$q$-hat") as follows:
+We might have defined two relative ranks $\check{q}, \hat{q} : X \times X \longrightarrow \N$ ("$q$-check" and "$q$-hat") as follows:
 \begin{align*}
 & \check{q}(x,y)=\abs{\{z\in X\mid d(x,z)<d(x,y)\}} \\%>
 & \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}} - 1
 \end{align*}
 In this notation, $\check{q}=q$, while $\hat{q}(x,y)$ is the cardinality of the smallest ball centered at $x$ that contains $y$.
 Then $\check{N}^\pm_1(x) \subseteq  \{x\} \subseteq \hat{N}^\pm_1(x)$, and $\hat{q}(x,x)>0$ when $x$ has multiplicity.
-The two ego-ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates. For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(0,1,1,3)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(0,2,2,3)$.
+The two relative ranks derive from two tie-handling schemes for calculating rankings of lists with duplicates. For example, if $a<b=c<d$ are the distances from $x$ to $y_1,y_2,y_3,y_4$, respectively, then $(\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(0,1,1,3)$ and $(\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(0,2,2,3)$.
 Indeed, any tie-handling rule could be used, and the choice becomes more consequential with greater multiplicity in the data.
 
 Conceptually, the lastfirst procedure based on $\hat{q}$ would produce landmark sets that yield neighborhood covers with smaller, rather than larger, neighborhoods in regions of high multiplicity.
 While we do not use these ideas in this study, they may be suitable in some settings or for some purposes, for example when high multiplicity indicates a failure to discriminate between important categories.
 It is also possible that $\check{q}$- and $\hat{q}$-based covers could be used to produce interveaving sequences of nerves useful for stability analysis.
 
-\begin{example}\label{ex:ego-rank-max}
+\begin{example}\label{ex:relative-rank-max}
 
-Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:ego-rank}. The ego-rank $\hat{q}$ is also asymmetric:
+Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. The relative rank $\hat{q}$ is also asymmetric:
 \begin{align*}
     \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
     \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
@@ -590,13 +597,13 @@ Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ for $b$ and 
 \label{sec:implementation}
 
 We have implemented the lastfirst procedure, together with maxmin, in the R package landmark [@Brunson2021a]. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
-For ego-rank--based procedures, the user can choose any tie-handling rule.
+For relative rank--based procedures, the user can choose any tie-handling rule.
 The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
 In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more redundant covers.
 
 ## Validation
 
-We validated the firstlast and lastfirst procedures against several small example data sets, including that of Example\nbs\ref{ex:ego-rank}.
+We validated the firstlast and lastfirst procedures against several small example data sets, including that of Example\nbs\ref{ex:relative-rank}.
 We also validated the C++ and R implementations against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
 We invite readers to experiment with new cases and to request or contribute additional features.
 
@@ -796,12 +803,12 @@ AUROCs of the sliding-window interpolative predictive models of intubation and m
 The definitions of our lastfirst and firstlast procedures are analogous to those of maxmin and minmax, substituting ranks in the role of distances.
 In this way, lastfirst is an alternative to maxmin that is adaptive to the local density of the data, similar to the use of fixed quantiles in place of fixed-length intervals.
 The maxmin and lastfirst procedures implicitly construct a minimal cover whose sets are centered at the selected landmarks, and the fixed-radius balls of maxmin correspond to the fixed-cardinality neighborhoods of lastfirst.
-The rank-based procedures are more combinatorially complex and computationally expensive, primarily because ego-ranks are asymmetric, which doubles (in the best case) or squares (in the worst case) the number of distances that must be calculated.
+The rank-based procedures are more combinatorially complex and computationally expensive, primarily because relative ranks are asymmetric, which doubles (in the best case) or squares (in the worst case) the number of distances that must be calculated.
 Nevertheless, the procedure can be performed in a reasonable time for many real-world uses.
 
 We ran an experiment to compare maxmin and lastfirst landmarks at expediting the computation of persistent homology, extending an experiment of @deSilva2004. In addition to a uniform sample from a sphere, we drew skewed and bootstrapped samples in order to simulate data sets with variable density and multiplicity, in this case exhibiting a statistical void at one pole of the sphere, opposite a concentration at the other pole.
 Whereas the maxmin procedure would sample more uniformly across the sphere despite this skew, the lastfirst procedure would concentrate landmarks toward the south.
-Classical persistent homology is notoriously sensitive to outliers, and maxmin better recovered spherical homology than lastfirst, as expected. This is likely due in part to the filtration itself being based on distances rather than ego-ranks between landmarks (and other points as witnesses).
+Classical persistent homology is notoriously sensitive to outliers, and maxmin better recovered spherical homology than lastfirst, as expected. This is likely due in part to the filtration itself being based on distances rather than relative ranks between landmarks (and other points as witnesses).
 Yet, compared to random sampling, lastfirst still oversampled from less dense regions. This is desirable for settings, such as healthcare, in which regions of missingness often indicate limitations of the data collection rather than rarity of case types in the population.
 
 We also ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.
