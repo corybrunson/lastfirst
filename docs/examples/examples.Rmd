@@ -82,10 +82,11 @@ g <- ggplot(dat, aes(x, y)) +
   geom_hline(yintercept=0, color="gray") +
   ylim(-0.2,0.2) +
   geom_point() +
-  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=seed), size=3) +
-  geom_text_repel(data=highlight, aes(label=name, color=procedure)) +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=procedure), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure),
+                  show.legend = FALSE) +
   scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
-  scale_shape_manual(values = c("1L"=16, "minmax/firstlast"=18)) +
+  scale_shape_manual(values = c("maxmin"=1L, "lastfirst"=5L)) +
   facet_grid(seed ~ ., switch="y", scales="free", space="free") +
   theme_minimal() +
   theme(axis.title=element_blank(),
@@ -266,6 +267,7 @@ dat <- rbind(bigCircle,
 
 # plot the resulting data set
 g <- ggplot(dat, aes(x, y)) +
+  coord_equal() +
   geom_point() +
   theme_minimal()
 g
@@ -274,12 +276,16 @@ g
 
 
 Observe that calculating the first few landmark points of $X$ gives different results with each procedure:
+While maxmin generates landmarks evenly across both dense and sparse regions of the necklace, lastfirst concentrates landmarks in dense regions and generates fewer in sparse regions.
+The patterns, and the procedures, may be appropriate for different settings:
+If the necklace is understood as a biased sample from a single circular shape, each region of which is of equal interest, then maxmin generates a more desirable sample. If, instead, the density of the sample is believed to reflect the density of an underlying population, then the lastfirst sample will be more useful.
+While many techniques could be used for this purpose, maxmin and lastfirst have the advantage of being deterministic up to the seed point and co-location.
 
 
 ```{r}
 # num <- 5L works fine, but any number 6L or higher seems to cause the error
 # using seed_index=1L also gives the error for landmarks_lastfirst
-num <- 16L
+num <- 12L
 input <- as.matrix(dat)
 lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
 lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
@@ -293,7 +299,7 @@ g_mm <- ggplot(dat, aes(x, y)) +
   geom_point() +
   geom_point(data=highlight_mm,
              aes(x=x, y=y),
-             color='red', shape = 1L,
+             color='red', shape = 0L,
              size=3) +
   geom_text_repel(data=highlight_mm, aes(label=name), color="red") +
   labs(title = "MaxMin Landmarks") +
@@ -306,7 +312,7 @@ g_lf <- ggplot(dat, aes(x, y)) +
   geom_point() +
   geom_point(data=highlight_lf,
              aes(x=x, y=y),
-             color='blue', shape = 1L,
+             color='blue', shape = 5L,
              size=3) +
   geom_text_repel(data=highlight_lf, aes(label=name), color="blue") +
   labs(title = "LastFirst Landmarks") +
