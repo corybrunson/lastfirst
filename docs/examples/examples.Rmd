@@ -1,0 +1,240 @@
+---
+title: "Landmark Examples"
+author: "Yara Skaf"
+date: "1/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+library(ggplot2)
+library(tidyverse)
+library(ggrepel)
+library(landmark)
+library(tdaunif)
+library(gridExtra)
+set.seed(0)
+```
+
+## Example 1: Basic Illustration
+
+This is one of the simplest possible examples that illustrates the major definitions and the differences between the maxmin and lastfirst procedures. Let $X = \{a,b,c,d\}$ as shown below and equip $X$ with the standard Euclidean metric. Note that $X$ is *not* Hausdorff since the points $c$ and $d$ are indistinguishable since they both have a value of $4$, meaning they cannot be separated by open sets.
+
+```{r}
+name <- c("a", "b", "c", "d")
+x <- c(1,2,4,4)
+y <- c(0, 0, 0.01, -0.01)
+dat <- data.frame(name, x, y)
+
+g <- ggplot(dat, aes(x, y, label=name)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.5,0.5) +
+  geom_point() +
+  geom_text_repel() +
+  labs(x="X", y="") +
+  theme_minimal() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())
+g
+```
+
+The two procedures generate the same set of landmark points if the seed is chosen to be $\ell_0 = a$. However, the order of landmark selection is different if the seed point is chosen from the minmax or firstlast set.
+
+```{r}
+num <- 3L
+dat <- dat %>% select(x,y)
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+lmk_mm_constSeed <- landmarks_maxmin(input, num=num, seed_index=1L)
+lmk_lf_constSeed <- landmarks_lastfirst(input, num=num, seed_index=1L)
+```
+
+
+
+```{r, echo=FALSE} 
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(y=0.05) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="minmax/firstlast")
+highlight_mm_constSeed <- data.frame(dat[lmk_mm_constSeed,] %>% cbind(name=c(1:length(lmk_mm_constSeed)-1))) %>%
+  mutate(y=0.05) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="1L")
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(y=-0.05) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="minmax/firstlast")
+highlight_lf_constSeed <- data.frame(dat[lmk_lf_constSeed,] %>% cbind(name=c(1:length(lmk_lf_constSeed)-1))) %>%
+  mutate(y=-0.05) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="1L")
+
+highlight <- rbind(highlight_mm, highlight_mm_constSeed, highlight_lf, highlight_lf_constSeed) %>%
+  mutate(name=paste0("l",name))
+
+g <- ggplot(dat, aes(x, y)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.2,0.2) +
+  geom_point() +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=seed), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure)) +
+  scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
+  scale_shape_manual(values = c("1L"=16, "minmax/firstlast"=18)) +
+  facet_grid(seed ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(strip.background=element_rect(colour="black", fill="white"))
+plot(g)
+```
+
+
+
+## Example 2: Variable Density
+
+Let $X$ be the data set shown along the $x$-axis in the plot below below and equip $X$ with the standard Euclidean metric. The density of points in $X$ is shown on the $y$-axis-- note that this density is highest near $x=0$, also high near $x=1$, and significantly lower in between these two values..
+
+```{r, echo=FALSE}
+dat <- data.frame(x=c(rnorm(70,0,0.05), rnorm(20,1,0.05), rnorm(10,0.5,0.5)),
+                  y=rep(0, 100))
+
+g_dens <- ggplot(dat, aes(x=x)) +
+  geom_density(fill="black", color=NA, alpha=0.2) +
+  geom_point(aes(x, y), alpha=0.5) +
+  labs(x="X", y="Density") +
+  theme_minimal()
+plot(g_dens)
+```
+
+Observe that calculating the first few landmark points of $X$ gives different results with each procedure:
+
+```{r, echo=FALSE}
+num <- 4L
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+lmk_mm_constSeed <- landmarks_maxmin(input, num=num, seed_index=1L)
+lmk_lf_constSeed <- landmarks_lastfirst(input, num=num, seed_index=1L)
+```
+
+
+
+```{r, echo=FALSE} 
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(y=y+0.01) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="minmax/firstlast")
+highlight_mm_constSeed <- data.frame(dat[lmk_mm_constSeed,] %>% cbind(name=c(1:length(lmk_mm_constSeed)-1))) %>%
+  mutate(y=y+0.01) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="1L")
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(y=y-0.01) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="minmax/firstlast")
+highlight_lf_constSeed <- data.frame(dat[lmk_lf_constSeed,] %>% cbind(name=c(1:length(lmk_lf_constSeed)-1))) %>%
+  mutate(y=y-0.01) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="1L")
+
+highlight <- rbind(highlight_mm, highlight_mm_constSeed, highlight_lf, highlight_lf_constSeed) %>%
+  mutate(name=paste0("l",name))
+
+g <- ggplot(dat, aes(x, y)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.1,0.1) + xlim(-0.5,1.5) +
+  geom_point(alpha=0.5) +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=seed), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure)) +
+  scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
+  scale_shape_manual(values = c("1L"=16, "minmax/firstlast"=18)) +
+  facet_grid(seed ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(strip.background=element_rect(colour="black", fill="white"))
+plot(g)
+```
+
+
+
+
+
+
+
+
+## Example 3: Necklace Sampler
+
+This data set provides a clear, 2-dimensional example of a situation where the differences between the maxmin and lastfirst algorithms result in significant differences between the two landmark sets, and thus between the resulting covers. Let $X$ be the data set shown below equipped with the standard Euclidean metric.
+
+```{r}
+sample_circle_radius <- function(n, bins = 1L, sd = 0, r=1L) {
+  theta <- sample_strat_segment(n, bins) * 2*pi
+  res <- cbind(x = r*cos(theta), y = r*sin(theta))
+  colnames(res) <- c("x","y")
+  data.frame(add_noise(res, sd = sd))
+}
+
+# sample a few points around a large circle for the "necklace" outline
+bigCircle <- sample_circle_radius(20, sd=0.05, r=10)
+
+# add points sampled from smaller circles to use as the "beads" on the necklace
+dat <- rbind(bigCircle,
+             sample_circle_radius(100, sd=0.1) %>% mutate(y=y+10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(x=x+10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(x=x-10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(y=y-10)
+             )
+
+# plot the resulting data set
+g <- ggplot(dat, aes(x, y)) +
+  geom_point() +
+  theme_minimal()
+g
+```
+
+
+
+Observe that calculating the first few landmark points of $X$ gives different results with each procedure:
+
+
+```{r}
+# num <- 5L works fine, but any number 6L or higher seems to cause the error
+# using seed_index=1L also gives the error for landmarks_lastfirst
+num <- 4L
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+```
+
+```{r}
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(name=paste0("l",name))
+g_mm <- ggplot(dat, aes(x, y)) +
+  geom_point() +
+  geom_point(data=highlight_mm,
+             aes(x=x, y=y),
+             color='red',
+             size=3) +
+  geom_text_repel(data=highlight_mm, aes(label=name), color="red") +
+  labs(title = "MaxMin Landmarks") +
+  theme_minimal()
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(name=paste0("l",name))
+g_lf <- ggplot(dat, aes(x, y)) +
+  geom_point() +
+  geom_point(data=highlight_lf,
+             aes(x=x, y=y),
+             color='blue',
+             size=3) +
+  geom_text_repel(data=highlight_lf, aes(label=name), color="blue") +
+  labs(title = "LastFirst Landmarks") +
+  theme_minimal()
+
+grid.arrange(g_mm, g_lf, nrow=1)
+```
+
+
