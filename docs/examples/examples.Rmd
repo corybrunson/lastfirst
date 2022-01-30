@@ -83,10 +83,9 @@ g <- ggplot(dat, aes(x, y)) +
   ylim(-0.2,0.2) +
   geom_point() +
   geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=procedure), size=3) +
-  geom_text_repel(data=highlight, aes(label=name, color=procedure),
-                  show.legend = FALSE) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure), show.legend = FALSE) +
   scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
-  scale_shape_manual(values = c("maxmin"=1L, "lastfirst"=5L)) +
+  scale_shape_manual(values = c("maxmin"=15L, "lastfirst"=18L)) +
   facet_grid(seed ~ ., switch="y", scales="free", space="free") +
   theme_minimal() +
   theme(axis.title=element_blank(),
@@ -156,10 +155,10 @@ g <- ggplot(dat, aes(x, y)) +
   geom_hline(yintercept=0, color="gray") +
   ylim(-0.1,0.1) + xlim(-0.5,1.5) +
   geom_point(alpha=0.5) +
-  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=seed), size=3) +
-  geom_text_repel(data=highlight, aes(label=name, color=procedure)) +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=procedure), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure), show.legend = FALSE) +
   scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
-  scale_shape_manual(values = c("1L"=16, "minmax/firstlast"=18)) +
+  scale_shape_manual(values = c("maxmin"=15L, "lastfirst"=18L)) +
   facet_grid(seed ~ ., switch="y", scales="free", space="free") +
   theme_minimal() +
   theme(axis.title=element_blank(),
@@ -197,7 +196,7 @@ mm <- ggplot(coverSets_mm, aes(x, y, color=factor(lmk))) +
   geom_hline(yintercept=0, color="gray") +
   geom_point(aes(x, y, color=factor(lmk))) +
   scale_color_manual(values=cool) +
-  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=8) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
   theme_minimal() +
   theme(axis.title=element_blank(), legend.position = "none",
         axis.text.y=element_blank(), axis.ticks.y=element_blank())
@@ -206,7 +205,35 @@ lf <- ggplot(coverSets_lf, aes(x, y, color=factor(lmk))) +
   geom_hline(yintercept=0, color="gray") +
   geom_point(aes(x, y, color=factor(lmk))) +
   scale_color_manual(values=warm) +
-  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=8) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=5L, color = "blue") +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+
+
+coverBounds_mm <- coverSets_mm %>%
+  group_by(lmk) %>%
+  summarize(xmin = min(x), xmax = max(x))
+coverBounds_lf <- coverSets_lf %>%
+  group_by(lmk) %>%
+  summarize(xmin = min(x), xmax = max(x))
+mm_band <- ggplot(coverSets_mm, aes(x, y)) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_rect(data = coverBounds_mm, aes(xmin = xmin, xmax = xmax, fill = factor(lmk)), ymin = -1, ymax = 1, alpha = .2) +
+  geom_point(aes(x, y), alpha = .2) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  scale_x_continuous(limits = range(df$x)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+lf_band <- ggplot(coverSets_lf, aes(x, y)) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_rect(data = coverBounds_lf, aes(xmin = xmin, xmax = xmax, fill = factor(lmk)), ymin = -1, ymax = 1, alpha = .2) +
+  geom_point(aes(x, y), alpha = .2) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  scale_x_continuous(limits = range(df$x)) +
   theme_minimal() +
   theme(axis.title=element_blank(), legend.position = "none",
         axis.text.y=element_blank(), axis.ticks.y=element_blank())
@@ -216,7 +243,7 @@ mm_indiv <- ggplot(coverSets_mm, aes(x, y, color=factor(lmk))) +
   geom_hline(yintercept=0, color="gray") +
   geom_point(aes(x, y, color=factor(lmk))) +
   scale_color_manual(values=cool) +
-  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=8) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
   facet_grid(lmk ~ ., switch="y", scales="free", space="free") +
   theme_minimal() +
   theme(axis.title=element_blank(), legend.position = "none",
@@ -227,15 +254,14 @@ lf_indiv <- ggplot(coverSets_lf, aes(x, y, color=factor(lmk))) +
   geom_hline(yintercept=0, color="gray") +
   geom_point(aes(x, y, color=factor(lmk))) +
   scale_color_manual(values=warm) +
-  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=8) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=5L, color = "blue") +
   facet_grid(lmk ~ ., switch="y", scales="free", space="free") +
   theme_minimal() +
   theme(axis.title=element_blank(), legend.position = "none",
         axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
   theme(strip.background=element_blank(), strip.text=element_blank())
 
-
-grid.arrange(mm_indiv, lf_indiv, mm, lf, nrow=2)
+grid.arrange(mm_indiv, lf_indiv, mm, lf, mm_band, lf_band, nrow=3)
 ```
 
 
