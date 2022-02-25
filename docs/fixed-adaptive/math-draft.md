@@ -186,7 +186,7 @@ Ego-stances are a much more general notion of metric that encompasess ranks in n
 \begin{definition}[ego-stance]
     An \emph{ego-stance} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
     \begin{equation}\label{eqn:ego-stance}
-        d(x,x) \leq d(x,y) for all x,y \in X
+        \forall x,y \in X : d(x,x) \leq d(x,y)
     \end{equation}
 \end{definition}
 
@@ -365,7 +365,7 @@ Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\
 
 \begin{definition}[total orders on rank sequences]
     Let $a_n = (a_1,\ldots,a_M),b_n = (b_1,\ldots,b_M)\in\N^M$.
-    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i, a_i > b_i \wedge (\forall j<i, a_j = b_j)$.
+    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i : a_i > b_i \wedge (\forall j<i : a_j = b_j)$.
 \end{definition}
 
 Impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$ to emphasize the sizes of smaller neighborhoods.
