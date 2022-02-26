@@ -1,0 +1,350 @@
+---
+title: "Landmark Examples"
+author: "Yara Skaf"
+date: "1/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+library(ggplot2)
+library(tidyverse)
+library(ggrepel)
+library(landmark)
+library(tdaunif)
+library(gridExtra)
+library(RColorBrewer)
+library(viridis)
+
+set.seed(0)
+cool <- c("darkblue", "skyblue", "forestgreen", "darkviolet")
+warm <- c("coral", "darkred", "goldenrod", "red")
+```
+
+## Example 1: Basic Illustration
+
+This is one of the simplest possible examples that illustrates the major definitions and the differences between the maxmin and lastfirst procedures. Let $X = \{a,b,c,d\}$ as shown below and equip $X$ with the standard Euclidean metric. Note that $X$ is *not* Hausdorff since the points $c$ and $d$ are indistinguishable since they both have a value of $4$, meaning they cannot be separated by open sets.
+
+```{r}
+name <- c("a", "b", "c", "d")
+x <- c(1,2,4,4)
+y <- c(0, 0, 0.01, -0.01)
+dat <- data.frame(name, x, y)
+
+g <- ggplot(dat, aes(x, y, label=name)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.5,0.5) +
+  geom_point() +
+  geom_text_repel() +
+  labs(x="X", y="") +
+  theme_minimal() +
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())
+g
+```
+
+The two procedures generate the same set of landmark points if the seed is chosen to be $\ell_0 = a$. However, the order of landmark selection is different if the seed point is chosen from the minmax or firstlast set.
+
+```{r}
+num <- 3L
+dat <- dat %>% select(x,y)
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+lmk_mm_constSeed <- landmarks_maxmin(input, num=num, seed_index=1L)
+lmk_lf_constSeed <- landmarks_lastfirst(input, num=num, seed_index=1L)
+```
+
+
+
+```{r, echo=FALSE} 
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(y=0.05) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="minmax/firstlast")
+highlight_mm_constSeed <- data.frame(dat[lmk_mm_constSeed,] %>% cbind(name=c(1:length(lmk_mm_constSeed)-1))) %>%
+  mutate(y=0.05) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="1L")
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(y=-0.05) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="minmax/firstlast")
+highlight_lf_constSeed <- data.frame(dat[lmk_lf_constSeed,] %>% cbind(name=c(1:length(lmk_lf_constSeed)-1))) %>%
+  mutate(y=-0.05) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="1L")
+
+highlight <- rbind(highlight_mm, highlight_mm_constSeed, highlight_lf, highlight_lf_constSeed) %>%
+  mutate(name=paste0("l",name))
+
+g <- ggplot(dat, aes(x, y)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.2,0.2) +
+  geom_point() +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=procedure), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure), show.legend = FALSE) +
+  scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
+  scale_shape_manual(values = c("maxmin"=15L, "lastfirst"=18L)) +
+  facet_grid(seed ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(strip.background=element_rect(colour="black", fill="white"))
+plot(g)
+```
+
+
+
+
+
+
+
+## Example 2: Variable Density
+
+Let $X$ be the data set shown along the $x$-axis in the plot below below and equip $X$ with the standard Euclidean metric. The density of points in $X$ is shown on the $y$-axis-- note that this density is highest near $x=0$, also high near $x=1$, and significantly lower in between these two values..
+
+```{r, echo=FALSE}
+dat <- data.frame(x=c(rnorm(70,0,0.05), rnorm(20,1,0.05), rnorm(10,0.5,0.5)),
+                  y=rep(0, 100))
+
+g_dens <- ggplot(dat, aes(x=x)) +
+  geom_density(fill="black", color=NA, alpha=0.2) +
+  geom_point(aes(x, y), alpha=0.5) +
+  labs(x="X", y="Density") +
+  theme_minimal()
+plot(g_dens)
+```
+
+Observe that calculating the first few landmark points of $X$ gives different results with each procedure:
+
+```{r, echo=FALSE}
+num <- 4L
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+lmk_mm_constSeed <- landmarks_maxmin(input, num=num, seed_index=1L)
+lmk_lf_constSeed <- landmarks_lastfirst(input, num=num, seed_index=1L)
+```
+
+
+
+```{r, echo=FALSE} 
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(y=y+0.01) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="minmax/firstlast")
+highlight_mm_constSeed <- data.frame(dat[lmk_mm_constSeed,] %>% cbind(name=c(1:length(lmk_mm_constSeed)-1))) %>%
+  mutate(y=y+0.01) %>%
+  mutate(procedure="maxmin") %>%
+  mutate(seed="1L")
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(y=y-0.01) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="minmax/firstlast")
+highlight_lf_constSeed <- data.frame(dat[lmk_lf_constSeed,] %>% cbind(name=c(1:length(lmk_lf_constSeed)-1))) %>%
+  mutate(y=y-0.01) %>%
+  mutate(procedure="lastfirst") %>%
+  mutate(seed="1L")
+
+highlight <- rbind(highlight_mm, highlight_mm_constSeed, highlight_lf, highlight_lf_constSeed) %>%
+  mutate(name=paste0("l",name))
+
+g <- ggplot(dat, aes(x, y)) +
+  geom_hline(yintercept=0, color="gray") +
+  ylim(-0.1,0.1) + xlim(-0.5,1.5) +
+  geom_point(alpha=0.5) +
+  geom_point(data=highlight, aes(x=x, y=y, color=procedure, shape=procedure), size=3) +
+  geom_text_repel(data=highlight, aes(label=name, color=procedure), show.legend = FALSE) +
+  scale_color_manual(values = c("maxmin"="red", "lastfirst"="blue")) +
+  scale_shape_manual(values = c("maxmin"=15L, "lastfirst"=18L)) +
+  facet_grid(seed ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(strip.background=element_rect(colour="black", fill="white"))
+plot(g)
+```
+
+We can also examine the cover sets generated by these landmarks for each procedure (maxmin is on the left, lastfirst on the right, both use the minmax/lastfirst seed......I haven't come up with a great way of visualizing these yet, so this is just a preliminary idea):
+
+```{r}
+df <- dat
+df$row <- as.numeric(rownames(dat))
+
+cover_mm <- landmarks_maxmin(input, num=num, seed_index="minmax", cover=TRUE)
+cover_lf <- landmarks_lastfirst(input, num=num, seed_index="firstlast", cover=TRUE)
+
+lmk_mm <- cover_mm$landmark
+coverSets_mm <- cover_mm$cover_set
+names(coverSets_mm) <- lmk_mm
+coverSets_mm <- data.frame(lmk=as.numeric(rep(names(coverSets_mm), sapply(coverSets_mm, length))), idx=unlist(coverSets_mm))
+coverSets_mm <- coverSets_mm %>%
+  left_join(df, by=c("idx"="row"))
+
+
+lmk_lf <- cover_lf$landmark
+coverSets_lf <- cover_lf$cover_set
+names(coverSets_lf) <- lmk_lf
+coverSets_lf <- data.frame(lmk=as.numeric(rep(names(coverSets_lf), sapply(coverSets_lf, length))), idx=unlist(coverSets_lf))
+coverSets_lf <- coverSets_lf %>%
+  left_join(df, by=c("idx"="row"))
+
+
+mm <- ggplot(coverSets_mm, aes(x, y, color=factor(lmk))) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_point(aes(x, y, color=factor(lmk))) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+
+lf <- ggplot(coverSets_lf, aes(x, y, color=factor(lmk))) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_point(aes(x, y, color=factor(lmk))) +
+  scale_color_manual(values=warm) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=5L, color = "blue") +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+
+
+coverBounds_mm <- coverSets_mm %>%
+  group_by(lmk) %>%
+  summarize(xmin = min(x), xmax = max(x))
+coverBounds_lf <- coverSets_lf %>%
+  group_by(lmk) %>%
+  summarize(xmin = min(x), xmax = max(x))
+mm_band <- ggplot(coverSets_mm, aes(x, y)) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_rect(data = coverBounds_mm, aes(xmin = xmin, xmax = xmax, fill = factor(lmk)), ymin = -1, ymax = 1, alpha = .2) +
+  geom_point(aes(x, y), alpha = .2) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  scale_x_continuous(limits = range(df$x)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+lf_band <- ggplot(coverSets_lf, aes(x, y)) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_rect(data = coverBounds_lf, aes(xmin = xmin, xmax = xmax, fill = factor(lmk)), ymin = -1, ymax = 1, alpha = .2) +
+  geom_point(aes(x, y), alpha = .2) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  scale_x_continuous(limits = range(df$x)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank())
+
+
+mm_indiv <- ggplot(coverSets_mm, aes(x, y, color=factor(lmk))) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_point(aes(x, y, color=factor(lmk))) +
+  scale_color_manual(values=cool) +
+  geom_point(data=filter(coverSets_mm, idx %in% lmk_mm), aes(x=x, y=y), size=3, shape=0L, color = "red") +
+  facet_grid(lmk ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+ theme(strip.background=element_blank(), strip.text=element_blank())
+
+lf_indiv <- ggplot(coverSets_lf, aes(x, y, color=factor(lmk))) + 
+  geom_hline(yintercept=0, color="gray") +
+  geom_point(aes(x, y, color=factor(lmk))) +
+  scale_color_manual(values=warm) +
+  geom_point(data=filter(coverSets_lf, idx %in% lmk_lf), aes(x=x, y=y), size=3, shape=5L, color = "blue") +
+  facet_grid(lmk ~ ., switch="y", scales="free", space="free") +
+  theme_minimal() +
+  theme(axis.title=element_blank(), legend.position = "none",
+        axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(strip.background=element_blank(), strip.text=element_blank())
+
+grid.arrange(mm_indiv, lf_indiv, mm, lf, mm_band, lf_band, nrow=3)
+```
+
+
+
+
+
+## Example 3: Necklace Sampler
+
+This data set provides a clear, 2-dimensional example of a situation where the differences between the maxmin and lastfirst algorithms result in significant differences between the two landmark sets, and thus between the resulting covers. Let $X$ be the data set shown below equipped with the standard Euclidean metric.
+
+```{r}
+sample_circle_radius <- function(n, bins = 1L, sd = 0, r=1L) {
+  theta <- sample_strat_segment(n, bins) * 2*pi
+  res <- cbind(x = r*cos(theta), y = r*sin(theta))
+  colnames(res) <- c("x","y")
+  data.frame(add_noise(res, sd = sd))
+}
+
+# sample a few points around a large circle for the "necklace" outline
+bigCircle <- sample_circle_radius(20, sd=0.05, r=10)
+
+# add points sampled from smaller circles to use as the "beads" on the necklace
+dat <- rbind(bigCircle,
+             sample_circle_radius(100, sd=0.1) %>% mutate(y=y+10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(x=x+10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(x=x-10),
+             sample_circle_radius(100, sd=0.1) %>% mutate(y=y-10)
+             )
+
+# plot the resulting data set
+g <- ggplot(dat, aes(x, y)) +
+  coord_equal() +
+  geom_point() +
+  theme_minimal()
+g
+```
+
+
+
+Observe that calculating the first few landmark points of $X$ gives different results with each procedure:
+While maxmin generates landmarks evenly across both dense and sparse regions of the necklace, lastfirst concentrates landmarks in dense regions and generates fewer in sparse regions.
+The patterns, and the procedures, may be appropriate for different settings:
+If the necklace is understood as a biased sample from a single circular shape, each region of which is of equal interest, then maxmin generates a more desirable sample. If, instead, the density of the sample is believed to reflect the density of an underlying population, then the lastfirst sample will be more useful.
+While many techniques could be used for this purpose, maxmin and lastfirst have the advantage of being deterministic up to the seed point and co-location.
+
+
+```{r}
+# num <- 5L works fine, but any number 6L or higher seems to cause the error
+# using seed_index=1L also gives the error for landmarks_lastfirst
+num <- 12L
+input <- as.matrix(dat)
+lmk_mm <- landmarks_maxmin(input, num = num, seed_index = "minmax")
+lmk_lf <- landmarks_lastfirst(input, num = num, seed_index = "firstlast")
+```
+
+```{r}
+highlight_mm <- data.frame(dat[lmk_mm,] %>% cbind(name=c(1:length(lmk_mm)-1))) %>%
+  mutate(name=paste0("L",name))
+g_mm <- ggplot(dat, aes(x, y)) +
+  coord_equal() +
+  geom_point() +
+  geom_point(data=highlight_mm,
+             aes(x=x, y=y),
+             color='red', shape = 0L,
+             size=3) +
+  geom_text_repel(data=highlight_mm, aes(label=name), color="red") +
+  labs(title = "MaxMin Landmarks") +
+  theme_minimal()
+
+highlight_lf <- data.frame(dat[lmk_lf,] %>% cbind(name=c(1:length(lmk_lf)-1))) %>%
+  mutate(name=paste0("L",name))
+g_lf <- ggplot(dat, aes(x, y)) +
+  coord_equal() +
+  geom_point() +
+  geom_point(data=highlight_lf,
+             aes(x=x, y=y),
+             color='blue', shape = 5L,
+             size=3) +
+  geom_text_repel(data=highlight_lf, aes(label=name), color="blue") +
+  labs(title = "LastFirst Landmarks") +
+  theme_minimal()
+
+grid.arrange(g_mm, g_lf, nrow=1)
+```
+
+
