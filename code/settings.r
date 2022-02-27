@@ -2,7 +2,11 @@
 phi <- (sqrt(5)+1)/2
 
 # document dimensions (starting with text width obtained using LaTeX)
-textwidth <- grid::unit(15.11293, "cm") * 4/5
+textwidth <- grid::unit(15.11293 * 4/5, "cm")
+
+# figure dimensions (cm)
+textwidth <- 15.11293 * 4/5
+phi <- (1 + sqrt(5)) / 2
 
 # global options
 options(tibble.print_min = 12L, tibble.print_max = 24L)
