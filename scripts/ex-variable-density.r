@@ -21,8 +21,8 @@ lmk_lf <-
 
 # single landmarks data set
 bind_rows(
-  mutate(lmk_mm, name = str_c("l", seq(0L, num - 1L)), procedure = "maxmin"),
-  mutate(lmk_lf, name = str_c("l", seq(0L, num - 1L)), procedure = "lastfirst")
+  mutate(lmk_mm, name = str_c("L", seq(0L, num - 1L)), procedure = "maxmin"),
+  mutate(lmk_lf, name = str_c("L", seq(0L, num - 1L)), procedure = "lastfirst")
 ) %>%
   #mutate(name = map(name, ~ parse(text = .))) %>%
   mutate(procedure = fct_inorder(procedure)) %>%
@@ -56,7 +56,8 @@ lmks %>%
     axis.text.y = element_blank(), axis.ticks.y = element_blank(),
     panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank()
   ) +
-  labs(x = NULL, y = NULL) ->
+  labs(x = NULL, y = NULL) +
+  ggtitle("Maxmin and landmark covers of a variable-density risk sample") ->
   lmks_plot
 print(lmks_plot)
 
