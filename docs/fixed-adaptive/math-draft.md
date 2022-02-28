@@ -96,6 +96,7 @@ Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$,
 The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
 
 \begin{figure}
+\includegraphics[width=\textwidth]{../figures/vardens-cover}
 \caption{
 Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
 \label{fig:icu-cover}
@@ -346,6 +347,14 @@ Consider the "necklace" data set adapted from [@].
 The points are sampled in the plane from a large, low-density circular region (the "string") and from several smaller, higher-density circular regions (the "beads") evenly spaced along the string.
 Only a method of detecting topology that is adaptive to the different scales of the string and of the beads will recover both the large feature and the smaller features of dimension 1.
 We use small landmark samples to illustrate the differences between the maxmin and lastfirst selection procedures, **and we compute the nerves of the covers obtained from larger samples to test their ability to detect homology at multiple scales**.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
+\caption{
+Landmark samples of size 12 from a necklace data set using two selection procedures.
+\label{fig:necklace}
+}
+\end{figure}
 
 # Implementation
 \label{sec:implementation}

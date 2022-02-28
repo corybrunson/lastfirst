@@ -73,7 +73,7 @@ homology (PH) and mapper-like constructions, it can be understood to
 generalize many conventional and even classical techniques, including
 cluster analysis, network analysis, and nearest neighbors prediction.
 
-Two basic maneuvers in TDA are locality preservation and cardinality
+Two frequent maneuvers in TDA are locality preservation and cardinality
 reduction. \emph{Locality preservation} is the property of some
 functions, such as projections or hashes, that nearby cases or points in
 the domain have nearby images in the codomain. (Continuity, as defined
@@ -222,6 +222,51 @@ multiple instances of the same point. All of these attributes violate
 the assumptions of the ball cover approach and suggest the need for an
 ordinal counterpart.
 
+\hypertarget{illustration}{%
+\subsection{Illustration}\label{illustration}}
+
+As a motivating example, imagine an intensive care unit whose patients
+fall roughly into three groups: a large, clinically homogeneous,
+low-risk majority; a smaller, more heterogeneous, higher-risk group; and
+a minority of highly distinctive patients who cannot be sorted into
+either group and are at less predictable risk.
+
+Figure\nbs\ref{fig:icu-density} depicts a simple model of this situation
+in which each group is represented by a Gaussian distribution. The shape
+approximates an empirical distribution of standard risk scores observed
+for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}).
+(Imagine that probabilistic risk has been logit-transformed, so that all
+real values are possible risk estimates.) The points \(X\) along the
+abscissa are sampled randomly from this distribution.
+
+\begin{figure}
+\caption{
+Imagined distribution of mortality risk for patients in an ICU and a finite sample $X$ from this distribution.
+The density function is the sum of three Gaussian density functions, weighted by a partition of unity.
+\label{fig:icu-density}
+}
+\end{figure}
+
+Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst
+procedures generate sequences in \(X\) of four landmarks each. Each
+procedure begins with a seed landmark \(\ell_0\) selected to be
+reachable by minimum-radius balls (maxmin) or by minimum-cardinality
+neighborhoods (lastfirst) from all other points in \(X\); see the
+appendix for details. Whereas the maxmin landmarks are roughly
+equally-spaced across the range of \(X\), the lastfirst landmarks lie at
+roughly equal quantiles of \(X\). The lastfirst procedure will be
+advantageous when subpopulations can be discriminated at different
+resolutions and the ability to do so is limited primarily by sample
+size.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/vardens-cover}
+\caption{
+Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
+\label{fig:icu-cover}
+}
+\end{figure}
+
 \hypertarget{procedures}{%
 \section{Procedures}\label{procedures}}
 
@@ -264,7 +309,7 @@ since there may exist \(w \in X\) for which \(d(x,y)=d(z,w)\) but
 pseudometric spaces, which we take to be a \(1\)-Lipschitz map
 (\(d_X(x,y)\geq d_Y(f(x),f(y))\)).
 
-Denote by \(\power(X)\) the power set of \(X\) and by \(\order(X)\) the
+Denote by \(\power{X}\) the power set of \(X\) and by \(\order{X}\) the
 set of ordered, non-duplicative sequences from \(X\). We use the ball
 notation \(B_{\eps}(x) \in \power(X)\) for the set of points less than
 distance \(\eps\) from a point \(x\); that is,
@@ -331,10 +376,10 @@ require that the balls \(\{ \cl{B_{\eps}}(\ell) : \ell \in L \}\) cover
 \(X\). Choose a first landmark point \(\ell_0\in X\). Inductively over
 \(i\in\N\), if ever \(i\geq n\) or \(d(L,X\wo \cl{L})\leq\eps\), then
 stop. Otherwise, when \(L=\{\ell_0,\ldots,\ell_{i-1}\}\), choose
-\(\ell_i\in\maxmin(L)\), according to a preferred procedure \(\sigma\).
-If a fixed number \(n\) of landmarks was prescribed, then set
-\(\eps=\eps(n)=d(L,X\wo \cl{L})\); if \(\eps\) was prescribed and
-\(\sigma\) is understood, then set \(n=n(\eps)=\abs{L}\). Write
+\(\ell_i\in\maxmin(L)\), according to a preferred procedure \(\sigma\)
+(see the Appendix). If a fixed number \(n\) of landmarks was prescribed,
+then set \(\eps=\eps(n)=d(L,X\wo \cl{L})\); if \(\eps\) was prescribed
+and \(\sigma\) is understood, then set \(n=n(\eps)=\abs{L}\). Write
 \(\mathcal{B}_\eps(\ell_0)=\{\cl{B_{\eps}(\ell_i)}\}_{i=0}^{n}\) for the
 resulting \emph{landmark cover of $X$}.
 
@@ -352,137 +397,34 @@ in \(\eps\) will yield a collection of sets that fail to cover \(X\). A
 describe two adaptive parameters implemented in our software package
 that make these choices easier.
 
-\hypertarget{selection-procedures}{%
-\subsubsection{Selection procedures}\label{selection-procedures}}
+\hypertarget{lastfirst-procedure}{%
+\subsection{Lastfirst procedure}\label{lastfirst-procedure}}
 
-The choice of \(\ell_i \in \maxmin(L)\) is trivial when \(X\) is in
-locally general position, but this study is specifically interested in
-cases with a high frequency of violations of this property, and indeed
-with such violations of Hausdorffness that large numbers of points in
-\(X\) may be co-located. When \(X\) is not in locally general position,
-the choice of selection from among the maxmin set is consequential. For
-convenience, let \(\maxmin(L;X)\) take the value \(\varnothing\) if
-\(\cl{L}=X\) and the value \(X\) if \(L=\varnothing\). Then write
-\(\graph{\maxmin, X} \subset \order{X} \times \power{X}\) for the graph
-of the unary function \(\maxmin(\,\cdot\,;X): \order{X} \to \power{X}\),
-so that \((L,\Gamma) \in \graph{\maxmin, X}\) if and only if
-\(\maxmin(L;X) = \Gamma\). Then a selection procedure is a function
-\(\sigma: \graph{\maxmin, X} \to X\) subject to
-\(\sigma((L,\Gamma)) \in \Gamma = \maxmin(L;X)\). Importantly,
-\(\sigma\) may depend not only on the maxmin set \(\Gamma\) but also on
-the ordered sequence \(L\).
+Let us redefine the maxmin procedure in terms of balls rather than of
+distances:
 
-We assume the following choice of \(\sigma\): Take
-\(d_L = \max_{y \in X \wo \cl{L}}{d(y,L)}\). For each
-\(y \in \maxmin(L;X)\), choose \(\ell_y \in L\) for which
-\(d(y,\ell_y) = d_L\). Then take
-\(\maxmin^{(1)}(L;X) = \{y \in \maxmin(L;X) \mid d(y,L \wo \{\ell_y\}) = \max_{z \in \maxmin(L;X)}{d(z,L \wo \{\ell_z\})}\}\).
-While \(\abs{\maxmin^{(j)}(L;X)} > 1\), continue in this way until
-either a singleton is reached or \(j=\abs{L}=i\). If the latter, then
-the choice \(\sigma\) is arbitrary among the remaining \(y\).\footnote{Should
-  this be written up as an algorithm?}
-
-\hypertarget{relative-ranks}{%
-\subsection{Relative ranks}\label{relative-ranks}}
-
-Relative ranks are a much more general notion of metric that encompasess
-ranks in nearest neighborhoods.
-
-\begin{definition}[relative rank]
-    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
-    \begin{equation}\label{eqn:relative-rank}
-        d(x,x) \leq d(x,y) for all x,y \in X
-    \end{equation}
+\begin{definition}[maxmin in terms of balls]
+Write $\cl{B_\eps}(Y) = \bigcup_{y \in Y}{\overline{B_\eps}(y)}$ and similarly for open balls. Then $D(Y,X) = \argmin_{\eps}{\cl{B_\eps}(Y) = X}$ and $d(Y,X) = \argmax_{\eps}{B_\eps(Y) = Y}$, and we may define the \emph{maxmin set}:
+$$\maxmin(Y;X) = X \wo B_{D(Y,X)}(Y)$$
 \end{definition}
 
-Ego-stances can be used as the basis for a much more general maxmin
-procedure, taking care in particular to account for asymmetry.
-
-\begin{definition}[maxmin under a relative rank]
-Given a relative rank $q$ on $X$, write
-\begin{align*}
-    q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
-    q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
-    q(Y,x) &= q(Y,\{x\})                   & Q(x,Y) &= Q(Y,\{x\}) \\
-\end{align*}
-Given $L\subset X$, and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
-\begin{align*}
-    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid q(L,x) = \max_{y\in X\wo \cl{L}}{q(L,y)}\} \\
-    \maxmin(X) &= \{x\in X\mid q(X \wo \cl{\{x\}},x) = \max_{y\in X}{q(X \wo \cl{\{y\}},y)}\}
-\end{align*}
-consisting of \emph{maxmin points}.
-\end{definition}
-
-A pseudometric \(d_X\) induces a relative rank that we call the relative
-rank, which takes values in \(\N\) given by the ordinal of one point's
-distance from another.
-
-\begin{definition}[out-rank and in-rank]
-    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
-    \begin{equation}\label{eqn:out-rank}
-        q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
-    \end{equation}
-    and the \emph{in-rank} $q_{X,d}^\top = q_{X,d} \circ T$, so that $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
-\end{definition}
-
-As with \(d\), we allow ourselves to write \(q=q_{X,d}\) when clear from
-context. Note that \(q_{X,d}\) is a relative rank with \(q(x,x)=0\),
-\(q(x,y) < N\), and \(\forall x,y \in X : q(x,x) \leq q(x,y)\).
-
-\begin{example}\label{ex:relative-rank}
-    Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
-    \begin{centeredTikz}
-        [every label/.append style={text=black!60!blue, font=\scriptsize}]
-        \draw[gray] (0,0) -- (5,0);
-
-        \foreach \i in {0,...,3}
-            \draw[gray] (\i,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$\i$};
-        \draw[gray] (3,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {};
-        \draw[gray] (5,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$5$};
-
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$a = 1$}] at (1,0) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$b = 2$}] at (2,0) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$c = 4$}] at (4,0.1) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=below:{$d = 4$}] at (4,-0.1) {};
-    \end{centeredTikz}
-
-    Lack of symmetry of $q$ is shown by points $b$ and $c$ :
-    \begin{align*}
-        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} &
-        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} \\
-               &= \abs{\{a, b\}} &&= \abs{\{b, c, d\}} \\
-               &= 2 &&= 3
-    \end{align*}
-
-    Observe in particular that $\max_{x\in X}{q(a,x)}=2<\abs{X}-1$; $q(x,\,\cdot\,)$ will not max out at $N-1$ when the most distant points from $x$ have multiplicity.
-
-    However, $q(x,x) = 0$ whether $x$ has multiplicity or not:
-    \begin{align*}
-        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} &
-        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} \\
-               &= \abs{\varnothing} &&= \abs{\varnothing} \\
-               &= 0 &&= 0
-    \end{align*}
-\end{example}
-
-We also term the unary rankings \(q(x,\,\cdot\,)\) and
-\(q(\,\cdot\,,x)\) the \emph{out- (from $x$)} and
-\emph{in- (to $x$) rankings} of \(X\), respectively.\footnote{The
-  terminology and notation are adapted from graph theory. These
-  definitions are the same as those for a complete directed graph on
-  \(X\) with directed arcs \(x\to y\) weighted by \(q(x,y)\).} These can
-be used to define \emph{out-} and \emph{in-neighborhoods} of \(x\).
+The lastfirst procedure is defined analogously to the maxmin procedure,
+substituting nearest neighborhoods, parameterized by their cardinality
+\(k\), for balls, parameterized by their radius \(\eps\). Membership in
+nearest neighborhoods is not a symmetric relation: It may be that
+\(y \in N_k(x)\) while \(x \notin N_k(y)\). We therefore introduce a
+companion concept that reverses this relationship:
 
 \begin{definition}[$k$-neighborhoods]
     For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
     \begin{align*}
-        & N^+_k(x)=\{y\in X\mid q(x,y)\leq k\} \\
-        & N^-_k(x)=\{y\in X\mid q(y,x)\leq k\}
+        N^+_k(x) &= \{ y\in X \mid y \in N_k(x) = N_k(x) \} \\
+        N^-_k(x) &= \{ y\in X \mid x \in N_k(y) \}
     \end{align*}
     Given a subset $Y \subseteq X$, we also define
     \begin{align*}
-        & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
-        & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
+        N^+_k(x,Y) &= Y \cap N^+_k(x) \\
+        N^-_k(x,Y) &= Y \cap N^-_k(x)
     \end{align*}
 \end{definition}
 
@@ -496,33 +438,17 @@ in \(X\) from which \(x\) has out-rank at most \(k\).
 \begin{example}\label{ex:rank-neighborhoods}
 Consider the same $X$ as in Example\nbs\ref{ex:relative-rank}. Compute $N_k^+$ and $N_k^-$ for $a$ and $c$, using $k = 3$:
 \begin{align*}
-    N_3^+ (a) &= \{x \in X \mid q(a,x) \leq 2\} &
-    N_3^+ (c) &= \{x \in X \mid q(c,x) \leq 2\} \\
-    &= \{a, b, c, d\} &
-    &= \{b, c, d\} \\
+    N_3^+ (a) &= \{a, b, c, d\} &
+    N_3^+ (c) &= \{b, c, d\} \\
     \\
-    N_3^- (a) &= \{x \in X \mid q(x,a) \leq 2\} &
-    N_3^- (c) &= \{x \in X \mid q(x,c) \leq 2\} \\
-    &= \{a, b\} &
-    &= \{a, b, c, d\}
+    N_3^- (a) &= \{a, b\} &
+    N_3^- (c) &= \{a, b, c, d\}
 \end{align*}
 \end{example}
 
 \begin{remark}
 If $\abs{N^\pm_k(x)} = n_k$, then $\abs{N^\pm_k(x,X\wo\{x\})} = n_k - 1$.
 \end{remark}
-
-Relative ranks are not as straightforward to compare among subsets of
-points. For example, for \(y\neq x\), \(q(x,y)\) takes integer values
-between \(\abs{\supp{\{x\}}}\) and \(N-1\). To explain and motivate
-their use, we attempt to intuitively adapt the maxmin procedure to this
-setting, then state and prove a formal definition for their analogs.
-
-\hypertarget{lastfirst-procedure}{%
-\subsection{Lastfirst procedure}\label{lastfirst-procedure}}
-
-The lastfirst procedure is defined analogously to the maxmin procedure,
-substituting ``relative rank'' for the pseudometric \(d_X\).
 
 \hypertarget{rank-sequences-and-landmark-selection}{%
 \subsubsection{Rank sequences and landmark
@@ -541,7 +467,7 @@ This is a useful heuristic for constructing a ball cover
 \(\mathcal{B} = \{\cl{B_\eps}(\ell_j) \mid 0 \leq j < n\}\) centered at
 a highly mutually distant set of landmarks.
 
-We desire to construct a neighborhoodcover
+We desire to construct a neighborhood cover
 \(\mathcal{N} = \{N^+_k(\ell_j) \mid 0 \leq j < n\}\) whose centers are
 analogously dispersed. Suppose \(\ell_i\) is selected so that the
 minimum \(k\) required for
@@ -558,9 +484,10 @@ choose \(\ell_i\) for which \(N^-_{k}(\ell_i,L) \leq 1\) for the latest
 \(k^-_1 = k^-_0\), in which case no \(N^-_k(\ell_i,L) = 1\).) Continue
 this process until only one candidate \(\ell\) remains (up to
 multiplicity), or until \(N^-_{k}(\ell,L)=\abs{L}\), in which case all
-remaining candidates may be considered equivalent.
-
-Example\nbs\ref{ex:rank-sequence} illustrates these computations.
+remaining candidates may be considered equivalent.\footnote{Break this
+  into a separate paragraph that analogizes \(\sigma\) from the maxmin
+  discussion.} Example\nbs\ref{ex:rank-sequence} illustrates these
+computations.
 
 \begin{example}\label{ex:rank-sequence}
 Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\bullet^+$ and $N_\bullet^-$ for $a$ and $c$:
@@ -583,7 +510,7 @@ Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\
 
 \begin{definition}[total orders on rank sequences]
     Let $a_n = (a_1,\ldots,a_M),b_n = (b_1,\ldots,b_M)\in\N^M$.
-    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i, a_i > b_i \wedge (\forall j<i, a_j = b_j)$.
+    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i : a_i > b_i \wedge (\forall j<i : a_j = b_j)$.
 \end{definition}
 
 Impose the revlex order on the \(N_\bullet^+\) and \(N_\bullet^-\) to
@@ -594,21 +521,13 @@ points.
 We now define counterparts to the minmax and maxmin procedures to be
 used with these totally ordered sequences.
 
-\begin{lemma}
-    Let $q$ be a relative rank on $X$ with associated neighborhoods $N_\bullet^\pm$.
-    Then, given $Y\subset X$,
-    \begin{align*}
-        \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
-        \maxmin(X,q) &= \{x\in X\mid N_\bullet^-(x,X \wo \cl{\{x\}}) = \max_{y\in X}{N_\bullet^-(y,X \wo \cl{\{y\}}}\}
-    \end{align*}
-\end{lemma}
-
 \begin{definition}[firstlast and lastfirst]
-    Let $d$ be a pseudometric on $X$ with induced relative rank $q_d$.
-    Given $Y\subset X$, define the \emph{lastfirst sets}
+    Let $d$ be a pseudometric on $X$.
+    Given $Y\subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let $K(Y,X) = \argmin_{k}{N_k(Y) = X}$.
+    Define the \emph{lastfirst sets}
     \begin{align*}
-        \lf(Y;X,d) = \lf(Y) &= \maxmin(Y;X,q_d) \\
-        \lf(X,d) &= \maxmin(X,q_d)
+        \lf(Y;X,d) &= X \wo N_{K(Y,X) - 1}(Y) \\
+        \lf(X,d)   &= \{ x \in X \mid K(\{x\},X) = \max_{y \in X}{K(\{y\},X)} \}
     \end{align*}
     consisting of \emph{lastfirst points}.
 \end{definition}
@@ -634,199 +553,35 @@ used with these totally ordered sequences.
     \end{enumerate}
 \end{example}
 
-\hypertarget{algorithms}{%
-\subsubsection{Algorithms}\label{algorithms}}
+We defer algorithms and proofs to the Appendix, where we rely on
+additional technical definitions. The results apply to a more general
+conception of ``relative rank'' (our term), one of which is induced by
+the pseudometric on any finite pseudometric space but which need only
+satisfy the condition that a point is no nearer any other point than
+itself.
 
-Algorithm\nbs\ref{alg:lastfirst-landmarks} calculates a lastfirst set
-from a seed point, subject to parameters analogous to \(n\) and
-\(\epsilon\) in Algorithm\nbs\ref{alg:maxmin}. The algorithm is tailored
-to the vectorized arithmetic of R, and Lemma\nbs\ref{lem:revlex-lex}
-provides a shortcut between \(Q^-\) and the more compact way that the
-relative rank data are stored.
+\hypertarget{illustration-1}{%
+\subsubsection{Illustration}\label{illustration-1}}
 
-\begin{lemma}\label{lem:revlex-lex}
-For $L = \{ \ell_0, \ldots, \ell_n \} \subset X$, write $S(x,L) = ( q(\ell_{\pi^{-1}(1)},x) \leq \cdots \leq q(\ell_{\pi^{-1}(n)},x) )$, where $\pi$ is any suitable permutation on $[n]$.
-Then $Q^-(x,L) < Q^-(y,L) \Leftrightarrow S(x,L) < S(y,L)$.
-\end{lemma}
+Consider the ``necklace'' data set adapted from {[}@{]}. The points are
+sampled in the plane from a large, low-density circular region (the
+``string'') and from several smaller, higher-density circular regions
+(the ``beads'') evenly spaced along the string. Only a method of
+detecting topology that is adaptive to the different scales of the
+string and of the beads will recover both the large feature and the
+smaller features of dimension 1. We use small landmark samples to
+illustrate the differences between the maxmin and lastfirst selection
+procedures, \textbf{and we compute the nerves of the covers obtained
+from larger samples to test their ability to detect homology at multiple
+scales}.
 
-\begin{proof}
-Write $Q(x) = Q^-(x,L)$ and $Q(y) = Q^-(y,L)$ and suppose that $Q(x) < Q(y)$.
-This means that $Q_i(x) > Q_i(y)$ for some index $i \in [N]$ while $Q_j(x) = Q_j(y)$ for all $j < i$.
-There are then, for each $j < i$, equal numbers of $\ell \in L$ for which $q(\ell,x) = j$ and for which $q(\ell,y) = j$; while there are more $\ell \in L$ for which $q(\ell,x) = i$ than for which $q(\ell,y) = i$.
-When the sets $\{ q(\ell,x) \}_{\ell in L}$ and $\{ q(\ell,y) \}_{\ell in L}$ are arranged in order to get $S(x,L)$ and $S(y,L)$, therefore, the leftmost position at which they differ is $Q_1(y) + \cdots + Q_i(Y) + 1$, at which $q(\ell,x) = i$ while $q(\ell,y) \geq i + 1$.
-Thus $S(x,L) <_{\operatorname{lex}} S(y,L)$.
-
-The reverse implication is similarly straightforward.
-\end{proof}
-
-\begin{algorithm}
-\caption{Calculate the lastfirst landmark sequence from a seed point.}
-\label{alg:lastfirst-landmarks}
-\begin{algorithmic}[1]
-\REQUIRE finite pseudometric space $(X,d)$
-\REQUIRE seed point $\ell_0 \in X$
-\REQUIRE number of landmarks $n \in \N$ or cover set cardinality $k \in \N$
-\REQUIRE selection procedure $\sigma$
-\STATE if $n$ is not given, set $n \leftarrow 0$
-\label{line:n}
-\STATE if $k$ is not given, set $k \leftarrow \infty$
-\label{line:k}
-\STATE $L \leftarrow \varnothing$ initial landmark set
-\STATE $F \leftarrow \{ \ell_0 \}$ initial lastfirst set
-\STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
-\FOR{$i$ from $0$ to $\uniq{X} - 1$}
-    \STATE $\ell_i \leftarrow \sigma(F)$
-    \STATE $L \leftarrow L \cup \{\ell_i\}$
-    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
-    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
-    \label{line:rank}
-    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times (i+1)}$
-    \STATE $k_{\min} \leftarrow \max_{r=1}^{N}{ \min_{j=1,i+1}{ R_{r,j} } }$ (minimum $k$ for which neighborhoods centered at $L$ cover $X$)
-    \label{line:kmin}
-    \IF{$D(L, X \wo \cl{L}) = 0$}
-        \STATE \textbf{break}
-        \label{line:nonempty}
-    \ENDIF
-    \IF{$i \geq n$ and $k_{\min} \leq k$}
-        \STATE \textbf{break}
-        \label{line:check}
-    \ENDIF
-    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \N^{N \times (i+1)}$
-    \label{line:sort}
-    \STATE $F \leftarrow X \wo \cl{L}$
-    \FOR{$j$ from $1$ to $i$}
-    \label{line:maximize}
-        \STATE $F \leftarrow \{x_r \in F \mid R_{rj} = \max_{r'}{R_{r'j}}\}$
-        \label{line:lastfirst}
-        \IF{$\abs{F} = 1$}
-            \STATE \textbf{break}
-        \ENDIF
-    \ENDFOR
-\ENDFOR
-\RETURN $L$
-\RETURN lastfirst landmark set $L$ with at least $n$ cover sets of cardinality at most $k$
-\end{algorithmic}
-\end{algorithm}
-
-\begin{proposition}
-Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
-If $n \leq \uniq{X}$ is given as input and $k$ is not, then $\abs{L} = n$.
-If $n$ and $k$ are both given, then $\abs{L} \geq n$.
-Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
-\end{proposition}
-
-\begin{proof}
-Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point, as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
-Note that, for the algorithm to terminate its loop and subsequently return $L$, either there must be no points in $X \wo \cl{L}$ distinguishable from $L$ (line\nbs\ref{line:nonempty}), or both of two exit conditions must hold (line\nbs\ref{line:check}):
-  (1) $k_{\min} \leq k$ and
-  (2) $\abs{L} \geq n$.
-
-Because the seed point is arbitrary, for the main result it is enough to show that, at each step $i$, $F = \lf(\{ \ell_0, \ldots, \ell_{i-1} \})$.
-When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the in-ranks $q(\ell_i, x_r)$ of $x_r$ in increasing order.
-Because $D(L, X \wo \cl{L}) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
-By Lemma\nbs\ref{lem:revlex-lex}, then, $Q^-(x_r, L)$ is maximized (in revlex) when $R_r$ is maximized in lex, and this is exactly what the loop that begins on line\nbs\ref{line:maximize} does.
-
-Suppose first that $n \leq \uniq{X}$ is given.
-The loop will only break on line\nbs\ref{line:nonempty} if $D(L, X \wo \cl{L}) = 0$, which is only possible if $\abs{L} = \uniq{X} \geq n$.
-The loop will only break on line\nbs\ref{line:check} if both $\abs{L} = i \geq n$ and $k_{\min} \leq k$.
-Since these are the only two possible breaks, $\abs{L} \geq n$ is a necessary condition.
-\footnote{Note that $\abs{L} > n$ if and only if $k_{\min} \leq k$ is not satisfied when $\abs{L} = n$, meaning that $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so that more landmarks must be chosen to guarantee the algorithm produces a valid $k$-neighborhood cover.}
-
-If $k$ is not given, then $k$ is set to $\infty$ on line\nbs\ref{line:k}, which means that (1) holds throughout the loop.
-Then the algorithm terminates as least as soon as (2) is satisfied, when $\abs{L} = n$, and as discussed above it cannot terminate any sooner.
-
-Now suppose $n$ is not given.
-Then $k$ must be given, and $n$ is set to $0$ (line\nbs\ref{line:n}).
-This means that (2) always holds, so the algorithm terminates as soon as (1) is satisfied, i.e.\ when $k \geq k_{\min}$ with $k_{\min}$ as defined on line\nbs\ref{line:kmin}.
-We claim that
-\[ k_{\min} = \max_{x \in X}{ \min_{\ell \in L}{ q(\ell, x) } } \]
-which means that every point in $x$ is within a $k$-neighborhood of some existing landmark $\ell \in L$, i.e.\ that the $k$-neighborhoods at $L$ constitute a cover of $X$.
-For this to have not been true for $L$ at previous iterations, there must have been $x \in X$ with $q(\ell, x) > k$ for all $\ell \in L$, meaning that the $k$-neighborhoods at $L$ did not cover $X$.
-
-To prove the claim, note that the maximum is taken over all rows of $R$, which at no point in the algorithm are permuted---that is, the entries of row $R_{r,\bullet}$ at each iteration consist of $q(\ell_0,x_r),\ldots,q(\ell_i,x_r)$ in some order.
-Therefore, $\min_{j=1}^{i}{R_{r,j}} = \min_{\ell \in L}{ q(\ell, x_r) }$.
-Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (line\nbs\ref{line:sort}), this minimum only needs to be taken over $j=1,i$, which gives the formula on line\nbs\ref{line:kmin}.
-\end{proof}
-
-\hypertarget{tie-handling}{%
-\subsubsection{Tie handling}\label{tie-handling}}
-
-We might have defined two relative ranks
-\(\check{q}, \hat{q} : X \times X \longrightarrow \N\) (``\(q\)-check''
-and ``\(q\)-hat'') as follows: \begin{align*}
-& \check{q}(x,y)=\abs{\{z\in X\mid d(x,z)<d(x,y)\}} \\%>
-& \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}} - 1
-\end{align*} In this notation, \(\check{q}=q\), while \(\hat{q}(x,y)\)
-is the cardinality of the smallest ball centered at \(x\) that contains
-\(y\). Then
-\(\check{N}^\pm_1(x) \subseteq \{x\} \subseteq \hat{N}^\pm_1(x)\), and
-\(\hat{q}(x,x)>0\) when \(x\) has multiplicity. The two relative ranks
-derive from two tie-handling schemes for calculating rankings of lists
-with duplicates. For example, if \(a<b=c<d\) are the distances from
-\(x\) to \(y_1,y_2,y_3,y_4\), respectively, then
-\((\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(0,1,1,3)\)
-and
-\((\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(0,2,2,3)\).
-Indeed, any tie-handling rule could be used, and the choice becomes more
-consequential with greater multiplicity in the data.
-
-Conceptually, the lastfirst procedure based on \(\hat{q}\) would produce
-landmark sets that yield neighborhood covers with smaller, rather than
-larger, neighborhoods in regions of high multiplicity. While we do not
-use these ideas in this study, they may be suitable in some settings or
-for some purposes, for example when high multiplicity indicates a
-failure to discriminate between important categories. It is also
-possible that \(\check{q}\)- and \(\hat{q}\)-based covers could be used
-to produce interveaving sequences of nerves useful for stability
-analysis.
-
-\begin{example}\label{ex:relative-rank-max}
-
-Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. The relative rank $\hat{q}$ is also asymmetric:
-\begin{align*}
-    \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
-    \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
-        &= \abs{\{a, b, c, d\}} &&= \abs{\{b, c, d\}} \\
-        &= 4 &&= 3
-\end{align*}
-
-Observe that $\hat{q}(x,x) = 1$ only for distinguishable points $x \in X$:
-\begin{align*}
-    \hat{q}(a,a) &= \abs{\{x \in X \mid \abs{x-a} \leq \abs{a-a} = 0\}} &
-    \hat{q}(c,c) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{c-c} = 0\}} \\
-       &= \abs{\{a\}} &&= \abs{\{c, d\}} \\
-       &= 1 &&= 2
-\end{align*}
-
-Finally, observe that $\hat{q}(x,\,\cdot\,)$ always maxes out at $\abs{X}$: $\hat{q}(a,c) = \hat{q}(b,c) = \hat{q}(c,a) = \hat{q}(d,a) = \abs{X}$.
-
-Continuing on as in Example\nbs\ref{ex:rank-neighborhoods}, we can compute $\hat{N}_2^+$ and $\hat{N}_2^-$ for $b$ and $c$:
-\begin{align*}
-    \hat{N}_2^+ (b) &= \{x \in X \mid \hat{q}(b,x) \leq 2\} &
-    \hat{N}_2^+ (c) &= \{x \in X \mid \hat{q}(c,x) \leq 2\} \\
-        &= \{a, b\} &&= \{c, d\} \\
-        \\
-    \hat{N}_2^- (b) &= \{x \in X \mid \hat{q}(x,b) \leq 2\} &
-    \hat{N}_2^- (c) &= \{x \in X \mid \hat{q}(x,c) \leq 2\} \\
-        &= \{a, b\} &&= \{c, d\}
-\end{align*}
-
-Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ for $b$ and $c$:
-\begin{align*}
-    \hat{Q}^+ (b) &= (\abs{\hat{N}^+_1(b)}, \abs{\hat{N}^+_2(b)}, \abs{\hat{N}^+_3(b)}, \abs{\hat{N}^+_4(b)}) &
-    \hat{N}_\bullet^+ (c) &= (\abs{\hat{N}^+_1(c)}, \abs{\hat{N}^+_2(c)}, \abs{\hat{N}^+_3(c)}, \abs{\hat{N}^+_4(c)}) \\
-        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
-        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
-        &= (1, 2, 2, 4) &
-        &= (0, 2, 3, 4) \\
-        \\
-    \hat{N}_\bullet^- (b) &= (\abs{\hat{N}^-_1(b)}, \abs{\hat{N}^-_2(b)}, \abs{\hat{N}^-_3(b)}, \abs{\hat{N}^-_4(b)}) &
-    \hat{N}_\bullet^- (c) &= (\abs{\hat{N}^-_1(c)}, \abs{\hat{N}^-_2(c)}, \abs{\hat{N}^-_3(c)}, \abs{\hat{N}^-_4(c)}) \\
-        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
-        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}) \\
-        &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
-\end{align*}
-\end{example}
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
+\caption{
+Landmark samples of size 12 from a necklace data set using two selection procedures.
+\label{fig:necklace}
+}
+\end{figure}
 
 \hypertarget{implementation}{%
 \section{Implementation}\label{implementation}}
@@ -905,6 +660,8 @@ tests.
 
 \hypertarget{mimic-iii}{%
 \subsubsection{MIMIC-III}\label{mimic-iii}}
+
+\label{sec:mimic}
 
 The open-access critical care database MIMIC-III (``Medical Information
 Mart for Intensive Care''), derived from the administrative and clinical
@@ -1378,6 +1135,364 @@ rich data, relevance can be more precisely measured and becomes more
 important to cohort definition, as with MIMIC. When variables are fewer,
 as with MXDH, relevance is more difficult to measure, so that larger
 samples can improve performance even at the expense of such a measure.
+
+\hypertarget{appendix}{%
+\section{Appendix}\label{appendix}}
+
+\hypertarget{selection-procedures}{%
+\subsubsection{Selection procedures}\label{selection-procedures}}
+
+The choice of \(\ell_i \in \maxmin(L)\) is trivial when \(X\) is in
+locally general position, but this study is specifically interested in
+cases with a high frequency of violations of this property, and indeed
+with such violations of Hausdorffness that large numbers of points in
+\(X\) may be co-located. When \(X\) is not in locally general position,
+the choice of selection from among the maxmin set is consequential. For
+convenience, let \(\maxmin(L;X)\) take the value \(\varnothing\) if
+\(\cl{L}=X\) and the value \(X\) if \(L=\varnothing\). Then write
+\(\graph{\maxmin, X} \subset \order{X} \times \power{X}\) for the graph
+of the unary function \(\maxmin(\,\cdot\,;X): \order{X} \to \power{X}\),
+so that \((L,\Gamma) \in \graph{\maxmin, X}\) if and only if
+\(\maxmin(L;X) = \Gamma\). Then a selection procedure is a function
+\(\sigma: \graph{\maxmin, X} \to X\) subject to
+\(\sigma((L,\Gamma)) \in \Gamma = \maxmin(L;X)\). Importantly,
+\(\sigma\) may depend not only on the maxmin set \(\Gamma\) but also on
+the ordered sequence \(L\).
+
+We assume the following choice of \(\sigma\): Take
+\(d_L = \max_{y \in X \wo \cl{L}}{d(y,L)}\). For each
+\(y \in \maxmin(L;X)\), choose \(\ell_y \in L\) for which
+\(d(y,\ell_y) = d_L\). Then take
+\(\maxmin^{(1)}(L;X) = \{y \in \maxmin(L;X) \mid d(y,L \wo \{\ell_y\}) = \max_{z \in \maxmin(L;X)}{d(z,L \wo \{\ell_z\})}\}\).
+While \(\abs{\maxmin^{(j)}(L;X)} > 1\), continue in this way until
+either a singleton is reached or \(j=\abs{L}=i\). If the latter, then
+the choice \(\sigma\) is arbitrary among the remaining \(y\).\footnote{Should
+  this be written up as an algorithm?}
+
+\hypertarget{relative-ranks}{%
+\subsection{Relative ranks}\label{relative-ranks}}
+
+Relative ranks are a much more general notion of metric that encompasess
+ranks in nearest neighborhoods.
+
+\begin{definition}[relative rank]
+    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
+    \begin{equation}\label{eqn:relative-rank}
+        \forall x,y \in X : d(x,x) \leq d(x,y)
+    \end{equation}
+\end{definition}
+
+Relative ranks can be used as the basis for a much more general maxmin
+procedure, taking care in particular to account for asymmetry.
+
+\begin{definition}[maxmin under a relative rank]
+Given a relative rank $q$ on $X$, write
+\begin{align*}
+    q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
+    q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
+    q(Y,x) &= q(Y,\{x\})                   & Q(x,Y) &= Q(Y,\{x\}) \\
+\end{align*}
+Given $L\subset X$, and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
+\begin{align*}
+    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid q(L,x) = \max_{y\in X\wo \cl{L}}{q(L,y)}\} \\
+    \maxmin(X) &= \{x\in X\mid q(X \wo \cl{\{x\}},x) = \max_{y\in X}{q(X \wo \cl{\{y\}},y)}\}
+\end{align*}
+consisting of \emph{maxmin points}.
+\end{definition}
+
+A pseudometric \(d_X\) induces a relative rank that we call the relative
+rank, which takes values in \(\N\) given by the ordinal of one point's
+distance from another.
+
+\begin{definition}[out-rank and in-rank]
+    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
+    \begin{equation}\label{eqn:out-rank}
+        q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
+    \end{equation}
+    and the \emph{in-rank} $q_{X,d}^\top = q_{X,d} \circ T$, so that $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
+\end{definition}
+
+As with \(d\), we allow ourselves to write \(q=q_{X,d}\) when clear from
+context. Note that \(q_{X,d}\) is a relative rank with \(q(x,x)=0\),
+\(q(x,y) < N\), and \(\forall x,y \in X : q(x,x) \leq q(x,y)\).
+
+\begin{example}\label{ex:relative-rank}
+    Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
+    \begin{centeredTikz}
+        [every label/.append style={text=black!60!blue, font=\scriptsize}]
+        \draw[gray] (0,0) -- (5,0);
+
+        \foreach \i in {0,...,3}
+            \draw[gray] (\i,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$\i$};
+        \draw[gray] (3,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {};
+        \draw[gray] (5,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$5$};
+
+        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$a = 1$}] at (1,0) {};
+        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$b = 2$}] at (2,0) {};
+        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$c = 4$}] at (4,0.1) {};
+        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=below:{$d = 4$}] at (4,-0.1) {};
+    \end{centeredTikz}
+
+    Lack of symmetry of $q$ is shown by points $b$ and $c$ :
+    \begin{align*}
+        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} &
+        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} \\
+               &= \abs{\{a, b\}} &&= \abs{\{b, c, d\}} \\
+               &= 2 &&= 3
+    \end{align*}
+
+    Observe in particular that $\max_{x\in X}{q(a,x)}=2<\abs{X}-1$; $q(x,\,\cdot\,)$ will not max out at $N-1$ when the most distant points from $x$ have multiplicity.
+
+    However, $q(x,x) = 0$ whether $x$ has multiplicity or not:
+    \begin{align*}
+        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} &
+        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} \\
+               &= \abs{\varnothing} &&= \abs{\varnothing} \\
+               &= 0 &&= 0
+    \end{align*}
+\end{example}
+
+We also term the unary rankings \(q(x,\,\cdot\,)\) and
+\(q(\,\cdot\,,x)\) the \emph{out- (from $x$)} and
+\emph{in- (to $x$) rankings} of \(X\), respectively.\footnote{The
+  terminology and notation are adapted from graph theory. These
+  definitions are the same as those for a complete directed graph on
+  \(X\) with directed arcs \(x\to y\) weighted by \(q(x,y)\).} These can
+be used to define \emph{out-} and \emph{in-neighborhoods} of \(x\).
+
+A relative rank \(q\) can be used to define \(k\)-neighborhoods in
+greater generality:
+
+\begin{definition}[$k$-neighborhoods using relative rank]
+    For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
+    \begin{align*}
+        & N^+_k(x)=\{y\in X\mid q(x,y)\leq k\} \\
+        & N^-_k(x)=\{y\in X\mid q(y,x)\leq k\}
+    \end{align*}
+    Given a subset $Y \subseteq X$, we also define
+    \begin{align*}
+        & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
+        & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
+    \end{align*}
+\end{definition}
+
+Relative ranks are not as straightforward to compare among subsets of
+points. For example, for \(y\neq x\), \(q(x,y)\) takes integer values
+between \(\abs{\supp{\{x\}}}\) and \(N-1\). To explain and motivate
+their use, we attempt to intuitively adapt the maxmin procedure to this
+setting, then state and prove a formal definition for their analogs.
+
+\begin{lemma}
+    Given $Y\subset X$,
+    \begin{align*}
+        \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
+        \maxmin(X,q) &= \{x\in X\mid N_\bullet^-(x,X \wo \cl{\{x\}}) = \max_{y\in X}{N_\bullet^-(y,X \wo \cl{\{y\}}}\}
+    \end{align*}
+\end{lemma}
+
+\begin{definition}[firstlast and lastfirst using relative rank]
+    Let $d$ be a pseudometric on $X$ with induced relative rank $q_d$.
+    Given $Y\subset X$, define the \emph{lastfirst sets}
+    \begin{align*}
+        \lf(Y;X,d) = \lf(Y) &= \maxmin(Y;X,q_d) \\
+        \lf(X,d) &= \maxmin(X,q_d)
+    \end{align*}
+    consisting of \emph{lastfirst points}.
+\end{definition}
+
+\hypertarget{algorithms}{%
+\subsubsection{Algorithms}\label{algorithms}}
+
+Algorithm\nbs\ref{alg:lastfirst-landmarks} calculates a lastfirst set
+from a seed point, subject to parameters analogous to \(n\) and
+\(\epsilon\) in Algorithm\nbs\ref{alg:maxmin}. The algorithm is tailored
+to the vectorized arithmetic of R, and Lemma\nbs\ref{lem:revlex-lex}
+provides a shortcut between \(Q^-\) and the more compact way that the
+relative rank data are stored.
+
+\begin{lemma}\label{lem:revlex-lex}
+For $L = \{ \ell_0, \ldots, \ell_n \} \subset X$, write $S(x,L) = ( q(\ell_{\pi^{-1}(1)},x) \leq \cdots \leq q(\ell_{\pi^{-1}(n)},x) )$, where $\pi$ is any suitable permutation on $[n]$.
+Then $Q^-(x,L) < Q^-(y,L) \Leftrightarrow S(x,L) < S(y,L)$.
+\end{lemma}
+
+\begin{proof}
+Write $Q(x) = Q^-(x,L)$ and $Q(y) = Q^-(y,L)$ and suppose that $Q(x) < Q(y)$.
+This means that $Q_i(x) > Q_i(y)$ for some index $i \in [N]$ while $Q_j(x) = Q_j(y)$ for all $j < i$.
+There are then, for each $j < i$, equal numbers of $\ell \in L$ for which $q(\ell,x) = j$ and for which $q(\ell,y) = j$; while there are more $\ell \in L$ for which $q(\ell,x) = i$ than for which $q(\ell,y) = i$.
+When the sets $\{ q(\ell,x) \}_{\ell in L}$ and $\{ q(\ell,y) \}_{\ell in L}$ are arranged in order to get $S(x,L)$ and $S(y,L)$, therefore, the leftmost position at which they differ is $Q_1(y) + \cdots + Q_i(Y) + 1$, at which $q(\ell,x) = i$ while $q(\ell,y) \geq i + 1$.
+Thus $S(x,L) <_{\operatorname{lex}} S(y,L)$.
+
+The reverse implication is similarly straightforward.
+\end{proof}
+
+\begin{algorithm}
+\caption{Calculate the lastfirst landmark sequence from a seed point.}
+\label{alg:lastfirst-landmarks}
+\begin{algorithmic}[1]
+\REQUIRE finite pseudometric space $(X,d)$
+\REQUIRE seed point $\ell_0 \in X$
+\REQUIRE number of landmarks $n \in \N$ or cover set cardinality $k \in \N$
+\REQUIRE selection procedure $\sigma$
+\STATE if $n$ is not given, set $n \leftarrow 0$
+\label{line:n}
+\STATE if $k$ is not given, set $k \leftarrow \infty$
+\label{line:k}
+\STATE $L \leftarrow \varnothing$ initial landmark set
+\STATE $F \leftarrow \{ \ell_0 \}$ initial lastfirst set
+\STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
+\FOR{$i$ from $0$ to $\uniq{X} - 1$}
+    \STATE $\ell_i \leftarrow \sigma(F)$
+    \STATE $L \leftarrow L \cup \{\ell_i\}$
+    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
+    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
+    \label{line:rank}
+    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times (i+1)}$
+    \STATE $k_{\min} \leftarrow \max_{r=1}^{N}{ \min_{j=1,i+1}{ R_{r,j} } }$ (minimum $k$ for which neighborhoods centered at $L$ cover $X$)
+    \label{line:kmin}
+    \IF{$D(L, X \wo \cl{L}) = 0$}
+        \STATE \textbf{break}
+        \label{line:nonempty}
+    \ENDIF
+    \IF{$i \geq n$ and $k_{\min} \leq k$}
+        \STATE \textbf{break}
+        \label{line:check}
+    \ENDIF
+    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \N^{N \times (i+1)}$
+    \label{line:sort}
+    \STATE $F \leftarrow X \wo \cl{L}$
+    \FOR{$j$ from $1$ to $i$}
+    \label{line:maximize}
+        \STATE $F \leftarrow \{x_r \in F \mid R_{rj} = \max_{r'}{R_{r'j}}\}$
+        \label{line:lastfirst}
+        \IF{$\abs{F} = 1$}
+            \STATE \textbf{break}
+        \ENDIF
+    \ENDFOR
+\ENDFOR
+\RETURN $L$
+\RETURN lastfirst landmark set $L$ with at least $n$ cover sets of cardinality at most $k$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{proposition}
+Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
+If $n \leq \uniq{X}$ is given as input and $k$ is not, then $\abs{L} = n$.
+If $n$ and $k$ are both given, then $\abs{L} \geq n$.
+Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
+\end{proposition}
+
+\begin{proof}
+Let $(X,d)$ be a finite metric space and $\ell_0 \in X$ be a seed point, as required by Algorithm\nbs\ref{alg:lastfirst-landmarks}.
+Note that, for the algorithm to terminate its loop and subsequently return $L$, either there must be no points in $X \wo \cl{L}$ distinguishable from $L$ (line\nbs\ref{line:nonempty}), or both of two exit conditions must hold (line\nbs\ref{line:check}):
+  (1) $k_{\min} \leq k$ and
+  (2) $\abs{L} \geq n$.
+
+Because the seed point is arbitrary, for the main result it is enough to show that, at each step $i$, $F = \lf(\{ \ell_0, \ldots, \ell_{i-1} \})$.
+When $F$ is calculated on line\nbs\ref{line:lastfirst}, the rows $R_r$ of $R$ contain the in-ranks $q(\ell_i, x_r)$ of $x_r$ in increasing order.
+Because $D(L, X \wo \cl{L}) > 0$ (line\nbs\ref{line:nonempty}), $F$ is nonempty.
+By Lemma\nbs\ref{lem:revlex-lex}, then, $Q^-(x_r, L)$ is maximized (in revlex) when $R_r$ is maximized in lex, and this is exactly what the loop that begins on line\nbs\ref{line:maximize} does.
+
+Suppose first that $n \leq \uniq{X}$ is given.
+The loop will only break on line\nbs\ref{line:nonempty} if $D(L, X \wo \cl{L}) = 0$, which is only possible if $\abs{L} = \uniq{X} \geq n$.
+The loop will only break on line\nbs\ref{line:check} if both $\abs{L} = i \geq n$ and $k_{\min} \leq k$.
+Since these are the only two possible breaks, $\abs{L} \geq n$ is a necessary condition.
+\footnote{Note that $\abs{L} > n$ if and only if $k_{\min} \leq k$ is not satisfied when $\abs{L} = n$, meaning that $X$ would not be covered by $k$-neighborhoods around $n$ landmark points, so that more landmarks must be chosen to guarantee the algorithm produces a valid $k$-neighborhood cover.}
+
+If $k$ is not given, then $k$ is set to $\infty$ on line\nbs\ref{line:k}, which means that (1) holds throughout the loop.
+Then the algorithm terminates as least as soon as (2) is satisfied, when $\abs{L} = n$, and as discussed above it cannot terminate any sooner.
+
+Now suppose $n$ is not given.
+Then $k$ must be given, and $n$ is set to $0$ (line\nbs\ref{line:n}).
+This means that (2) always holds, so the algorithm terminates as soon as (1) is satisfied, i.e.\ when $k \geq k_{\min}$ with $k_{\min}$ as defined on line\nbs\ref{line:kmin}.
+We claim that
+\[ k_{\min} = \max_{x \in X}{ \min_{\ell \in L}{ q(\ell, x) } } \]
+which means that every point in $x$ is within a $k$-neighborhood of some existing landmark $\ell \in L$, i.e.\ that the $k$-neighborhoods at $L$ constitute a cover of $X$.
+For this to have not been true for $L$ at previous iterations, there must have been $x \in X$ with $q(\ell, x) > k$ for all $\ell \in L$, meaning that the $k$-neighborhoods at $L$ did not cover $X$.
+
+To prove the claim, note that the maximum is taken over all rows of $R$, which at no point in the algorithm are permuted---that is, the entries of row $R_{r,\bullet}$ at each iteration consist of $q(\ell_0,x_r),\ldots,q(\ell_i,x_r)$ in some order.
+Therefore, $\min_{j=1}^{i}{R_{r,j}} = \min_{\ell \in L}{ q(\ell, x_r) }$.
+Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (line\nbs\ref{line:sort}), this minimum only needs to be taken over $j=1,i$, which gives the formula on line\nbs\ref{line:kmin}.
+\end{proof}
+
+\hypertarget{tie-handling}{%
+\subsubsection{Tie handling}\label{tie-handling}}
+
+We might have defined two relative ranks
+\(\check{q}, \hat{q} : X \times X \longrightarrow \N\) (``\(q\)-check''
+and ``\(q\)-hat'') as follows: \begin{align*}
+& \check{q}(x,y)=\abs{\{z\in X\mid d(x,z)<d(x,y)\}} \\%>
+& \hat{q}(x,y)=\abs{\{z\in X\mid d(x,z)\leq d(x,y)\}} - 1
+\end{align*} In this notation, \(\check{q}=q\), while \(\hat{q}(x,y)\)
+is the cardinality of the smallest ball centered at \(x\) that contains
+\(y\). Then
+\(\check{N}^\pm_1(x) \subseteq \{x\} \subseteq \hat{N}^\pm_1(x)\), and
+\(\hat{q}(x,x)>0\) when \(x\) has multiplicity. The two relative ranks
+derive from two tie-handling schemes for calculating rankings of lists
+with duplicates. For example, if \(a<b=c<d\) are the distances from
+\(x\) to \(y_1,y_2,y_3,y_4\), respectively, then
+\((\check{q}(x,y_1),\check{q}(x,y_2),\check{q}(x,y_3),\check{q}(x,y_4))=(0,1,1,3)\)
+and
+\((\hat{q}(x,y_1),\hat{q}(x,y_2),\hat{q}(x,y_3),\hat{q}(x,y_4))=(0,2,2,3)\).
+Indeed, any tie-handling rule could be used, and the choice becomes more
+consequential with greater multiplicity in the data.
+
+Conceptually, the lastfirst procedure based on \(\hat{q}\) would produce
+landmark sets that yield neighborhood covers with smaller, rather than
+larger, neighborhoods in regions of high multiplicity. While we do not
+use these ideas in this study, they may be suitable in some settings or
+for some purposes, for example when high multiplicity indicates a
+failure to discriminate between important categories. It is also
+possible that \(\check{q}\)- and \(\hat{q}\)-based covers could be used
+to produce interveaving sequences of nerves useful for stability
+analysis.
+
+\begin{example}\label{ex:relative-rank-max}
+
+Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. The relative rank $\hat{q}$ is also asymmetric:
+\begin{align*}
+    \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
+    \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
+        &= \abs{\{a, b, c, d\}} &&= \abs{\{b, c, d\}} \\
+        &= 4 &&= 3
+\end{align*}
+
+Observe that $\hat{q}(x,x) = 1$ only for distinguishable points $x \in X$:
+\begin{align*}
+    \hat{q}(a,a) &= \abs{\{x \in X \mid \abs{x-a} \leq \abs{a-a} = 0\}} &
+    \hat{q}(c,c) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{c-c} = 0\}} \\
+       &= \abs{\{a\}} &&= \abs{\{c, d\}} \\
+       &= 1 &&= 2
+\end{align*}
+
+Finally, observe that $\hat{q}(x,\,\cdot\,)$ always maxes out at $\abs{X}$: $\hat{q}(a,c) = \hat{q}(b,c) = \hat{q}(c,a) = \hat{q}(d,a) = \abs{X}$.
+
+Continuing on as in Example\nbs\ref{ex:rank-neighborhoods}, we can compute $\hat{N}_2^+$ and $\hat{N}_2^-$ for $b$ and $c$:
+\begin{align*}
+    \hat{N}_2^+ (b) &= \{x \in X \mid \hat{q}(b,x) \leq 2\} &
+    \hat{N}_2^+ (c) &= \{x \in X \mid \hat{q}(c,x) \leq 2\} \\
+        &= \{a, b\} &&= \{c, d\} \\
+        \\
+    \hat{N}_2^- (b) &= \{x \in X \mid \hat{q}(x,b) \leq 2\} &
+    \hat{N}_2^- (c) &= \{x \in X \mid \hat{q}(x,c) \leq 2\} \\
+        &= \{a, b\} &&= \{c, d\}
+\end{align*}
+
+Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ for $b$ and $c$:
+\begin{align*}
+    \hat{Q}^+ (b) &= (\abs{\hat{N}^+_1(b)}, \abs{\hat{N}^+_2(b)}, \abs{\hat{N}^+_3(b)}, \abs{\hat{N}^+_4(b)}) &
+    \hat{N}_\bullet^+ (c) &= (\abs{\hat{N}^+_1(c)}, \abs{\hat{N}^+_2(c)}, \abs{\hat{N}^+_3(c)}, \abs{\hat{N}^+_4(c)}) \\
+        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}) &
+        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{b, c, d\}}, \abs{\{a, b, c, d\}}) \\
+        &= (1, 2, 2, 4) &
+        &= (0, 2, 3, 4) \\
+        \\
+    \hat{N}_\bullet^- (b) &= (\abs{\hat{N}^-_1(b)}, \abs{\hat{N}^-_2(b)}, \abs{\hat{N}^-_3(b)}, \abs{\hat{N}^-_4(b)}) &
+    \hat{N}_\bullet^- (c) &= (\abs{\hat{N}^-_1(c)}, \abs{\hat{N}^-_2(c)}, \abs{\hat{N}^-_3(c)}, \abs{\hat{N}^-_4(c)}) \\
+        &= (\abs{\{b\}}, \abs{\{a, b\}}, \abs{\{a, b, c, d\}}, \abs{\{a, b, c, d\}}) &
+        &= (\abs{\varnothing}, \abs{\{c, d\}}, \abs{\{c, d\}}, \abs{\{a, b, c, d\}}) \\
+        &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
+\end{align*}
+\end{example}
 
 \hypertarget{references}{%
 \section{References}\label{references}}
