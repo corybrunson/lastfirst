@@ -133,15 +133,15 @@ For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $
 ## Maxmin procedure
 \label{sec:maxmin}
 
-Each step of the maxmin procedure receives a proper subset $L\subset X$ and returns a point $x\in X\wo \cl{L}$. We also define such a step without reference to $L$:
-
-Given $L\subset X$ and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
+\begin{definition}[maxmin]
+Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin sets}
 \begin{align*}
-    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid d(x,L) = \max_{y\in X\wo \cl{L}}{d(y,L)}\} \\
+    \maxmin(Y;X) = \maxmin(Y) &= \{x\in X \wo \cl{Y}\mid d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)}\} \\
     \maxmin(X) &= \{x\in X\mid d(x,X \wo \cl{\{x\}}) = \max_{y\in X}{d(y,X \wo \cl{\{y\}})}\}
 \end{align*}
 consisting of \emph{maxmin points}.
 Note that $\maxmin(X)$ is nonempty and that, when $X$ is in locally general position, it has cardinality $1$.
+\end{definition}
 
 \begin{algorithm}
 \caption{Select a maxmin landmark set.}
@@ -168,7 +168,9 @@ Note that $\maxmin(X)$ is nonempty and that, when $X$ is in locally general posi
 \end{algorithmic}
 \end{algorithm}
 
-The \emph{maxmin procedure} for generating a landmark set $L\subseteq X$ proceeds as follows (see Algorithm\nbs\ref{alg:maxmin}):
+The \emph{maxmin procedure} for generating a landmark set $L\subseteq X$ proceeds as follows (see Algorithm\nbs\ref{alg:maxmin}).
+Each step receives a proper subset $L\subset X$ and returns a point $x\in X\wo \cl{L}$.
+
 First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\{ \cl{B_{\eps}}(\ell) : \ell \in L \}$ cover $X$.
 Choose a first landmark point $\ell_0\in X$.
 <!--This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and (random selection from) $\minmax(X)$.-->
@@ -188,10 +190,12 @@ In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters impl
 
 Let us redefine the maxmin procedure in terms of balls rather than of distances:
 
-\begin{definition}[maxmin in terms of balls]
-Write $\cl{B_\eps}(Y) = \bigcup_{y \in Y}{\overline{B_\eps}(y)}$ and similarly for open balls. Then $D(Y,X) = \argmin_{\eps}{\cl{B_\eps}(Y) = X}$ and $d(Y,X) = \argmax_{\eps}{B_\eps(Y) = Y}$, and we may define the \emph{maxmin set}:
-$$\maxmin(Y;X) = X \wo B_{D(Y,X)}(Y)$$
-\end{definition}
+\begin{proposition}[maxmin in terms of balls]
+Given $(X,d)$ and $Y \subset X$, write $B_\eps(Y) = \bigcup_{y \in Y}{B_\eps(y)}$ and similarly for closed balls, then let
+$$\Eps(Y,X) = \min\{ \eps \mid \cl{B_\eps}(Y) = X \}$$
+Then
+$$\maxmin(Y;X,d) = X \wo B_{\Epsilon(Y,X)}(Y)$$
+\end{proposition}
 
 The lastfirst procedure is defined analogously to the maxmin procedure, substituting nearest neighborhoods, parameterized by their cardinality $k$, for balls, parameterized by their radius $\eps$.
 Membership in nearest neighborhoods is not a symmetric relation: It may be that $y \in N_k(x)$ while $x \notin N_k(y)$. We therefore introduce a companion concept that reverses this relationship:
@@ -250,26 +254,6 @@ When indistinguishable points abound, this may still not uniquely determine $\el
 Continue this process until only one candidate $\ell$ remains (up to multiplicity), or until $N^-_{k}(\ell,L)=\abs{L}$, in which case all remaining candidates may be considered equivalent.^[Break this into a separate paragraph that analogizes $\sigma$ from the maxmin discussion.]
 Example\nbs\ref{ex:rank-sequence} illustrates these computations.
 
-<!--
-We formalize this procedure, and a companion procedure without reference to $L$, by defining a sequence of neighborhood sizes that encodes the optimized cardinalities $k_i$.
-
-\begin{definition}[rank sequences]\label{def:rank-sequence}
-    For $x \in X$ and $Y\subset X$, define the \emph{out-rank} ($Q^+$) and \emph{in-rank} ($Q^-$) \emph{sequences} of $k$-neighborhood cardinalities:
-    \begin{align*}
-        Q^\pm(x) &= (\abs{N^\pm_k(x)})_{k=1}^N &
-        Q^\pm(x,Y) &= (\abs{N^\pm_k(x,Y)})_{k=1}^{N}
-    \end{align*}
-\end{definition}
-
-\begin{remark}
-Taking the $k^\pm_i$ as defined above,
-\begin{align*}
-    Q^+(x,L) &= (k^+_1-1, k^+_2-k^+_1, \ldots, k^+_{\abs{L}}-k^+_{\abs{L}-1}, \abs{L}) \\
-    Q^-(x,L) &= (0^{k^-_0}, 1^{k^-_1-k^-_0}, \ldots, {(\abs{L}-1)}^{k^-_{\abs{L}-1}-k^-_{\abs{L}-2}}, {\abs{L}}^{N-k^-_{\abs{L}-1}})
-\end{align*}
-\end{remark}
--->
-
 \begin{example}\label{ex:rank-sequence}
 Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\bullet^+$ and $N_\bullet^-$ for $a$ and $c$:
 \begin{align*}
@@ -299,14 +283,11 @@ Sequences with more large values indicate points with lower out-ranks to or from
 
 We now define counterparts to the minmax and maxmin procedures to be used with these totally ordered sequences.
 
-\begin{definition}[firstlast and lastfirst]
-    Let $d$ be a pseudometric on $X$.
-    Given $Y\subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let $K(Y,X) = \argmin_{k}{N_k(Y) = X}$.
-    Define the \emph{lastfirst sets}
-    \begin{align*}
-        \lf(Y;X,d) &= X \wo N_{K(Y,X) - 1}(Y) \\
-        \lf(X,d)   &= \{ x \in X \mid K(\{x\},X) = \max_{y \in X}{K(\{y\},X)} \}
-    \end{align*}
+\begin{definition}[lastfirst (in terms of neighborhoods)]
+    Given $(X,d)$ and $Y \subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let
+    $$K(Y,X) = \min\{ k \mid N_k(Y) = X \}$$
+    Then define the \emph{lastfirst sets}
+    $$\lf(Y;X,d) = X \wo N_{K(Y,X) - 1}(Y)$$
     consisting of \emph{lastfirst points}.
 \end{definition}
 
