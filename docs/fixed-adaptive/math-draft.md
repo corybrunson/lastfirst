@@ -78,19 +78,11 @@ This motivates us to produce a counterpart to the ball cover that we call the _n
 
 ## Illustration
 
-As a motivating example, imagine an intensive care unit whose patients fall roughly into three groups: a large, clinically homogeneous, low-risk majority; a smaller, more heterogeneous, higher-risk group; and a minority of highly distinctive patients who cannot be sorted into either group and are at less predictable risk.
+Imagine an intensive care unit whose patients fall roughly into three groups: a large, clinically homogeneous, low-risk majority; a smaller, more heterogeneous, higher-risk group; and a minority of highly distinctive patients who cannot be sorted into either group and are at less predictable risk.
 
-Figure\nbs\ref{fig:icu-density} depicts a simple model of this situation in which each group is represented by a Gaussian distribution. The shape approximates an empirical distribution of standard risk scores observed for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}). (Imagine that probabilistic risk has been logit-transformed, so that all real values are possible risk estimates.) The points $X$ along the abscissa are sampled randomly from this distribution.
+The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of this situation in which each group is represented by a Gaussian distribution. The shape approximates an empirical distribution of standard risk scores observed for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}). (Imagine that probabilistic risk has been logit-transformed, so that all real values are possible risk estimates.) The points $X$ along the abscissa are sampled randomly from this distribution.
 
-\begin{figure}
-\caption{
-Imagined distribution of mortality risk for patients in an ICU and a finite sample $X$ from this distribution.
-The density function is the sum of three Gaussian density functions, weighted by a partition of unity.
-\label{fig:icu-density}
-}
-\end{figure}
-
-Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst procedures generate sequences in $X$ of four landmarks each.
+The bottom panel of Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst procedures generate sequences in $X$ of four landmarks each.
 Each procedure begins with a seed landmark $\ell_0$ selected to be reachable by minimum-radius balls (maxmin) or by minimum-cardinality neighborhoods (lastfirst) from all other points in $X$; see the appendix for details.
 Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$, the lastfirst landmarks lie at roughly equal quantiles of $X$.
 The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
