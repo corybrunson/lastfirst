@@ -21,17 +21,17 @@ sim %>%
   unnest(x) %>%
   select(x, y) ->
   dat
-#dat <- cbind(
-#  x = c(rnorm(70,0,0.05), rnorm(20,1,0.05), rnorm(10,0.5,0.5)),
-#  y = rep(0, 100)
-#)
 
 # landmark selection
 num <- 4L
-lmk_mm <-
-  landmarks_maxmin(as.matrix(dat), num = num, seed_index = "minmax", cover = TRUE)
-lmk_lf <-
-  landmarks_lastfirst(as.matrix(dat), num = num, seed_index = "firstlast", cover = TRUE)
+lmk_mm <- landmarks_maxmin(
+  as.matrix(dat),
+  num = num, seed_index = "minmax", cover = TRUE
+)
+lmk_lf <- landmarks_lastfirst(
+  as.matrix(dat),
+  num = num, seed_index = "firstlast", cover = TRUE
+)
 
 # single landmarks data set
 bind_rows(
@@ -43,7 +43,13 @@ bind_rows(
   mutate(x = map_dbl(landmark, ~ dat$x[.])) %>%
   mutate(xran = map(cover_set, ~ as.data.frame(as.list(range(dat$x[.]))))) %>%
   mutate(xran = map(xran, ~ set_names(., c("xmin", "xmax")))) %>%
-  unnest(xran) ->
+  unnest(xran) %>%
+  group_by(procedure) %>%
+  mutate(radius = max(c(xmax - x, x - xmin))) %>%
+  ungroup() %>%
+  mutate(xmin = ifelse(procedure == "maxmin", x - radius, xmin)) %>%
+  mutate(xmax = ifelse(procedure == "maxmin", x + radius, xmax)) %>%
+  mutate(xmin = pmax(xmin, min(dat$x)), xmax = pmin(xmax, max(dat$x))) ->
   lmks
 
 # visualize distribution
