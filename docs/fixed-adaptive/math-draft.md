@@ -134,13 +134,10 @@ For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $
 \label{sec:maxmin}
 
 \begin{definition}[maxmin]
-Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin sets}
-\begin{align*}
-    \maxmin(Y;X) = \maxmin(Y) &= \{x\in X \wo \cl{Y}\mid d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)}\} \\
-    \maxmin(X) &= \{x\in X\mid d(x,X \wo \cl{\{x\}}) = \max_{y\in X}{d(y,X \wo \cl{\{y\}})}\}
-\end{align*}
+Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin set}
+$$\maxmin(Y;X) = \maxmin(Y) = \{ x \in X \wo \cl{Y} \mid d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)} \}$$
 consisting of \emph{maxmin points}.
-Note that $\maxmin(X)$ is nonempty and that, when $X$ is in locally general position, it has cardinality $1$.
+Note that $\maxmin(Y)$ is nonempty when $X \wo \cl{Y} \neq \varnothing$ and that $\maxmin(Y)$ has cardinality $1$ when $X$ is in locally general position.
 \end{definition}
 
 \begin{algorithm}
@@ -191,10 +188,10 @@ In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters impl
 Let us redefine the maxmin procedure in terms of balls rather than of distances:
 
 \begin{proposition}[maxmin in terms of balls]
-Given $(X,d)$ and $Y \subset X$, write $B_\eps(Y) = \bigcup_{y \in Y}{B_\eps(y)}$ and similarly for closed balls, then let
-$$\Eps(Y,X) = \min\{ \eps \mid \cl{B_\eps}(Y) = X \}$$
-Then
-$$\maxmin(Y;X,d) = X \wo B_{\Epsilon(Y,X)}(Y)$$
+    Given $(X,d)$ and $Y \subset X$, write $B_\eps(Y) = \bigcup_{y \in Y}{B_\eps(y)}$ and similarly for closed balls, then let
+    $$\Eps(Y,X) = \min\{ \eps \mid \cl{B_\eps}(Y) = X \}$$
+    Then
+    $$\maxmin(Y;X,d) = X \wo B_{\Epsilon(Y,X)}(Y)$$
 \end{proposition}
 
 The lastfirst procedure is defined analogously to the maxmin procedure, substituting nearest neighborhoods, parameterized by their cardinality $k$, for balls, parameterized by their radius $\eps$.
@@ -287,7 +284,7 @@ We now define counterparts to the minmax and maxmin procedures to be used with t
     Given $(X,d)$ and $Y \subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let
     $$K(Y,X) = \min\{ k \mid N_k(Y) = X \}$$
     Then define the \emph{lastfirst sets}
-    $$\lf(Y;X,d) = X \wo N_{K(Y,X) - 1}(Y)$$
+    $$\lf(Y;X,d) = \lf(Y) = X \wo N_{K(Y,X) - 1}(Y)$$
     consisting of \emph{lastfirst points}.
 \end{definition}
 
