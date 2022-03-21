@@ -4,10 +4,6 @@
 %
 \documentclass[
 ]{article}
-\title{Fixed and adaptive landmark sets for finite metric spaces}
-\author{Jason Cory Brunson \and Yara Skaf}
-\date{}
-
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
 \usepackage{iftex}
@@ -53,6 +49,10 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+
+\title{Fixed and adaptive landmark sets for finite metric spaces}
+\author{Jason Cory Brunson \and Yara Skaf}
+\date{}
 
 \begin{document}
 \maketitle
@@ -225,32 +225,25 @@ ordinal counterpart.
 \hypertarget{illustration}{%
 \subsection{Illustration}\label{illustration}}
 
-As a motivating example, imagine an intensive care unit whose patients
-fall roughly into three groups: a large, clinically homogeneous,
-low-risk majority; a smaller, more heterogeneous, higher-risk group; and
-a minority of highly distinctive patients who cannot be sorted into
-either group and are at less predictable risk.
+Imagine an intensive care unit whose patients fall roughly into three
+groups: a large, clinically homogeneous, low-risk majority; a smaller,
+more heterogeneous, higher-risk group; and a minority of highly
+distinctive patients who cannot be sorted into either group and are at
+less predictable risk.
 
-Figure\nbs\ref{fig:icu-density} depicts a simple model of this situation
-in which each group is represented by a Gaussian distribution. The shape
-approximates an empirical distribution of standard risk scores observed
-for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}).
-(Imagine that probabilistic risk has been logit-transformed, so that all
-real values are possible risk estimates.) The points \(X\) along the
-abscissa are sampled randomly from this distribution.
+The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of
+this situation in which each group is represented by a Gaussian
+distribution. The shape approximates an empirical distribution of
+standard risk scores observed for patients in the MIMIC-III database
+(see Section\nbs\ref{sec:mimic}). (Imagine that probabilistic risk has
+been logit-transformed, so that all real values are possible risk
+estimates.) The points \(X\) along the abscissa are sampled randomly
+from this distribution.
 
-\begin{figure}
-\caption{
-Imagined distribution of mortality risk for patients in an ICU and a finite sample $X$ from this distribution.
-The density function is the sum of three Gaussian density functions, weighted by a partition of unity.
-\label{fig:icu-density}
-}
-\end{figure}
-
-Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst
-procedures generate sequences in \(X\) of four landmarks each. Each
-procedure begins with a seed landmark \(\ell_0\) selected to be
-reachable by minimum-radius balls (maxmin) or by minimum-cardinality
+The bottom panel of Figure\nbs\ref{fig:icu-cover} shows how the maxmin
+and lastfirst procedures generate sequences in \(X\) of four landmarks
+each. Each procedure begins with a seed landmark \(\ell_0\) selected to
+be reachable by minimum-radius balls (maxmin) or by minimum-cardinality
 neighborhoods (lastfirst) from all other points in \(X\); see the
 appendix for details. Whereas the maxmin landmarks are roughly
 equally-spaced across the range of \(X\), the lastfirst landmarks lie at
@@ -331,17 +324,15 @@ arithmetic sequence \((a,a+1,\ldots,b)\). For \(a,b \in \N\), we use
 
 \label{sec:maxmin}
 
-Each step of the maxmin procedure receives a proper subset
-\(L\subset X\) and returns a point \(x\in X\wo \cl{L}\). We also define
-such a step without reference to \(L\):
-
-Given \(L\subset X\) and \(x\in X\wo \cl{L}\), define the
-\emph{maxmin sets} \begin{align*}
-    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid d(x,L) = \max_{y\in X\wo \cl{L}}{d(y,L)}\} \\
+\begin{definition}\label{def:maxmin}[maxmin]
+Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin sets}
+\begin{align*}
+    \maxmin(Y;X) = \maxmin(Y) &= \{x\in X \wo \cl{Y}\mid d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)}\} \\
     \maxmin(X) &= \{x\in X\mid d(x,X \wo \cl{\{x\}}) = \max_{y\in X}{d(y,X \wo \cl{\{y\}})}\}
-\end{align*} consisting of \emph{maxmin points}. Note that
-\(\maxmin(X)\) is nonempty and that, when \(X\) is in locally general
-position, it has cardinality \(1\).
+\end{align*}
+consisting of \emph{maxmin points}.
+Note that $\maxmin(X)$ is nonempty and that, when $X$ is in locally general position, it has cardinality $1$.
+\end{definition}
 
 \begin{algorithm}
 \caption{Select a maxmin landmark set.}
@@ -370,16 +361,19 @@ position, it has cardinality \(1\).
 
 The \emph{maxmin procedure} for generating a landmark set
 \(L\subseteq X\) proceeds as follows (see
-Algorithm\nbs\ref{alg:maxmin}): First, choose a number \(n\leq\uniq{X}\)
-of landmark points to generate or a radius \(\eps\geq 0\) for which to
-require that the balls \(\{ \cl{B_{\eps}}(\ell) : \ell \in L \}\) cover
-\(X\). Choose a first landmark point \(\ell_0\in X\). Inductively over
-\(i\in\N\), if ever \(i\geq n\) or \(d(L,X\wo \cl{L})\leq\eps\), then
-stop. Otherwise, when \(L=\{\ell_0,\ldots,\ell_{i-1}\}\), choose
-\(\ell_i\in\maxmin(L)\), according to a preferred procedure \(\sigma\)
-(see the Appendix). If a fixed number \(n\) of landmarks was prescribed,
-then set \(\eps=\eps(n)=d(L,X\wo \cl{L})\); if \(\eps\) was prescribed
-and \(\sigma\) is understood, then set \(n=n(\eps)=\abs{L}\). Write
+Algorithm\nbs\ref{alg:maxmin}). Each step receives a proper subset
+\(L\subset X\) and returns a point \(x\in X\wo \cl{L}\).
+
+First, choose a number \(n\leq\uniq{X}\) of landmark points to generate
+or a radius \(\eps\geq 0\) for which to require that the balls
+\(\{ \cl{B_{\eps}}(\ell) : \ell \in L \}\) cover \(X\). Choose a first
+landmark point \(\ell_0\in X\). Inductively over \(i\in\N\), if ever
+\(i\geq n\) or \(d(L,X\wo \cl{L})\leq\eps\), then stop. Otherwise, when
+\(L=\{\ell_0,\ldots,\ell_{i-1}\}\), choose \(\ell_i\in\maxmin(L)\),
+according to a preferred procedure \(\sigma\) (see the Appendix). If a
+fixed number \(n\) of landmarks was prescribed, then set
+\(\eps=\eps(n)=d(L,X\wo \cl{L})\); if \(\eps\) was prescribed and
+\(\sigma\) is understood, then set \(n=n(\eps)=\abs{L}\). Write
 \(\mathcal{B}_\eps(\ell_0)=\{\cl{B_{\eps}(\ell_i)}\}_{i=0}^{n}\) for the
 resulting \emph{landmark cover of $X$}.
 
@@ -403,10 +397,12 @@ that make these choices easier.
 Let us redefine the maxmin procedure in terms of balls rather than of
 distances:
 
-\begin{definition}[maxmin in terms of balls]
-Write $\cl{B_\eps}(Y) = \bigcup_{y \in Y}{\overline{B_\eps}(y)}$ and similarly for open balls. Then $D(Y,X) = \argmin_{\eps}{\cl{B_\eps}(Y) = X}$ and $d(Y,X) = \argmax_{\eps}{B_\eps(Y) = Y}$, and we may define the \emph{maxmin set}:
-$$\maxmin(Y;X) = X \wo B_{D(Y,X)}(Y)$$
-\end{definition}
+\begin{proposition}\label{prop:maxmin}[maxmin in terms of balls]
+Given $(X,d)$ and $Y \subset X$, write $B_\eps(Y) = \bigcup_{y \in Y}{B_\eps(y)}$ and similarly for closed balls, then let
+$$\Eps(Y,X) = \min\{ \eps \mid \cl{B_\eps}(Y) = X \}$$
+Then
+$$\maxmin(Y;X,d) = X \wo B_{\Epsilon(Y,X)}(Y)$$
+\end{proposition}
 
 The lastfirst procedure is defined analogously to the maxmin procedure,
 substituting nearest neighborhoods, parameterized by their cardinality
@@ -521,14 +517,11 @@ points.
 We now define counterparts to the minmax and maxmin procedures to be
 used with these totally ordered sequences.
 
-\begin{definition}[firstlast and lastfirst]
-    Let $d$ be a pseudometric on $X$.
-    Given $Y\subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let $K(Y,X) = \argmin_{k}{N_k(Y) = X}$.
-    Define the \emph{lastfirst sets}
-    \begin{align*}
-        \lf(Y;X,d) &= X \wo N_{K(Y,X) - 1}(Y) \\
-        \lf(X,d)   &= \{ x \in X \mid K(\{x\},X) = \max_{y \in X}{K(\{y\},X)} \}
-    \end{align*}
+\begin{definition}[lastfirst (in terms of neighborhoods)]
+    Given $(X,d)$ and $Y \subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let
+    $$K(Y,X) = \min\{ k \mid N_k(Y) = X \}$$
+    Then define the \emph{lastfirst sets}
+    $$\lf(Y;X,d) = X \wo N_{K(Y,X) - 1}(Y)$$
     consisting of \emph{lastfirst points}.
 \end{definition}
 
@@ -735,77 +728,6 @@ rather than continuous/numeric, there are sufficiently many of them
 phenotypes. Further, this data set is very complete in that every
 patient is required to contain a valid value for every field, which
 minimizes concerns around missing data.
-
-\hypertarget{homology-recovery}{%
-\subsection{Homology recovery}\label{homology-recovery}}
-
-We compared the suitability of three landmarking procedures (uniformly
-random, maxmin, lastfirst) on datasets with varying density and
-duplication patterns by extending an example of @deSilva2004. Each
-expriment proceeded as follows: We sampled \(n=540\) points from the
-sphere \(\Sph^2\subset\R^3\) and in different experiments selected
-\(k=12,36,60\) landmark points. We then used the landmarks to compute PH
-and computed the \emph{relative dominance} \((R_1 - R_0) / K_0\) and
-\emph{absolute dominance} \((R_1 - R_0) / K_1\) of the last interval
-over which all Betti numbers agreed with those of \(\Sph^2\). These
-statistics provide an indication of how successfully PH recovered the
-homology of the manifold from which the points were sampled.
-
-The points \(x=(r,\theta,\phi)\) were sampled using four procedures:
-uniform sampling, skewed sampling, uniform sampling with skewed
-boosting, and skewed sampling with skewed boosting. The first procedure
-was used by @deSilva2004 and here serves as a baseline. For a sample
-\(S\) (with multiplicities) generated from each of the other three
-procedures, the expected density
-\(\lim_{\eps\to 0}\lim_{n\to\infty}\frac{1}{n}\abs{\{x=(r,\theta,\phi)\in S\mid \alpha-\eps<\phi<\alpha+\eps\}}\)
-of points near a given latitude \(\alpha\in[0,\pi]\) is proportional to
-the quartic function \(p:[0,1]\to[0,1]\) defined by
-\(p(x)=(\frac{\phi}{\pi})^4\).\footnote{Should this be analytically
-  shown or confirmed using large samples?} Skewed sampling is performed
-via rejection sampling: Points \(x_i=(r_i,\theta_i,\phi_i)\) are sampled
-uniformly and rejected at random if a uniform random variable
-\(t_i\in[0,1]\) satisfies \((\frac{\phi_i}{\pi})^\alpha<t_i\) until
-\(n\) points have been kept {[}@Diaconis2013{]}. Skewed boosting is
-performed by first obtaining a (uniform or skewed) sample \(T\) of size
-a fraction \(\frac{n}{6}\) of the total, then sampling \(n\) points
-(with replacement) from \(T\) using the probability mass function
-satisfying \(P(x_i)\propto(\frac{\phi_i}{\pi})^\beta\). When performed
-separately, skewed sampling and skewed boosting use \(\alpha=\beta=4\);
-when performed in sequence, they use \(\alpha=\beta=2\).
-
-The landmark points were selected in three ways: uniform random
-selection (without replacement), the maxmin procedure, and the lastfirst
-procedure. We computed PH in Python GUDHI, using three implementations:
-Vietoris--Rips (VR) filtrations on the landmarks, alpha complexes on the
-landmarks, and witness complexes on the landmarks with the full sample
-as witnesses {[}@Maria2021; @Rouvreau2021; @Kachanovich2021{]}.
-
-The skewed data sets are dense at the south pole and sparse at the north
-pole. We expect lastfirst to be more sensitive to this variation and
-place more landmarks toward the south. As measured by dominance,
-therefore, we hypothesized that lastfirst would be competitive with
-maxmin when samples are uniform and inferior to maxmin when samples are
-skewed. Put differently, we expected lastfirst to better reject the
-homology of \(\Sph^2\), i.e.~to detect the statistical void at the north
-pole.
-
-Figure\nbs\ref{fig:sphere} compares the relative dominance of the
-spherical homology groups in each case. When PH is computed using VR or
-alpha complexes, maxmin better recovers the homology of the sphere
-except on uniform samples, while lastfirst and random selection better
-detect the void. Random selection is usually better than lastfirst
-selection at detecting this void when samples are non-uniform, which
-indicates that lastfirst selection still oversamples from less dense
-regions. Lastfirst and maxmin perform similarly when PH is computed
-using witness complexes.
-
-\begin{figure}
-\includegraphics[width=\textwidth]{../figures/homology-sphere-relative}
-\caption{
-Relative dominance of the spherical homology groups in the persistent homology of four samples from the sphere, using each of three landmark procedures and three persistence computations. Similar plots of absolute dominance (not shown) tell a consistent story, but the distributions are more skewed so the comparisons are less clear.
-\label{fig:sphere}
-}
-\end{figure}
 
 \hypertarget{covers-and-nerves}{%
 \subsection{Covers and nerves}\label{covers-and-nerves}}
@@ -1139,6 +1061,114 @@ samples can improve performance even at the expense of such a measure.
 \hypertarget{appendix}{%
 \section{Appendix}\label{appendix}}
 
+\hypertarget{relative-ranks}{%
+\subsection{Relative ranks}\label{relative-ranks}}
+
+This section develops a more general lastfirst procedure and makes
+rigorous some ideas in the main text.
+
+Relative ranks are a much more general notion of metric that encompasess
+ranks in nearest neighborhoods.
+
+\begin{definition}[relative rank]
+    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
+    \begin{equation}\label{eqn:relative-rank}
+        \forall x,y \in X : d(x,x) \leq d(x,y)
+    \end{equation}
+\end{definition}
+
+Relative ranks can be used as the basis for a much more general maxmin
+procedure, taking care in particular to account for asymmetry.
+
+Given a relative rank \(q\) on \(X\), write \begin{align*}
+    q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
+    q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
+    q(Y,x) &= q(Y,\{x\})                   & Q(x,Y) &= Q(Y,\{x\}) \\
+\end{align*}
+
+A pseudometric \(d_X\) induces a relative rank that takes values in
+\(\N\) given by the ordinal of one point's distance from another:
+
+\begin{definition}[out-rank and in-rank]
+    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
+    \begin{equation}\label{eqn:out-rank}
+        q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
+    \end{equation}
+    and the \emph{in-rank} $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
+\end{definition}
+
+As with \(d\), we allow ourselves to write \(q=q_{X,d}\) when clear from
+context. Note that \(q_{X,d}\) is a relative rank with \(q(x,x)=0\),
+\(q(x,y) < N\), and \(\forall x,y \in X : q(x,x) \leq q(x,y)\).
+
+\begin{example}\label{ex:relative-rank}
+    Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank-max}.
+    Lack of symmetry of $q$ is shown by points $b$ and $c$ :
+    \begin{align*}
+        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} &
+        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} \\
+               &= \abs{\{a, b\}} &&= \abs{\{b, c, d\}} \\
+               &= 2 &&= 3
+    \end{align*}
+
+    Observe in particular that $\max_{x\in X}{q(a,x)}=2<\abs{X}-1$; $q(x,\,\cdot\,)$ will not max out at $N-1$ when the most distant points from $x$ have multiplicity.
+
+    However, $q(x,x) = 0$ whether $x$ has multiplicity or not:
+    \begin{align*}
+        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} &
+        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} \\
+               &= \abs{\varnothing} &&= \abs{\varnothing} \\
+               &= 0 &&= 0
+    \end{align*}
+\end{example}
+
+We also term the unary rankings \(q(x,\,\cdot\,)\) and
+\(q(\,\cdot\,,x)\) the \emph{out- (from $x$)} and
+\emph{in- (to $x$) rankings} of \(X\), respectively. These can be used
+to define \emph{out-} and \emph{in-neighborhoods} of \(x\).\footnote{The
+  terminology and notation are adapted from graph theory. These
+  definitions are the same as those for a complete directed graph on
+  \(X\) with directed arcs \(x\to y\) weighted by \(q(x,y)\).}
+
+A relative rank \(q\) can be used to define \(k\)-neighborhoods in
+greater generality:
+
+\begin{definition}[$k$-neighborhoods using relative rank]
+    For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
+    \begin{align*}
+        & N^+_k(x)=\{y\in X\mid q(x,y)\leq k\} \\
+        & N^-_k(x)=\{y\in X\mid q(y,x)\leq k\}
+    \end{align*}
+    Given a subset $Y \subseteq X$, we also define
+    \begin{align*}
+        & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
+        & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
+    \end{align*}
+\end{definition}
+
+Relative ranks are not as straightforward to compare among subsets of
+points. For example, for \(y\neq x\), \(q(x,y)\) takes integer values
+between \(\abs{\supp{\{x\}}}\) and \(N-1\). However, they do provide us
+with a definition of the lastfirst procedure that straightforwardly
+adapts Definition\nbs\ref{def:maxmin}.
+
+\begin{lemma}[firstlast and lastfirst using relative rank]
+    Given $Y\subset X$ and a pseudometric $d$ on $X$ with relative rank $q$,
+    \begin{align*}
+        \lf(Y;X,d) &= \maxmin(Y;X,q_d) \\
+        \lf(X,d) &= \maxmin(X,q_d)
+    \end{align*}
+\end{lemma}
+
+\begin{proof}
+This follows directly from the observations
+\begin{align*}
+    \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
+    \maxmin(X,q) &= \{x\in X\mid N_\bullet^-(x,X \wo \cl{\{x\}}) = \max_{y\in X}{N_\bullet^-(y,X \wo \cl{\{y\}}}\}
+\end{align*}
+obtained by adapting Proposition\nbs\ref{prop:maxmin} to the relative rank.
+\end{proof}
+
 \hypertarget{selection-procedures}{%
 \subsubsection{Selection procedures}\label{selection-procedures}}
 
@@ -1168,137 +1198,6 @@ While \(\abs{\maxmin^{(j)}(L;X)} > 1\), continue in this way until
 either a singleton is reached or \(j=\abs{L}=i\). If the latter, then
 the choice \(\sigma\) is arbitrary among the remaining \(y\).\footnote{Should
   this be written up as an algorithm?}
-
-\hypertarget{relative-ranks}{%
-\subsection{Relative ranks}\label{relative-ranks}}
-
-Relative ranks are a much more general notion of metric that encompasess
-ranks in nearest neighborhoods.
-
-\begin{definition}[relative rank]
-    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
-    \begin{equation}\label{eqn:relative-rank}
-        \forall x,y \in X : d(x,x) \leq d(x,y)
-    \end{equation}
-\end{definition}
-
-Relative ranks can be used as the basis for a much more general maxmin
-procedure, taking care in particular to account for asymmetry.
-
-\begin{definition}[maxmin under a relative rank]
-Given a relative rank $q$ on $X$, write
-\begin{align*}
-    q(Y,Z) &= \min_{y\in Y,z\in Z}{q(y,z)} & Q(Y,Z) &= \max_{y\in Y,z\in Z}{q(y,z)} \\
-    q(x,Y) &= q(\{x\},Y)                   & Q(x,Y) &= Q(\{x\},Y) \\
-    q(Y,x) &= q(Y,\{x\})                   & Q(x,Y) &= Q(Y,\{x\}) \\
-\end{align*}
-Given $L\subset X$, and $x\in X\wo \cl{L}$, define the \emph{maxmin sets}
-\begin{align*}
-    \maxmin(L;X) = \maxmin(L) &= \{x\in X \wo \cl{L}\mid q(L,x) = \max_{y\in X\wo \cl{L}}{q(L,y)}\} \\
-    \maxmin(X) &= \{x\in X\mid q(X \wo \cl{\{x\}},x) = \max_{y\in X}{q(X \wo \cl{\{y\}},y)}\}
-\end{align*}
-consisting of \emph{maxmin points}.
-\end{definition}
-
-A pseudometric \(d_X\) induces a relative rank that we call the relative
-rank, which takes values in \(\N\) given by the ordinal of one point's
-distance from another.
-
-\begin{definition}[out-rank and in-rank]
-    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
-    \begin{equation}\label{eqn:out-rank}
-        q_{X,d}(x,y)=\abs{\{z\in X \mid d(x,z) < d(x,y)\}}%>
-    \end{equation}
-    and the \emph{in-rank} $q_{X,d}^\top = q_{X,d} \circ T$, so that $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
-\end{definition}
-
-As with \(d\), we allow ourselves to write \(q=q_{X,d}\) when clear from
-context. Note that \(q_{X,d}\) is a relative rank with \(q(x,x)=0\),
-\(q(x,y) < N\), and \(\forall x,y \in X : q(x,x) \leq q(x,y)\).
-
-\begin{example}\label{ex:relative-rank}
-    Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
-    \begin{centeredTikz}
-        [every label/.append style={text=black!60!blue, font=\scriptsize}]
-        \draw[gray] (0,0) -- (5,0);
-
-        \foreach \i in {0,...,3}
-            \draw[gray] (\i,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$\i$};
-        \draw[gray] (3,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {};
-        \draw[gray] (5,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$5$};
-
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$a = 1$}] at (1,0) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$b = 2$}] at (2,0) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$c = 4$}] at (4,0.1) {};
-        \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=below:{$d = 4$}] at (4,-0.1) {};
-    \end{centeredTikz}
-
-    Lack of symmetry of $q$ is shown by points $b$ and $c$ :
-    \begin{align*}
-        q(a,c) &= \abs{\{x \in X \mid \abs{x-a} < \abs{c-a} = 2\}} &
-        q(c,a) &= \abs{\{x \in X \mid \abs{x-c} < \abs{a-c} = 2\}} \\
-               &= \abs{\{a, b\}} &&= \abs{\{b, c, d\}} \\
-               &= 2 &&= 3
-    \end{align*}
-
-    Observe in particular that $\max_{x\in X}{q(a,x)}=2<\abs{X}-1$; $q(x,\,\cdot\,)$ will not max out at $N-1$ when the most distant points from $x$ have multiplicity.
-
-    However, $q(x,x) = 0$ whether $x$ has multiplicity or not:
-    \begin{align*}
-        q(a,a) &= \abs{\{x \in X \mid \abs{x-a} < \abs{a-a} = 0\}} &
-        q(c,c) &= \abs{\{x \in X \mid \abs{x-c} < \abs{c-c} = 0\}} \\
-               &= \abs{\varnothing} &&= \abs{\varnothing} \\
-               &= 0 &&= 0
-    \end{align*}
-\end{example}
-
-We also term the unary rankings \(q(x,\,\cdot\,)\) and
-\(q(\,\cdot\,,x)\) the \emph{out- (from $x$)} and
-\emph{in- (to $x$) rankings} of \(X\), respectively.\footnote{The
-  terminology and notation are adapted from graph theory. These
-  definitions are the same as those for a complete directed graph on
-  \(X\) with directed arcs \(x\to y\) weighted by \(q(x,y)\).} These can
-be used to define \emph{out-} and \emph{in-neighborhoods} of \(x\).
-
-A relative rank \(q\) can be used to define \(k\)-neighborhoods in
-greater generality:
-
-\begin{definition}[$k$-neighborhoods using relative rank]
-    For $x \in X$, define the \emph{$k$-out-neighborhoods} $N^+_k$ and \emph{$k$-in-neighborhoods} $N^-_k$ of $x$ as the sets
-    \begin{align*}
-        & N^+_k(x)=\{y\in X\mid q(x,y)\leq k\} \\
-        & N^-_k(x)=\{y\in X\mid q(y,x)\leq k\}
-    \end{align*}
-    Given a subset $Y \subseteq X$, we also define
-    \begin{align*}
-        & N^+_k(x,Y)=\{y\in Y\mid q_X(x,y)\leq k\} \\
-        & N^-_k(x,Y)=\{y\in Y\mid q_X(y,x)\leq k\}
-    \end{align*}
-\end{definition}
-
-Relative ranks are not as straightforward to compare among subsets of
-points. For example, for \(y\neq x\), \(q(x,y)\) takes integer values
-between \(\abs{\supp{\{x\}}}\) and \(N-1\). To explain and motivate
-their use, we attempt to intuitively adapt the maxmin procedure to this
-setting, then state and prove a formal definition for their analogs.
-
-\begin{lemma}
-    Given $Y\subset X$,
-    \begin{align*}
-        \maxmin(Y;X,q) &= \{x\in X\wo \cl{Y}\mid N_\bullet^-(x,Y) = \max_{y\in X\wo \cl{Y}}{N_\bullet^-(y,Y)}\} \\
-        \maxmin(X,q) &= \{x\in X\mid N_\bullet^-(x,X \wo \cl{\{x\}}) = \max_{y\in X}{N_\bullet^-(y,X \wo \cl{\{y\}}}\}
-    \end{align*}
-\end{lemma}
-
-\begin{definition}[firstlast and lastfirst using relative rank]
-    Let $d$ be a pseudometric on $X$ with induced relative rank $q_d$.
-    Given $Y\subset X$, define the \emph{lastfirst sets}
-    \begin{align*}
-        \lf(Y;X,d) = \lf(Y) &= \maxmin(Y;X,q_d) \\
-        \lf(X,d) &= \maxmin(X,q_d)
-    \end{align*}
-    consisting of \emph{lastfirst points}.
-\end{definition}
 
 \hypertarget{algorithms}{%
 \subsubsection{Algorithms}\label{algorithms}}
@@ -1447,8 +1346,23 @@ to produce interveaving sequences of nerves useful for stability
 analysis.
 
 \begin{example}\label{ex:relative-rank-max}
+Consider the simple case $X = \{a, b, c, d\}$, visualized below, equipped with the standard Euclidean metric:
+\begin{centeredTikz}
+    [every label/.append style={text=black!60!blue, font=\scriptsize}]
+    \draw[gray] (0,0) -- (5,0);
 
-Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. The relative rank $\hat{q}$ is also asymmetric:
+    \foreach \i in {0,...,3}
+        \draw[gray] (\i,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$\i$};
+    \draw[gray] (3,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {};
+    \draw[gray] (5,0.1) -- + (0,-0.25) node[font=\scriptsize, text=gray, below] {$5$};
+
+    \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$a = 1$}] at (1,0) {};
+    \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$b = 2$}] at (2,0) {};
+    \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=above:{$c = 4$}] at (4,0.1) {};
+    \node[circle, draw=blue!60, fill=blue!5, inner sep=0.5mm, label=below:{$d = 4$}] at (4,-0.1) {};
+\end{centeredTikz}
+
+The relative rank $\hat{q}$ is also asymmetric:
 \begin{align*}
     \hat{q}(b,c) &= \abs{\{x \in X \mid \abs{x-b} \leq \abs{c-b} = 2\}} &
     \hat{q}(c,b) &= \abs{\{x \in X \mid \abs{x-c} \leq \abs{b-c} = 2\}} \\
@@ -1493,6 +1407,77 @@ Similarly, we can compute the other $\hat{N}_k^+$ and $\hat{N}_k^-$ for $b$ and 
         &= (1, 2, 4, 4) &&= (0, 2, 2, 4)
 \end{align*}
 \end{example}
+
+\hypertarget{homology-recovery}{%
+\subsection{Homology recovery}\label{homology-recovery}}
+
+We compared the suitability of three landmarking procedures (uniformly
+random, maxmin, lastfirst) on datasets with varying density and
+duplication patterns by extending an example of @deSilva2004. Each
+expriment proceeded as follows: We sampled \(n=540\) points from the
+sphere \(\Sph^2\subset\R^3\) and in different experiments selected
+\(k=12,36,60\) landmark points. We then used the landmarks to compute PH
+and computed the \emph{relative dominance} \((R_1 - R_0) / K_0\) and
+\emph{absolute dominance} \((R_1 - R_0) / K_1\) of the last interval
+over which all Betti numbers agreed with those of \(\Sph^2\). These
+statistics provide an indication of how successfully PH recovered the
+homology of the manifold from which the points were sampled.
+
+The points \(x=(r,\theta,\phi)\) were sampled using four procedures:
+uniform sampling, skewed sampling, uniform sampling with skewed
+boosting, and skewed sampling with skewed boosting. The first procedure
+was used by @deSilva2004 and here serves as a baseline. For a sample
+\(S\) (with multiplicities) generated from each of the other three
+procedures, the expected density
+\(\lim_{\eps\to 0}\lim_{n\to\infty}\frac{1}{n}\abs{\{x=(r,\theta,\phi)\in S\mid \alpha-\eps<\phi<\alpha+\eps\}}\)
+of points near a given latitude \(\alpha\in[0,\pi]\) is proportional to
+the quartic function \(p:[0,1]\to[0,1]\) defined by
+\(p(x)=(\frac{\phi}{\pi})^4\).\footnote{Should this be analytically
+  shown or confirmed using large samples?} Skewed sampling is performed
+via rejection sampling: Points \(x_i=(r_i,\theta_i,\phi_i)\) are sampled
+uniformly and rejected at random if a uniform random variable
+\(t_i\in[0,1]\) satisfies \((\frac{\phi_i}{\pi})^\alpha<t_i\) until
+\(n\) points have been kept {[}@Diaconis2013{]}. Skewed boosting is
+performed by first obtaining a (uniform or skewed) sample \(T\) of size
+a fraction \(\frac{n}{6}\) of the total, then sampling \(n\) points
+(with replacement) from \(T\) using the probability mass function
+satisfying \(P(x_i)\propto(\frac{\phi_i}{\pi})^\beta\). When performed
+separately, skewed sampling and skewed boosting use \(\alpha=\beta=4\);
+when performed in sequence, they use \(\alpha=\beta=2\).
+
+The landmark points were selected in three ways: uniform random
+selection (without replacement), the maxmin procedure, and the lastfirst
+procedure. We computed PH in Python GUDHI, using three implementations:
+Vietoris--Rips (VR) filtrations on the landmarks, alpha complexes on the
+landmarks, and witness complexes on the landmarks with the full sample
+as witnesses {[}@Maria2021; @Rouvreau2021; @Kachanovich2021{]}.
+
+The skewed data sets are dense at the south pole and sparse at the north
+pole. We expect lastfirst to be more sensitive to this variation and
+place more landmarks toward the south. As measured by dominance,
+therefore, we hypothesized that lastfirst would be competitive with
+maxmin when samples are uniform and inferior to maxmin when samples are
+skewed. Put differently, we expected lastfirst to better reject the
+homology of \(\Sph^2\), i.e.~to detect the statistical void at the north
+pole.
+
+Figure\nbs\ref{fig:sphere} compares the relative dominance of the
+spherical homology groups in each case. When PH is computed using VR or
+alpha complexes, maxmin better recovers the homology of the sphere
+except on uniform samples, while lastfirst and random selection better
+detect the void. Random selection is usually better than lastfirst
+selection at detecting this void when samples are non-uniform, which
+indicates that lastfirst selection still oversamples from less dense
+regions. Lastfirst and maxmin perform similarly when PH is computed
+using witness complexes.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/homology-sphere-relative}
+\caption{
+Relative dominance of the spherical homology groups in the persistent homology of four samples from the sphere, using each of three landmark procedures and three persistence computations. Similar plots of absolute dominance (not shown) tell a consistent story, but the distributions are more skewed so the comparisons are less clear.
+\label{fig:sphere}
+}
+\end{figure}
 
 \hypertarget{references}{%
 \section{References}\label{references}}
