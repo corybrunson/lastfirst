@@ -32,9 +32,9 @@ Topology is the discipline at the interface of geometry (the study of shape) and
 TDA consists in the use of computational theories of continuity to investigate or exploit the structure of data.
 While TDA is most commonly associated with persistent homology (PH) and mapper-like constructions, it can be understood to include such classical and conventional techniques as cluster analysis, network analysis, and nearest neighbors prediction.
 
-TDA methods, including the ~~canonical~~ persistent homology and mapper [@] as well as manifold learning dimension reduction tools [@], have been deployed widely in biomedicine.
+TDA methods, including the ~~canonical/recognizable/archetypal (i.e. the most recognizable as a result of historical contingency)~~ persistent homology and mapper [@Yara-review] as well as manifold learning dimension reduction tools [@Ivakhno2007; @Reutlinger2012; @Aziz2017; @Viswanath2017; @Konstorum2018; @Becht2019], have been deployed widely in biomedicine.
 These methods require that data be pre-processed into the form of Euclidean vectors, and for many varieties of biomedical data, including most image and omics data, this is a straightforward requirement.
-In contrast, analysis tasks in clinical and public health often involve data that have diverse numerical and categorical variable types [@], high rates and complex patterns of missingness [@], or only a small number of variables taking finitely many values [@].
+In contrast, analysis tasks in clinical and public health often involve data that have diverse numerical and categorical variable types, high rates and complex patterns of missingness, or only a small number of variables taking finitely many values.
 A variety of approaches have been taken to apply classical topological methods to clinical and public health data, whether by transformaing records to coordinate vectors ("vector space embeddings") or by using non-metric similarity measures such as those common in ecology [@from-robustness-analysis; @Lee2015; @Dai2020].
 Extensions of these ideas to the present-day TDA toolkit are needed to bring the ~~potential/power/value~~ of more advanced methods to bear in domains that rely on more challenging data.
 
@@ -415,7 +415,7 @@ Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cove
 ## Implementation
 \label{sec:implementation}
 
-We have implemented both procedures in the R package landmark [@Brunson2021], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
+We have implemented both procedures in the R package landmark [@Brunson2021a], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
 For relative rank--based procedures, the user can choose any tie-handling rule (see the Appendix).
 The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
 In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more overlapping covers.
