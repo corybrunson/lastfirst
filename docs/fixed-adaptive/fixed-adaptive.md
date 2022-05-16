@@ -654,20 +654,20 @@ In this work, we introduce the lastfirst procedure as a complement to the widely
 Lastfirst applies the same logic to the growing of nearest neighborhoods rather than balls around the sampled points.
 This results in a heuristic sample of landmarks and an associated cover with analogous properties to those of maxmin.
 Common data limitations require careful consideration of edge cases, which also apply to maxmin but have not been worked out before, and our choices of solution can be used with either procedure.
-Further, our experiments described in the previous section have demonstrated that the lastfirst sampler confers a number of advantages over maxmin.
+Further, our experiments described in the previous section demonstrate a number of advantages that the lastfirst sampler confers over maxmin.
 
 First of all, the lastfirst procedure is more general than maxmin, in that it can be applied to any set of cases for which directed pairwise distances are available or can be computed.
-This relaxes the symmetry assumption of maxmin and would allow lastfirst to be used, for example, to sample dispersed nodes from a large directed graph based on shortest path distances.
+This relaxes the symmetry assumption of maxmin and would allow lastfirst to be used when the relevance of one case to another is not a two-way street. One use case would be to sample dispersed nodes from a transportation network involving one-way streets and other asymmetries such as traffic patterns, which would be modeled as a directed graph with shortest path distances between nodes.
 However, it imposes costs to computation, as our algorithm requires us to either impute or compute and store all distance ranks from the new landmark at each step.
 Based on our experiments comparing implementations of the same type, this increases runtime and storage only by a constant factor.
 
 Additionally, lastfirst confers some interpretability benefits in the context of applications.
-When dealing with certain data types, the meaning of numerical values of distance may not be entirely clear or intuitive.
-For instance, on EHR data, custom metrics are often needed to define a notion of distance, and it is not obvious what a concrete distance value such as 7 between patient A and patient B might mean.
+When dealing with certain data types, the meaning of numerical values of distance may not be clear or intuitive.
+For instance, on patient medical data obtained from electronic health records, custom distance metrics are often used to measure the _relative_ clinical relevance between patients, and it may not be obvious what an _absolute_ distance of, say, $.35$ between patient A and patient B might mean.
 In these types of settings, it can therefore be difficult to select parameters such as a ball radius to use in maxmin or other algorithms, and such choices are often made arbitrarily.
 This is especially true when minimal literature references are available, as is the case for many non-mathematical applications of TDA.
-However, in most applications, the notion of neighborhoods remains intuitive-- even when a ball of radius 7 around patient A is hard to conceptualize, a neighborhood of 200 similar patients still has a clear meaning.
-This increased interpretability makes parameter selection easier and also makes the algorithm more accessible to researchers outside the field of TDA.
+However, in most applications, the notion of neighborhoods remains intuitive: Even when a ball of radius $.35$ around patient A is hard to conceptualize, a neighborhood of 200 similar patients still has a clear meaning.
+This increased interpretability makes parameter selection easier and also makes the algorithm more accessible to researchers outside mathematics.
 
 Finally, lastfirst outperformed maxmin in settings tailored to the strengths of the algorithm (and achieved comparable performance in all other settings).
 We ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.

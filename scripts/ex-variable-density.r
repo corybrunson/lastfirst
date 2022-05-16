@@ -72,8 +72,8 @@ ggplot(dens, aes(x, y)) +
   geom_area(alpha = .2) +
   geom_point(data = dat, y = 0, alpha = .5, shape = 16L) +
   scale_y_continuous(position = "right") +
-  labs(x = NULL, y = NULL) +
-  ggtitle("Maxmin and landmark covers of a variable-density risk sample") ->
+  labs(x = NULL, y = NULL) ->
+  #ggtitle("Maxmin and landmark covers of a variable-density risk sample") ->
   dist_plot
 print(dist_plot)
 
@@ -81,16 +81,15 @@ print(dist_plot)
 proc_abbr <- c(maxmin = "mm", lastfirst = "lf")
 lmks %>%
   group_by(procedure) %>%
-  mutate(landmark_index = factor(row_number())) %>%
   ungroup() %>%
   ggplot(aes(x = x)) +
   facet_grid(procedure ~ .) +
   geom_hline(yintercept = 0, color = "gray") +
   geom_rect(
-    aes(xmin = xmin, xmax = xmax, fill = landmark_index),
+    aes(xmin = xmin, xmax = xmax, fill = name),
     ymin = -1, ymax = 1, alpha = .2
   ) +
-  scale_fill_brewer(type = "qual", palette = 6L, guide = "none") +
+  scale_fill_brewer(type = "qual", palette = 6L, guide = "none", aesthetics = c("color", "fill")) +
   geom_point(
     data = dat, aes(x = x),
     y = 0, alpha = .5, shape = 16L

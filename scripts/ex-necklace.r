@@ -64,8 +64,8 @@ dat %>%
   geom_point(data = lmks, shape = 5L, size = 4, aes(color = name)) +
   ggrepel::geom_text_repel(data = lmks, aes(label = name, color = name)) +
   labs(x = NULL, y = NULL) +
-  theme(legend.position="none") +
-  ggtitle("Maxmin and landmark samples from a necklace sample") ->
+  theme(legend.position="none") ->
+  #ggtitle("Maxmin and landmark samples from a necklace sample") ->
   lmks_plot
 print(lmks_plot)
 
@@ -73,6 +73,5 @@ print(lmks_plot)
 ggsave(
   "docs/figures/necklace-landmarks.pdf", lmks_plot,
   width = grid::unit(textwidth, "cm"),
-  height = grid::unit(textwidth / phi, "cm")
+  height = grid::unit(textwidth / (phi * 1.1), "cm")
 )
-
