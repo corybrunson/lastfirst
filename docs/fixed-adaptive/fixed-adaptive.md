@@ -27,9 +27,9 @@ header-includes:
 
 # Introduction
 
-Topological data analysis (TDA) is a maturing field in data science, at the interface of statistics, computer science, and mathematics.
-Topology is the discipline at the interface of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
-TDA consists in the use of computational theories of continuity to investigate or exploit the structure of data.
+Topological data analysis (TDA) is a maturing field in data science at the interface of statistics, computer science, and mathematics.
+Topology is the discipline at the intersection of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
+TDA consists of the use of computational theories of continuity to investigate or exploit the structure of data.
 While TDA is most commonly associated with persistent homology (PH) and mapper-like constructions, it can be understood to include such classical and conventional techniques as cluster analysis, network analysis, and nearest neighbors prediction.
 
 TDA methods, including the ~~canonical/recognizable/archetypal (i.e. the most recognizable as a result of historical contingency)~~ persistent homology and mapper [@Yara-review] as well as manifold learning dimension reduction tools [@Ivakhno2007; @Reutlinger2012; @Aziz2017; @Viswanath2017; @Konstorum2018; @Becht2019], have been deployed widely in biomedicine.
@@ -650,15 +650,26 @@ AUROCs of the sliding-window interpolative predictive models of intubation and m
 # Discussion
 \label{sec:discussion}
 
-We propose to complement the maxmin sampler with a similar sampler called lastfirst that applies the same logic to the growing of nearest neighborhoods rather than balls around the sampled points.
+In this work, we introduce the lastfirst procedure as a complement to the widely-used maxmin sampler for the selection of landmark points from a data set.
+Lastfirst applies the same logic to the growing of nearest neighborhoods rather than balls around the sampled points.
 This results in a heuristic sample of landmarks and an associated cover with analogous properties to those of maxmin.
 Common data limitations require careful consideration of edge cases, which also apply to maxmin but have not been worked out before, and our choices of solution can be used with either procedure.
+Further, our experiments described in the previous section have demonstrated that the lastfirst sampler confers a number of advantages over maxmin.
 
-The lastfirst procedure is more general than maxmin, in that it can be applied to any set of cases for which directed pairwise distances are available or can be computed.
+First of all, the lastfirst procedure is more general than maxmin, in that it can be applied to any set of cases for which directed pairwise distances are available or can be computed.
 This relaxes the symmetry assumption of maxmin and would allow lastfirst to be used, for example, to sample dispersed nodes from a large directed graph based on shortest path distances.
 However, it imposes costs to computation, as our algorithm requires us to either impute or compute and store all distance ranks from the new landmark at each step.
 Based on our experiments comparing implementations of the same type, this increases runtime and storage only by a constant factor.
 
+Additionally, lastfirst confers some interpretability benefits in the context of applications.
+When dealing with certain data types, the meaning of numerical values of distance may not be entirely clear or intuitive.
+For instance, on EHR data, custom metrics are often needed to define a notion of distance, and it is not obvious what a concrete distance value such as 7 between patient A and patient B might mean.
+In these types of settings, it can therefore be difficult to select parameters such as a ball radius to use in maxmin or other algorithms, and such choices are often made arbitrarily.
+This is especially true when minimal literature references are available, as is the case for many non-mathematical applications of TDA.
+However, in most applications, the notion of neighborhoods remains intuitive-- even when a ball of radius 7 around patient A is hard to conceptualize, a neighborhood of 200 similar patients still has a clear meaning.
+This increased interpretability makes parameter selection easier and also makes the algorithm more accessible to researchers outside the field of TDA.
+
+Finally, lastfirst outperformed maxmin in settings tailored to the strengths of the algorithm (and achieved comparable performance in all other settings).
 We ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.
 Because we designed lastfirst to produce cover sets of equal size despite variation in the density or multiplicity of the data, we expected it to outperform maxmin with respect to the crispness of clusters and to the accuracy of predictions.
 In particular, we expected that the optimal neighborhood size for outcome prediction would be roughly equal across our data; as a result, by assigning each landmark case an equally-sized cohort of similar cases, we expected predictions based on these cohorts to outperform those based on cohorts using a fixed similarity threshold.
@@ -677,6 +688,10 @@ Taken together, these results indicate that lastfirst covers are competitive wit
 One way to encapsulate these results is in terms of a balance between relevance and power, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
 With sufficiently rich data, relevance can be more precisely measured and becomes more important to cohort definition, as with MIMIC.
 When variables are fewer, as with MXDH, relevance is more difficult to measure, so that larger samples can improve performance even at the expense of such a measure.
+
+
+
+
 
 
 # Appendix
