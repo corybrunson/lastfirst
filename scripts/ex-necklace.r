@@ -59,13 +59,17 @@ dat %>%
   coord_equal() +
   facet_grid(~ procedure) +
   geom_point(shape = 16L, alpha = .5) +
-  geom_point(data = lmks, shape = 5L, size = 4, color = "#BA5216") +
-  ggrepel::geom_text_repel(data = lmks, aes(label = name), color = "#BA5216") +
+  # geom_point(data = lmks, shape = 5L, size = 4, color = "#BA5216") +
+  geom_point(data = lmks, shape = 16L, aes(color = name)) +
+  geom_point(data = lmks, shape = 5L, size = 4, aes(color = name)) +
+  ggrepel::geom_text_repel(data = lmks, aes(label = name, color = name)) +
   labs(x = NULL, y = NULL) +
+  theme(legend.position="none") +
   ggtitle("Maxmin and landmark samples from a necklace sample") ->
   lmks_plot
 print(lmks_plot)
 
+# ggsave("/Users/yara.skaf/Documents/GitHub/lastfirst/docs/figures/necklace-landmarks.pdf", lmks_plot,
 ggsave(
   "docs/figures/necklace-landmarks.pdf", lmks_plot,
   width = grid::unit(textwidth, "cm"),
