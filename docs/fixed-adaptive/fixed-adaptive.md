@@ -555,7 +555,7 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 
 Over the course of the COVID-19 pandemic, hospitals and other facilities experienced periods of overburden and resource depletion, and best practices were continually learned and disseminated.
 As a result, outcomes in the MXDH data reflect institutional- as well as population-level factors.
-We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a nested-longitudinal CV approach:
+We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a temporal CV approach [@Major2020a]:
 We partitioned the data by week, beginning with Week\nbs11 (March\nbs11--17) and ending with Week\nbs19 (May\nbs6--9, the last dates for which data were available).
 For each week $i$, $11 < i \leq 19$, we trained prediction models on the data from Week $i-1$.
 We then randomly partitioned Week\nbs$i$ into six roughly equal parts and optimized and evaluated the models as above.
