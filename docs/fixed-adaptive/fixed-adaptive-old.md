@@ -27,7 +27,6 @@ header-includes:
 
 # Introduction
 
-<!--
 Topological data analysis (TDA) is a maturing field in data science, at the interface of statistics, computer science, and mathematics.
 Topology is the discipline at the interface of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
 TDA consists in the use of computational theories of continuity to investigate the shape or structure of data.
@@ -37,45 +36,73 @@ TDA often uses or is used for many of the same tasks as other methodologies in d
 Dimension reduction tools can reduce the computational cost of of PH [@Arya2021], and the preservation of PH features has been used to evaluate the fidelity of these tools [@Rieck2015].
 Meanwhile, the transformation of persistence diagrams into persistent landscapes in order to take advantage of the probabilistic approach enabled by a central limit theorem [@Bubenik2015].
 A more TDA-specific maneuver is _cardinality reduction_[^cardinality-reduction].
-We use this term to describe techniques that produce more tractable representations of complex data by reducing the number of units of analysis rather than the number of variables or dimensions used to represent them. For example, cardinality reduction describes cluster analysis, which maps large numbers of cases to small numbers of clusters, and association network analysis, which projects large numbers of incidences or measurements to pairwise co-occurrence rates or correlations among the variables.
--->
+We use this term to describe techniques that produce more tractable or comprehensible representations of complex data by reducing the number of units of analysis rather than the number of variables or dimensions used to represent them. For example, cardinality reduction describes cluster analysis, which maps large numbers of cases to small numbers of clusters, and association network analysis, which projects large numbers of incidences or measurements to co-occurrences or correlations among small numbers of variables.
 
-Topological data analysis (TDA) is a maturing field in data science at the interface of statistics, computer science, and mathematics.
-Topology is the discipline at the intersection of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
-TDA consists of the use of computational theories of continuity to investigate or exploit the structure of data.
-While TDA is most commonly associated with persistent homology (PH) and mapper-like constructions, it can be understood to include such classical and conventional techniques as cluster analysis, network analysis, and nearest neighbors prediction.
+[^cardinality-reduction]: The term "cardinality reduction" takes different meanings in the data analysis literature, including the combining of different values of a categorical variable [@MicciBarreca2001; @Refaat2010] or of time series [@Hu2011] (also "numerosity reduction" [@Lin2007]). Our meaning is closer to that of @ByczkowskaLipinska2017: an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction method is data reduction.
 
-TDA methods, including the ~~canonical/recognizable/archetypal (i.e. the most recognizable as a result of historical contingency)~~ persistent homology and mapper [@Skaf2022] as well as manifold learning dimension reduction tools [@Ivakhno2007; @Reutlinger2012; @Aziz2017; @Viswanath2017; @Konstorum2018; @Becht2019], have been deployed widely in biomedicine.
-These methods require that data be pre-processed into the form of Euclidean vectors, and for many varieties of biomedical data, including most image and omics data, this is a straightforward requirement.
-In contrast, analysis tasks in clinical and public health often involve data that have diverse numerical and categorical variable types, high rates and complex patterns of missingness, or only a small number of variables taking finitely many values.
-A variety of approaches have been taken to apply classical topological methods to clinical and public health data, whether by transformaing records to coordinate vectors ("vector space embeddings") or by using non-metric similarity measures such as those common in ecology [@Johnston1976; @Lee2015; @Dai2020].
-Extensions of these ideas to the present-day TDA toolkit are needed to bring the ~~potential/power/value~~ of more advanced methods to bear in domains that rely on more challenging data.
+Many popular TDA techniques use cardinality rather than dimension reduction to improve efficiency, as with the approximation of PH through witness complexes [@deSilva2004], or as the basis for exploratory analysis, as in the mapper construction [@Singh2007]. These applications rely on covering (fuzzy clustering) methods, which like other distance-based techniques like case-based reasoning and nearest neighbors prediction can be enhanced by strategic sampling from large data sets. The maxmin sampling procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection. However, maxmin comes with its own limitations in the analysis of data that vary greatly in density or have many multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
 
-One support tool for TDA is the selection of landmarks or witnesses from a  data set, which can reduce the conceptual or computational complexity of an analysis.
-Maxmin is a common such selection procedure, which has been used to expedite the calculation of PH [@deSilva2004] or of mapper [@Singh2007] and to compute computational-topological representations of data directly.
-The maxmin sampling procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection.
-In addition to approximating PH, maxmin was used in these cases to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration.
-
-In this paper, we describe an adaptation of the maxmin procedure to health data that are not naturally represented as Euclidean vectors.
-We focus on three questions:
-(1) How is maxmin most naturally modified to sample landmarks from health data?
-(2) What useful properties do the modified procedure and its samples and covers have?
-(3) How does the procedure perform at certain analysis tasks on real-world data, and is its performance comparable or superior to that of maxmin?
-We propose a procedure that is deterministic and based not on a raw similarity or distance measure but on a rank-order of neighboring cases to each index case.
-
-We organize the paper as follows:
-In the remainder of this section, we introduce mathematical notation used throughout and use a simple example to motivate the procedure as a counterpart to maxmin.
-We carefully define and prove algorithms and other properties for the procedure in Section\nbs\ref{sec:methods}, after which we describe our implementation and several experiments performed on real-world data to address our motivating questions.
-In Section\nbs\ref{sec:results} we summarize key definitions, algorithms, and properties, report the results of benchmark tests and robustness checks, and report the results of experiments.
-We interpret our findings and comment on limitations and ongoing work in Section\nbs\ref{sec:discussion}.
-
-<!--
 In this paper, we develop a sampling procedure complementary to maxmin, based on the rankings of points by distance or similarity rather than on raw distances or similarities. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting the latter from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods.
-We work through an extended example that illustrates some common patterns of clinical data and models, how they raise concerns for uses of maxmin landmark selection, and how lastfirst selection addresses these concerns.
+We work through an extended example that illustrates some common patterns of clinical data and models, how they cause problems for uses of maxmin landmark selection, and how lastfirst selection addresses these problems.
 We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}.
 This technical discussion is accompanied by a small example in $\Z$ that spotlights edge cases and how they are handled, and it is followed by an example that extends the idea from $\Z$ to $\R^2$.
 In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
--->
+
+## Maxmin
+
+The maxmin procedure is defined in Section\nbs\ref{sec:maxmin}.[^maxmin]
+We designed the lastfirst procedure to addresses an issue with maxmin that arises when, due to the use of binary or categorical variables or to limits on measurement resolution, a data set includes many duplicate or otherwise indistinguishable cases.
+While these issues may be negligible when such points are rare, they raise computational and interpretative concerns when they are common.
+
+Maxmin has often been used in TDA.
+@deSilva2004 propose witness complexes, related to alpha complexes [@Akkiraju1995], for the rapid approximation of PH: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random. The procedure ensures that the landmarks are locally separated and roughly evenly distributed.
+Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
+In addition to approximating PH, maxmin was used in these cases to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration.
+
+[^maxmin]: This procedure is distinct from many other uses of "maxmin" and related terms.
+
+## Motivation
+
+The ball covers mentioned above have been proposed as an alternative to mapper [@Dlotko2019], where they exchange user discretion and manual effort for computational cost, and the mapper construction itself relies on a crucial covering step that has received limited theoretical attention [@Dey2015; @Carriere2018].
+Conventionally, mappers rely on covers consisting either of overlapping intervals (when the feature space is one-dimensional) or of their cartesian products (higher-dimensional) [@Carriere2018; @Piekenbrock2020].
+For this purpose, we propose that ball covers, heuristically optimized using the maxmin procedure, have a potential advantage over conventional covers, alongside a potential disadvantage.
+
+Conventionally, mappers use low-dimensional feature spaces $\mathbb{R}^p$ and one of two types of cover, based on overlapping intervals either of fixed-length or at fixed quantiles.
+We think of this length or quantile as the _resolution_ of the cover.
+When $m>1$, covers for $Y\subset\mathbb{R}^m$ can be obtained as the cartesian products of those of the coordinate projections of $Y$---so, if $\pi_1,\pi_2:\mathbb{R}^2\to\mathbb{R}$ are the coordinate projections, then interval covers $\{I_\alpha\}$ and $\{J_\beta\}$ of $\pi_1(Y)$ and $\pi_2(Y)$ give rise to the rectangle cover $\{I_\alpha \times J_\beta\}$ for $Y$.
+While these cover types are manageable in very few dimensions, the number of sets scales geometrically with $p$, holding the resolution fixed.
+Moreover, eventually most of the resulting cover sets will contain no points of $X$, and additional calculations will be needed to restrict to the non-empty sets.
+In contrast, a cover obtained by centering balls at a subset of landmark points in $Y$ will have greater up-front computational cost but will be guaranteed to contain no empty sets, and the number of sets required to capture the topology of $Y$ will increase only with the geometric and topological complexity of $Y$, not with $p$. (We test this hypothesis in Section\nbs\ref{sec:experiments}.)
+
+Moreover, the maxmin cover requires not a coordinatization but only a distance measure: the dissimilarity of cases $x$ and $y$ is captured by their distance $d(x,y)$, regardless of where $x$ and $y$ are located in $X$, and the balls $B_r(x)$ and $B_r(y)$ about landmarks $x$ and $y$ play an equal role in the cover.
+This means, however, that cover sets centered at landmarks in sparse regions of $X$ will contain fewer points than those centered in dense regions.
+Yet in many application domains, including much of biomedicine, proportionate sampling from dense regions and similar numbers of cases per set are desirable.
+
+Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than coordinate embeddings. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
+These considerations motivate us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality.
+
+Imagine an intensive care unit whose patients fall roughly into three groups: a large, clinically homogeneous, low-risk majority; a smaller, more heterogeneous, higher-risk group; and a minority of highly distinctive patients who cannot be sorted into either group and are at less predictable risk.
+The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of this situation in which each group is represented by a Gaussian distribution.
+<!--The shape approximates an empirical distribution of standard risk scores observed for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}). (Imagine that probabilistic risk has been logit-transformed, so that all real values are possible risk estimates.)-->
+The points $X$ along the abscissa are sampled randomly from this distribution.
+
+The bottom panel of Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst procedures generate sequences in $X$ of four landmarks each.
+Each procedure begins with a seed landmark $\ell_0$ selected to be reachable by minimum-radius balls (maxmin) or by minimum-cardinality neighborhoods (lastfirst) from all other points in $X$; see the appendix for details.
+Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$, the lastfirst landmarks lie at roughly equal quantiles of $X$.
+The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/vardens-cover}
+\caption{
+Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
+\label{fig:icu-cover}
+}
+\end{figure}
+
+# Procedures
+\label{sec:procedures}
+
+In this section we rigorously review the maxmin procedure and introduce the lastfirst procedure as a complement to it.
 
 ## Conventions
 
@@ -106,90 +133,13 @@ For convenience, we assume $0\in\N$.
 For $a,b \in \N$ with $a<b$, we use $[a,b]$ to denote the arithmetic sequence $(a,a+1,\ldots,b)$.
 For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $b$.
 
-## Motivation
-
-In contrast to geometric data analytic tools like principal components analysis that reduce the dimensionality of data, much TDA relies on _cardinality reduction_.
-As distinguished by @ByczkowskaLipinska2017, an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction method is data reduction, and unsupervised clustering methods are classical examples.
-Many popular TDA techniques use cardinality rather than dimension reduction to improve efficiency, often through landmark or witness sampling:
-@deSilva2004 propose witness complexes, related to alpha complexes [@Akkiraju1995], for the rapid approximation of PH: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random, which ensures that the landmarks are locally separated and roughly evenly distributed.
-Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
-However, maxmin comes with its own limitations in the analysis of data that vary greatly in density or have many multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
-
-<!--
-@Dlotko2019 proposed ball covers as an alternative to mapper, where they exchange user discretion and manual effort for computational cost, and the mapper construction itself relies on a crucial covering step that has received limited theoretical attention [@Dey2015; @Carriere2018].
-Conventionally, mappers rely on covers consisting either of overlapping intervals (when the feature space is one-dimensional) or of their cartesian products (higher-dimensional) [@Ayasdi; @Carriere2018; @Piekenbrock2020].
-For this purpose, we propose that ball covers, heuristically optimized using the maxmin procedure, have a potential advantage over conventional covers, alongside a potential disadvantage.
-
-Conventionally, mappers use low-dimensional feature spaces $\mathbb{R}^p$ and one of two types of cover, based on overlapping intervals either of fixed-length or at fixed quantiles.
-We think of this length or quantile as the _resolution_ of the cover.
-When $m>1$, covers for $Y\subset\mathbb{R}^m$ can be obtained as the cartesian products of those of the coordinate projections of $Y$---so, if $\pi_1,\pi_2:\mathbb{R}^2\to\mathbb{R}$ are the coordinate projections, then interval covers $\{I_\alpha\}$ and $\{J_\beta\}$ of $\pi_1(Y)$ and $\pi_2(Y)$ give rise to the rectangle cover $\{I_\alpha \times J_\beta\}$ for $Y$.
-While these cover types are manageable in very few dimensions, the number of sets scales geometrically with $p$, holding the resolution fixed.
-Moreover, eventually most of the resulting cover sets will contain no points of $X$, and additional calculations will be needed to restrict to the non-empty sets.
-In contrast, a cover obtained by centering balls at a subset of landmark points in $Y$ will have greater up-front computational cost but will be guaranteed to contain no empty sets, and the number of sets required to capture the topology of $Y$ will increase only with the geometric and topological complexity of $Y$, not with $p$. (We test this hypothesis in Section\nbs\ref{sec:experiments}.)
-
-Moreover, the maxmin cover requires not a coordinatization but only a distance measure: the dissimilarity of cases $x$ and $y$ is captured by their distance $d(x,y)$, regardless of where $x$ and $y$ are located in $X$, and the balls $B_r(x)$ and $B_r(y)$ about landmarks $x$ and $y$ play an equal role in the cover.
-This means, however, that cover sets centered at landmarks in sparse regions of $X$ will contain fewer points than those centered in dense regions.
-Yet in many application domains, including much of biomedicine, proportionate sampling from dense regions and similar numbers of cases per set are desirable.
--->
-
-<!--
-While distance-based selection methods may be used for convenience, cardinality-based methods may be more appropriate in some settings.
-Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than coordinate embeddings. Because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point.
-At the opposite extreme, rare phenotypes are often isolated in sparse regions of the data, so that a similarity threshold that obtains numbers of relevant cases for more common phenotypes may obtain far fewer.
-Thus, when analysis and modeling are to be done on the samples, distance-based selection risks high computational cost in one direction and low statistical power in the other.
--->
-
-Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than vector space embeddings. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
-
-These considerations motivate us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality.
-The two approaches are visually contrasted in Section\nbs\ref{sec:example}.
-Later sections will compare their performance on several tasks using real-world data, and specifically data and tasks for which precise sample sizes can be advantageous.
-From these experiments, then, we want to know both whether cardinality-based methods outperform distance-based methods (superiority), which might be expected, but also whether cardinality-based methods are not outperformed by distance-based methods (non-inferiority), so that they can be recommended when specific sample sizes are preferable for reasons other than performance.
-
-## Example
-\label{sec:example}
-
-\begin{example}
-
-Imagine an intensive care unit whose patients fall roughly into three groups: a large, clinically homogeneous, low-risk majority; a smaller, more heterogeneous, higher-risk group; and a minority of highly distinctive patients who cannot be sorted into either group and are at less predictable risk.
-The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of this situation in which each group is represented by a Gaussian distribution.
-<!--The shape approximates an empirical distribution of standard risk scores observed for patients in the MIMIC-III database (see Section\nbs\ref{sec:mimic}). (Imagine that probabilistic risk has been logit-transformed, so that all real values are possible risk estimates.)-->
-The points $X$ along the abscissa are sampled randomly from this distribution.
-
-The bottom panel of Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst procedures generate sequences in $X$ of four landmarks each.
-Each procedure begins with a seed landmark $\ell_0$ selected to be reachable by minimum-radius balls (maxmin) or by minimum-cardinality neighborhoods (lastfirst) from all other points in $X$; see the appendix for details.
-Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$, the lastfirst landmarks lie at roughly equal quantiles of $X$.
-The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
-
-\begin{figure}
-\includegraphics[width=\textwidth]{../figures/vardens-cover}
-\caption{
-Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
-\label{fig:icu-cover}
-}
-\end{figure}
-
-\end{example}
-
-
-# Materials and Methods
-\label{sec:methods}
-
-This section provides mathematical proofs of algorithms and oher properties of the landmark samplers (Section\nbs\ref{sec:samplers}), summarizes their implementation as an R package (Section\nbs\ref{sec:implementation}), and describes several experiments performed on real-world data to address our motivating questions (Sections\nbs\ref{sec:data} and \ref{sec:experiments}).
-
-## Samplers
-\label{sec:samplers}
-
-In this section we define both maxmin and its counterpart lastfirst, provide algorithms for their implementation, and prove some additional properties about them.
-The concepts and results are summarized in Section\nbs\ref{}.
-
-### Maxmin procedure
+## Maxmin procedure
 \label{sec:maxmin}
 
 \begin{definition}[maxmin]\label{def:maxmin}
-    Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin set}
-    $$\maxmin(Y) = \maxmin(Y;X) = \{ x \in X \wo \cl{Y} \where d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)} \}$$
-    consisting of \emph{maxmin points}.
+Given $(X,d)$ and $Y\subset X$, define the \emph{maxmin set}
+$$\maxmin(Y) = \maxmin(Y;X) = \{ x \in X \wo \cl{Y} \where d(x,Y) = \max_{y\in X\wo \cl{Y}}{d(y,Y)} \}$$
+consisting of \emph{maxmin points}.
 \end{definition}
 
 Note that $\maxmin(Y)$ is nonempty when $X \wo \cl{Y} \neq \varnothing$ and that $\abs{\maxmin(Y)} = 1$ when $X$ is in locally general position.
@@ -237,10 +187,7 @@ Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, 
 If $n$ was prescribed, then set $\eps=\eps(n)=d(L,X\wo \cl{L})$; if $\eps$ was prescribed, then set $n=n(\eps)=\abs{L}$.
 Write $\mathcal{B}_{n,\eps}(\ell_0)=\{\cl{B_{\eps}}(\ell_i)\}_{i=0}^{n}$ for the resulting \emph{landmark ball cover of $X$}.
 
-[^seed]: This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and the Chebyshev center $\argmin_{x \in X}{ D(x, X \wo \{x\}) }$.
-<!--
-We denote this last $\minmax(X)$ and elaborate upon it in the Appendix.
--->
+[^seed]: This choice may be arbitrary; we specifically consider three selection rules: the first point index in the object representing $X$, selection at random, and the Chebyshev center $\argmin_{x \in X}{ D(x, X \wo \{x\}) }$. We denote this last $\minmax(X)$ and elaborate upon it in the Appendix.
 
 We will write the elements of landmark sets $L=\{\ell_0,\ldots,\ell_{n-1}\}$ in the order in which they were generated.
 Note that, if $n=\uniq{X}$ or $\eps=0$, then $\cl{L}=X$.
@@ -249,12 +196,14 @@ This cover is not, in general, a minimal cover, but it is a minimal landmark cov
 A "thickened" cover can be obtained by pre-specifying both $n$ and $\eps$ in such a way that $n \geq n(\eps)$ and $\eps \geq \eps(n)$.
 In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters implemented in our software package that make these choices easier.
 
+## Lastfirst procedure
+
 Maxmin is a heuristic, iterative procedure used to select a well-dispersed subset of points from $X$, where dispersion is understood in terms of the interpoint distances of this subset.
 At each step, landmarks $L = \{\ell_0, \ldots, \ell_{i-1}\}$ having been selected, the next point $\ell_i$ is selected to maximize its minimum distance $d(\ell_j,\ell_i)$ from the $\ell_j$, $0 \leq j < 1$.
 Equivalently, $\ell_i \in X \wo L$ is selected so that the minimum radius $\eps$ required for $\ell_i \in \bigcup_{j=0}^{i-1}{\cl{B_\eps}(\ell_j)}$ is maximized.
 This is a useful heuristic for constructing a ball cover $\mathcal{B} = \{\cl{B_\eps}(\ell_j) \where 0 \leq j < n\}$ centered at a highly mutually distant set of landmarks.
 
-We desire in the next section to construct a neighborhood cover $\mathcal{N} = \{N^+_k(\ell_j) \where 0 \leq j < n\}$ whose centers are analogously dispersed.
+We desire to construct a neighborhood cover $\mathcal{N} = \{N^+_k(\ell_j) \where 0 \leq j < n\}$ whose centers are analogously dispersed.
 Accordingly, let us redefine the maxmin procedure in terms of balls rather than of distances:
 
 \begin{proposition}[maxmin in terms of balls]\label{prop:maxmin}
@@ -279,9 +228,6 @@ This yields the alternative loop for Algorithm\nbs\ref{alg:maxmin}, excerpted as
 \UNTIL $\eps_{\min} < \eps$ and $\abs{L} \geq n$
 \end{algorithmic}
 \end{algorithm}
-
-### Lastfirst procedure
-\label{sec:lastfirst}
 
 The lastfirst procedure is defined analogously to the maxmin procedure, substituting nearest neighborhoods, parameterized by their cardinality $k$, for balls, parameterized by their radius $\eps$.
 Unlike distance, membership in nearest neighborhoods is not a symmetric relation: It may be that $y \in N_k(x)$ while $x \notin N_k(y)$. We therefore introduce a companion concept that reverses this relationship:
@@ -369,7 +315,7 @@ We operationalize it as well as our lastfirst procedure by way of a total orderi
 Impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$ to emphasize the sizes of smaller neighborhoods.
 Sequences with more large values indicate points with lower out-ranks to or from more other points.
 
-We now define our counterpart to the maxmin procedure.
+We now define counterparts to the minmax and maxmin procedures.
 
 \begin{definition}[lastfirst, in terms of neighborhoods]
     Given $(X,d)$ and $Y \subset X$, write $N_k(Y) = \bigcup_{y \in Y}{N_k(y)}$, then let
@@ -378,6 +324,27 @@ We now define our counterpart to the maxmin procedure.
     $$\lf(Y) = \lf(Y;X) = X \wo N_{K(Y,X) - 1}(Y)$$
     consisting of \emph{lastfirst points}.
 \end{definition}
+
+\begin{example}
+    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-neighborhood sequence:
+    \begin{enumerate}
+        \item We have
+        \begin{align*}
+            N_\bullet^+(a,\{b,c,d\}) &= (0,1,3,3) &
+            N_\bullet^+(b,\{a,c,d\}) &= (0,1,3,3) \\
+            N_\bullet^+(c,\{a,b,d\}) &= (1,1,2,3) &
+            N_\bullet^+(d,\{a,b,c\}) &= (1,1,2,3)
+        \end{align*}
+        Under the revlex order, $\argmin_{x\in X}{N_\bullet^+(x,X \wo \cl{\{x\}})}=\{c,d\}$, and we arbitrarily select $\ell_0=c$ and $L=\{c\}$.
+        \item For $x \in X \wo \cl{L}$ we now have
+        \begin{align*}
+            N_\bullet^-(a,\{c\}) &= (0,0,0,1) &
+            N_\bullet^-(b,\{c\}) &= (0,0,1,1)
+        \end{align*}
+        Under the revlex order, $\argmax_{x\in X \wo \cl{\{c\}}}{N_\bullet^-(x,\{c\})}=\{a\}$; we select $\ell_1=a$, so that now $L=\{c,a\}$.
+        \item Only one point remains in $X\wo \cl{L}=\{b\}$, so the exhaustive landmark set is $\{c,a,b\}$.
+    \end{enumerate}
+\end{example}
 
 The _lastfirst procedure_ proceeds analogously to the maxmin procedure (Algorithm\nbs\ref{alg:lastfirst}).
 Write $\mathcal{N}_{n,k}(\ell_0) = \{ N_k(\ell_i) \}_{i=0}^{n}$ for the resulting _landmark neighborhood cover of $X$_.
@@ -409,72 +376,67 @@ Write $\mathcal{N}_{n,k}(\ell_0) = \{ N_k(\ell_i) \}_{i=0}^{n}$ for the resultin
 \end{algorithmic}
 \end{algorithm}
 
-We defer further proofs to the Appendix, where we rely on additional technical definitions. The results apply to a more general conception of "relative rank" (our term), one of which is induced by the pseudometric on any finite pseudometric space but which need only satisfy the condition that a point is no nearer any other point than itself.
+We defer proofs to the Appendix, where we rely on additional technical definitions. The results apply to a more general conception of "relative rank" (our term), one of which is induced by the pseudometric on any finite pseudometric space but which need only satisfy the condition that a point is no nearer any other point than itself.
 
-\begin{corollary}[lastfirst using relative rank]
-    Given $Y\subset X$ and a pseudometric $d$ on $X$ with relative rank $q$,
-    \begin{align*}
-        \lf(Y;X) &= \maxmin(Y;X,q_d) \\
-        \lf(X,d) &= \maxmin(X,q_d)
-    \end{align*}
-\end{corollary}
+### Illustration
 
-\begin{proposition}
-Algorithm\nbs\ref{alg:lastfirst-landmarks} returns a lastfirst landmark set.
-If $n \leq \uniq{X}$ is given as input and $k$ is not, then $\abs{L} = n$.
-If $n$ and $k$ are both given, then $\abs{L} \geq n$.
-Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
-\end{proposition}
+Consider the "necklace" data set adapted from [@Yoon2020].
+The points are sampled in the plane from a large, low-density circular region (the "string") and from several smaller, higher-density circular regions (the "beads") evenly spaced along the string.
+Only a method of detecting topology that is adaptive to the different scales of the string and of the beads will recover both the large feature and the smaller features of dimension 1.
+We use small landmark samples to illustrate the differences between the maxmin and lastfirst selection procedures.
+Publicly available software tools are not yet available to compute persistent homology for arbitrary sequences of simplicial maps, but we suggest that the relative strengths of maxmin and lastfirst would be revealed by a comparison of the persistent features obtained by sequences of covers obtained by both procedures on this data set.
 
-\begin{example}
-    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-neighborhood sequence:
-    \begin{enumerate}
-        \item We have
-        \begin{align*}
-            N_\bullet^+(a,\{b,c,d\}) &= (0,1,3,3) &
-            N_\bullet^+(b,\{a,c,d\}) &= (0,1,3,3) \\
-            N_\bullet^+(c,\{a,b,d\}) &= (1,1,2,3) &
-            N_\bullet^+(d,\{a,b,c\}) &= (1,1,2,3)
-        \end{align*}
-        Under the revlex order, $\argmin_{x\in X}{N_\bullet^+(x,X \wo \cl{\{x\}})}=\{c,d\}$, and we arbitrarily select $\ell_0=c$ and $L=\{c\}$.
-        \item For $x \in X \wo \cl{L}$ we now have
-        \begin{align*}
-            N_\bullet^-(a,\{c\}) &= (0,0,0,1) &
-            N_\bullet^-(b,\{c\}) &= (0,0,1,1)
-        \end{align*}
-        Under the revlex order, $\argmax_{x\in X \wo \cl{\{c\}}}{N_\bullet^-(x,\{c\})}=\{a\}$; we select $\ell_1=a$, so that now $L=\{c,a\}$.
-        \item Only one point remains in $X\wo \cl{L}=\{b\}$, so the exhaustive landmark set is $\{c,a,b\}$.
-    \end{enumerate}
-\end{example}
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
+\caption{
+Landmark samples of size 12 from a necklace data set using two selection procedures.
+\label{fig:necklace}
+}
+\end{figure}
 
-## Implementation
+# Implementation
 \label{sec:implementation}
 
-We have implemented both procedures in the R package landmark [@Brunson2021], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
+We have implemented the lastfirst procedure, together with maxmin, in the R package landmark [@Brunson2021]. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
 For relative rank--based procedures, the user can choose any tie-handling rule (see the Appendix).
 The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
 In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more overlapping covers.
 
-### Validation
+## Validation
 
 We validated the maxmin and lastfirst procedures against manual calculations on several small example data sets, including that of Example\nbs\ref{ex:relative-rank}.
 We also validated the C++ and R implementations against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
 We invite readers to experiment with new cases and to request or contribute additional features.
 
-### Benchmark tests
+## Benchmark tests
 
 We benchmarked the C++ and R implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using RT-transformed data and cosine similarity (Section\nbs\ref{sec:data}).
 We conducted benchmarks using the bench package [@Hester2020] on the University of Florida high-performance cluster HiPerGator.
 
+\begin{figure}
+\includegraphics[width=.6666667\textwidth]{../figures/benchmark-circle-lattice}
+\includegraphics[width=.3333333\textwidth]{../figures/benchmark-mimic}
+\caption{
+Benchmark results for computing landmarks on two families of artificial data (circle and lattice) and one collection of empirical data (RT-similarity space of critical care units in MIMIC-III). Some points are missing because benchmark tests did not complete within 1 hour.
+\label{fig:benchmark}
+}
+\end{figure}
+
+Benchmark results are reported in Figure\nbs\ref{fig:benchmark}.
+The R implementation of maxmin used orders of magnitude more memory and took slightly longer than the C++ implementation.
+They appeared to scale slightly better in terms of time than the lastfirst implementations.
+The additional calculations required for the lastfirst procedure increase runtimes by a median factor of 2.5 in our R implementations. The C++ implementation of lastfirst is based on combinatorial definitions and not optimized for speed, and as a result took much longer and failed to complete in many of our tests.
+
+# Experiments
+\label{sec:experiments}
+
 ## Empirical data
 \label{sec:data}
-
-The experiments described in Section\nbs\ref{} make use of the two real-world data sets detailed here.
 
 ### MIMIC-III
 \label{sec:mimic}
 
-The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016a].
+The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016].
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
 For each patient admission, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
 Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ suitable for the cosine similarity measure, which was converted to a distance measure by subtraction from 1.
@@ -492,9 +454,7 @@ The Mexican Department of Health (MXDH) has released official open-access data c
 
 [^kaggle]: <https://www.kaggle.com/lalish99/covid19-mx>
 
-## Experiments
-
-### Covers and nerves
+## Covers and nerves
 
 Cardinality reduction techniques can be used to model a large number of cases represented by a large number of variables as a smaller number of clusters with similarity or overlap relations among them.
 The deterministic maxmin and lastfirst procedures provide fuzzy clusters (cover sets) defined by proximity to the landmark cases and relations defined by their overlap.
@@ -513,100 +473,6 @@ We evaluated the procedures in three ways:
 -->
 
 We hypothesized that lastfirst covers would exhibit less overlap than maxmin covers by virtue of their greater sensitivity to local density, and that they would outperform maxmin covers at risk prediction by reducing the sizes of cover sets in denser regions of the data (taking advantage of more homogeneous patient cohorts).
-
-### Interpolative nearest neighbors prediction
-
-Landmark points may also be used to trade accuracy for memory in neighborhood-based prediction modeling. Consider the following approach: A modeling process involves predictor data $X \in \R^{n \times p}$ and response data $y \in \R^{n \times 1}$, partitioned into training and testing sets $X_0,X_1$ and $y_0,y_1$ according to a partition $I_0 \sqcup I_1 = \{1,\ldots,n\}$ of the index set. Given $x \in X_1$, a nearest neighbors model computes the prediction $p(x) = \frac{1}{k}\sum_{q(x,x_i) \leq k}{y_i}$ by averaging the responses for the $k^\text{th}$ nearest neighbors of $x$ in $X_0$. By selecting a landmark set $L \subset X_0$, a researcher can reduce the computational cost of the model as follows: For each $\ell \in L$, calculate $p(\ell)$ as above. Then, for each $x \in X_1$, calculate $p_L(x) = \sum_{\ell \in L}{w(d(x,\ell)) p(\ell)} / \sum_{\ell \in L}{w(d(x,\ell))}$, where $w : \R_{\geq 0} \to \R_{\geq 0}$ is a weighting function (for example, $w(d)=d^{-1}$). The nearest neighbor predictions for $L$ thus serve as proxies for the responses associated with $X_0$.
-
-We took this approach to the prediction of in-hospital mortality for patients with records in each critical care unit of MIMIC-III.
-We then implemented the following procedure:
-
-<!--Use time series nested cross-validation for the CTD data?-->
-1. Determine a nested $6 \times 6$–fold split for train–tune–test cross-validation. That is, partition $[n] = \bigsqcup_{i=1}^{6}{I_i}$ into roughly equal parts, and partition each $[n] \wo \cl{I_i} = \bigsqcup_{j=1}^{6}{J_{ij}}$ into roughly equal parts.
-2. Iterate the following steps over each $i,j$:
-    a) Generate a sequence $L$ of landmarks from the points $X_{([n] \wo \cl{I_i}) \wo \cl{J_{ij}}}$.
-    b) Identify the $180$ nearest neighbors $N^+_{180}(\ell)$ of each landmark $\ell$. This was a fixed parameter, chosen for being slightly larger than the optimal neighborhood size in a previous study of individualized models [@Lee2015].
-    c) Find the value of $k \in [180]$ and the weighting function $w$ (among those available) for which the predictions $p_L : X_{J_{ij}} \to [0,1]$ maximize the AUROC.
-    d) Use the AUROC to evaluate the performance of the predictions $p_L : X_{I_i} \to [0,1]$ using these $k$ and $w$.
-
-We replicated the experiment for each combination of procedure (random, maxmin, lastfirst), number of landmarks ($\abs{L}=36,60,180,360$), and each of several weighting functions (integer rank, triangle, inverse distance, Gaussian).
-We hypothesized that, as measured by overall accuracy of the resulting predictive model, the maxmin and lastfirst procedures would outperform random selection, and that lastfirst would outperform maxmin, for similar reasons to those in the previous section.
-
-
-# Results
-\label{sec:results}
-
-## Definition
-
-We introduce the following definitions in Section\nbs\ref{sec:methods}:
-
-\begin{definition}[sampling procedures in terms of cover sets]\label{def:maxmin-lastfirst}
-    Given $(X,d)$ and $Y \subset X$, write
-    \begin{align*}
-    \cl{B_\eps(Y)} &= \bigcup_{y \in Y}{\cl{B_\eps(y)}} \\
-    N_k(Y) &= \bigcup_{y \in Y}{N_k(y)}
-    \end{align*}
-    Take
-    \begin{align*}
-    \Eps(Y,X) &= \min\{ \eps \where \cl{B_\eps(Y)} = X \} \\
-    K(Y,X) &= \min\{ k \where N_k(Y) = X \}
-    \end{align*}
-    Then define the \emph{maxmin} and \emph{lastfirst sets}
-    \begin{align*}
-    \maxmin(Y) = \maxmin(Y;X) &= X \wo B_{\Epsilon(Y,X)}(Y) \\
-    \lf(Y) = \lf(Y;X) &= X \wo N_{K(Y,X) - 1}(Y)
-    \end{align*}
-    consisting of \emph{maxmin} and \emph{lastfirst points}, respectively.
-\end{definition}
-
-As suggested by their definitions, these procedures arise from the construction of conditionally minimal covers of $X$, where minimality is defined in terms of the common radius (maxmin) or cardinality (lastfirst) of the sets.
-The centers of the cover sets comprise the landmark points, beginning from an arbitrarily selected first landmark.
-In practice, we suggest a Chebyshev center $\argmin_{x \in X}{ \min\{ \eps : \cl{B_\eps(x)} = X \} }$ as a starting landmark for the maxmin procedure, in that it provides an (unconditionally) minimal one-set cover.^[An analogously defined point $\argmin_{x \in X}{ \min\{ k : N_k(x) = X \} }$ might be used for the lastfirst procedure; when $X$ is not in locally general position, it locates a landmark that is equidistant to as many farthest neighbors as possible, i.e. the center of a maximally populated circumcenter of $X$.]
-
-## Implementation
-
-The definition of our lastfirst procedure is analogous to that of maxmin, substituting ranks in the role of distances.
-In this way, lastfirst is an alternative to maxmin that is adaptive to the local density of the data, similar to the use of fixed quantiles in place of fixed-length intervals.
-The maxmin and lastfirst procedures implicitly construct a minimal cover whose sets are centered at the selected landmarks, and the fixed-radius balls of maxmin correspond to the fixed-cardinality neighborhoods of lastfirst.
-The rank-based procedures are more combinatorially complex and computationally expensive, primarily because relative ranks are asymmetric, which doubles (in the best case) or squares (in the worst case) the number of distances that must be calculated.
-Nevertheless, the procedure can be performed in a reasonable time for many real-world uses.
-
-### Illustration
-
-Consider the "necklace" data set adapted from @Yoon2020.
-The points are sampled in the plane from a large, low-density circular region (the "string") and from several smaller, higher-density circular regions (the "beads") evenly spaced along the string.
-Only a method of detecting topology that is adaptive to the different scales of the string and of the beads will recover both the large feature and the smaller features of dimension 1.
-We use small landmark samples to illustrate the differences between the maxmin and lastfirst selection procedures.
-Publicly available software tools are not yet available to compute persistent homology for arbitrary sequences of simplicial maps, but we suggest that the relative strengths of maxmin and lastfirst would be revealed by a comparison of the persistent features obtained by sequences of covers obtained by both procedures on this data set.
-
-\begin{figure}
-\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
-\caption{
-Landmark samples of size 12 from a necklace data set using two selection procedures.
-\label{fig:necklace}
-}
-\end{figure}
-
-### Benchmark tests
-
-\begin{figure}
-\includegraphics[width=.6666667\textwidth]{../figures/benchmark-circle-lattice}
-\includegraphics[width=.3333333\textwidth]{../figures/benchmark-mimic}
-\caption{
-Benchmark results for computing landmarks on two families of artificial data (circle and lattice) and one collection of empirical data (RT-similarity space of critical care units in MIMIC-III). Some points are missing because benchmark tests did not complete within 1 hour.
-\label{fig:benchmark}
-}
-\end{figure}
-
-Benchmark results are reported in Figure\nbs\ref{fig:benchmark}.
-The R implementation of maxmin used orders of magnitude more memory and took slightly longer than the C++ implementation.
-They appeared to scale slightly better in terms of time than the lastfirst implementations.
-The additional calculations required for the lastfirst procedure increase runtimes by a median factor of 2.5 in our R implementations. The C++ implementation of lastfirst is based on combinatorial definitions and not optimized for speed, and as a result took much longer and failed to complete in many of our tests.
-
-## Experiments
-\label{sec:experiments}
-
-### Covers and nerves
 
 Figure\nbs\ref{fig:cover-mimic} presents, for the analysis of the five MIMIC-III care units, the sizes of the nerves of the covers and the two evaluation statistics as functions of the number of landmarks.
 The numbers of 1- and of 2-simplices grew at most roughly quadratically and roughly cubically, respectively. This suggests that the densities of the simplicial complex models were at most roughly constant, regardless of the number of landmarks.
@@ -644,7 +510,23 @@ Right: the modified partition coefficient (MPC) and the c-statistics of the risk
 }
 \end{figure}
 
-### Interpolative nearest neighbors prediction
+## Interpolative nearest neighbors prediction
+
+Landmark points may also be used to trade accuracy for memory in neighborhood-based prediction modeling. Consider the following approach: A modeling process involves predictor data $X \in \R^{n \times p}$ and response data $y \in \R^{n \times 1}$, partitioned into training and testing sets $X_0,X_1$ and $y_0,y_1$ according to a partition $I_0 \sqcup I_1 = \{1,\ldots,n\}$ of the index set. Given $x \in X_1$, a nearest neighbors model computes the prediction $p(x) = \frac{1}{k}\sum_{q(x,x_i) \leq k}{y_i}$ by averaging the responses for the $k^\text{th}$ nearest neighbors of $x$ in $X_0$. By selecting a landmark set $L \subset X_0$, a researcher can reduce the computational cost of the model as follows: For each $\ell \in L$, calculate $p(\ell)$ as above. Then, for each $x \in X_1$, calculate $p_L(x) = \sum_{\ell \in L}{w(d(x,\ell)) p(\ell)} / \sum_{\ell \in L}{w(d(x,\ell))}$, where $w : \R_{\geq 0} \to \R_{\geq 0}$ is a weighting function (for example, $w(d)=d^{-1}$). The nearest neighbor predictions for $L$ thus serve as proxies for the responses associated with $X_0$.
+
+We took this approach to the prediction of in-hospital mortality for patients with records in each critical care unit of MIMIC-III.
+We then implemented the following procedure:
+
+<!--Use time series nested cross-validation for the CTD data?-->
+1. Determine a nested $6 \times 6$–fold split for train–tune–test cross-validation. That is, partition $[n] = \bigsqcup_{i=1}^{6}{I_i}$ into roughly equal parts, and partition each $[n] \wo \cl{I_i} = \bigsqcup_{j=1}^{6}{J_{ij}}$ into roughly equal parts.
+2. Iterate the following steps over each $i,j$:
+    a) Generate a sequence $L$ of landmarks from the points $X_{([n] \wo \cl{I_i}) \wo \cl{J_{ij}}}$.
+    b) Identify the $180$ nearest neighbors $N^+_{180}(\ell)$ of each landmark $\ell$. This was a fixed parameter, chosen for being slightly larger than the optimal neighborhood size in a previous study of individualized models [@Lee2015].
+    c) Find the value of $k \in [180]$ and the weighting function $w$ (among those available) for which the predictions $p_L : X_{J_{ij}} \to [0,1]$ maximize the AUROC.
+    d) Use the AUROC to evaluate the performance of the predictions $p_L : X_{I_i} \to [0,1]$ using these $k$ and $w$.
+
+We replicated the experiment for each combination of procedure (random, maxmin, lastfirst), number of landmarks ($\abs{L}=36,60,180,360$), and each of several weighting functions (integer rank, triangle, inverse distance, Gaussian).
+We hypothesized that, as measured by overall accuracy of the resulting predictive model, the maxmin and lastfirst procedures would outperform random selection, and that lastfirst would outperform maxmin, for similar reasons to those in the previous section.
 
 Boxplots of the AUROCs for each cross-validation step are presented in Figure\nbs\ref{fig:knn-mimic}.
 While both landmark procedures yielded stronger results than random selection, lastfirst performed on average slightly worse than maxmin on each data set.
@@ -663,7 +545,7 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 
 Over the course of the COVID-19 pandemic, hospitals and other facilities experienced periods of overburden and resource depletion, and best practices were continually learned and disseminated.
 As a result, outcomes in the MXDH data reflect institutional- as well as population-level factors.
-We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a temporal CV approach [@Major2020a]:
+We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a nested-longitudinal CV approach:
 We partitioned the data by week, beginning with Week\nbs11 (March\nbs11--17) and ending with Week\nbs19 (May\nbs6--9, the last dates for which data were available).
 For each week $i$, $11 < i \leq 19$, we trained prediction models on the data from Week $i-1$.
 We then randomly partitioned Week\nbs$i$ into six roughly equal parts and optimized and evaluated the models as above.
@@ -681,30 +563,21 @@ AUROCs of the sliding-window interpolative predictive models of intubation and m
 }
 \end{figure}
 
-
 # Discussion
-\label{sec:discussion}
 
-In this work, we introduce the lastfirst procedure as a complement to the widely-used maxmin sampler for the selection of landmark points from a data set.
-Lastfirst applies the same logic to the growing of nearest neighborhoods rather than balls around the sampled points.
-This results in a heuristic sample of landmarks and an associated cover with analogous properties to those of maxmin.
-Common data limitations require careful consideration of edge cases, which also apply to maxmin but have not been worked out before, and our choices of solution can be used with either procedure.
-Further, our experiments described in the previous section demonstrate a number of advantages that the lastfirst sampler confers over maxmin.
+The definitions of our lastfirst and firstlast procedures are analogous to those of maxmin and minmax, substituting ranks in the role of distances.
+In this way, lastfirst is an alternative to maxmin that is adaptive to the local density of the data, similar to the use of fixed quantiles in place of fixed-length intervals.
+The maxmin and lastfirst procedures implicitly construct a minimal cover whose sets are centered at the selected landmarks, and the fixed-radius balls of maxmin correspond to the fixed-cardinality neighborhoods of lastfirst.
+The rank-based procedures are more combinatorially complex and computationally expensive, primarily because relative ranks are asymmetric, which doubles (in the best case) or squares (in the worst case) the number of distances that must be calculated.
+Nevertheless, the procedure can be performed in a reasonable time for many real-world uses.
 
-First of all, the lastfirst procedure is more general than maxmin, in that it can be applied to any set of cases for which directed pairwise distances are available or can be computed.
-This relaxes the symmetry assumption of maxmin and would allow lastfirst to be used when the relevance of one case to another is not a two-way street. One use case would be to sample dispersed nodes from a transportation network involving one-way streets and other asymmetries such as traffic patterns, which would be modeled as a directed graph with shortest path distances between nodes.
-However, it imposes costs to computation, as our algorithm requires us to either impute or compute and store all distance ranks from the new landmark at each step.
-Based on our experiments comparing implementations of the same type, this increases runtime and storage only by a constant factor.
+<!--
+We ran an experiment to compare maxmin and lastfirst landmarks at expediting the computation of persistent homology, extending an experiment of @deSilva2004. In addition to a uniform sample from a sphere, we drew skewed and bootstrapped samples in order to simulate data sets with variable density and multiplicity, in this case exhibiting a statistical void at one pole of the sphere, opposite a concentration at the other pole.
+Whereas the maxmin procedure would sample more uniformly across the sphere despite this skew, the lastfirst procedure would concentrate landmarks toward the south.
+Classical persistent homology is notoriously sensitive to outliers, and maxmin better recovered spherical homology than lastfirst, as expected. This is likely due in part to the filtration itself being based on distances rather than relative ranks between landmarks (and other points as witnesses).
+Yet, compared to random sampling, lastfirst still oversampled from less dense regions. This is desirable for settings, such as healthcare, in which regions of missingness often indicate limitations of the data collection rather than rarity of case types in the population.
+-->
 
-Additionally, lastfirst confers some interpretability benefits in the context of applications.
-When dealing with certain data types, the meaning of numerical values of distance may not be clear or intuitive.
-For instance, on patient medical data obtained from electronic health records, custom distance metrics are often used to measure the _relative_ clinical relevance between patients, and it may not be obvious what an _absolute_ distance of, say, $.35$ between patient A and patient B might mean.
-In these types of settings, it can therefore be difficult to select parameters such as a ball radius to use in maxmin or other algorithms, and such choices are often made arbitrarily.
-This is especially true when minimal literature references are available, as is the case for many non-mathematical applications of TDA.
-However, in most applications, the notion of neighborhoods remains intuitive: Even when a ball of radius $.35$ around patient A is hard to conceptualize, a neighborhood of 200 similar patients still has a clear meaning.
-This increased interpretability makes parameter selection easier and also makes the algorithm more accessible to researchers outside mathematics.
-
-Finally, lastfirst outperformed maxmin in settings tailored to the strengths of the algorithm (and achieved comparable performance in all other settings).
 We ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.
 Because we designed lastfirst to produce cover sets of equal size despite variation in the density or multiplicity of the data, we expected it to outperform maxmin with respect to the crispness of clusters and to the accuracy of predictions.
 In particular, we expected that the optimal neighborhood size for outcome prediction would be roughly equal across our data; as a result, by assigning each landmark case an equally-sized cohort of similar cases, we expected predictions based on these cohorts to outperform those based on cohorts using a fixed similarity threshold.
@@ -712,21 +585,16 @@ In particular, we expected that the optimal neighborhood size for outcome predic
 Contrary to expectations, maxmin produced crisper clusterings on average, and in the case of MIMIC-III more accurate predictions.
 However, when the sets of these covers had their radii or cardinalities extended by a fixed proportion, those of lastfirst better preserved these qualities.
 Additionally, in the case of MXDH, neither landmark selection procedure produced consistently more accurate predictions.
-Specifically, when predicting mortality in MIMIC-III, even with the theory-agnostic RT-similarity measure, a patient's prognosis is better-guided by a cohort cutoff at a fixed minimum similarity than by one of a fixed size.
+
+A possible explanation for the stronger performance of maxmin on MIMIC is that the data did not exhibit very strongly the patterns for which the lastfirst procedure is designed to account, namely variation in density and multiplicity.
+As a result, the RT-similarity measure is in fact meaningful across the population: Whatever the baseline presentation of a patient, rather than a cohort of similar patients of some fixed size, their prognosis would be better guided by a cohort cut off at a fixed minimum similarity (or maximum distance).
 This suggests that the use of personalized cohorts to improve predictive modeling, as employed by @Lee2015, may be strengthened by optimizing a fixed similarity threshold rather than a fixed cohort size.
-<!--In contrast, this stronger performance was not evident on MXDH, which contained fewer variables and as a result exhibited many more occurrences of duplication.-->
-
+In contrast, this stronger performance was not evident on MXDH, which contained fewer variables and as a result exhibited many more occurrences of duplication.
 It is worth noting that @Park2006, to our knowledge the only other investigators who have compared predictive models based on cohorts bounded by a radius versus a cardinality, reached a similar conclusion.
-Notably, however, lastfirst performed better, relative to maxmin, on tasks involving the MXDH data, which had more categorical variables, more indistinguishable records, and fewer variables overall---that is, data for which the limitations of maxmin we described at the outset are more acute.
-Taken together, these results indicate that lastfirst covers are competitive with maxmin covers for basic analysis tasks and should be considered for more advanced tasks, for example witness complexes or mapper-like constructions, where consistency in the sizes of cover sets or density-based representativeness is advantageous.
 
-One way to encapsulate these results is in terms of a balance between relevance and power, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
+Another way to think about these results is in terms of a balance between relevance and pwoer, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
 With sufficiently rich data, relevance can be more precisely measured and becomes more important to cohort definition, as with MIMIC.
 When variables are fewer, as with MXDH, relevance is more difficult to measure, so that larger samples can improve performance even at the expense of such a measure.
-
-
-
-
 
 
 # Appendix
@@ -823,13 +691,13 @@ A relative rank $q$ can be used to define $k$-neighborhoods in greater generalit
 Relative ranks are not as straightforward to compare among subsets of points. For example, for $y\neq x$, $q(x,y)$ takes integer values between $\abs{\supp{\{x\}}}$ and $N-1$.
 However, they do provide us with a definition of the lastfirst procedure that straightforwardly adapts Definition\nbs\ref{def:maxmin}.
 
-\begin{corollary}[lastfirst using relative rank]
+\begin{lemma}[firstlast and lastfirst using relative rank]
     Given $Y\subset X$ and a pseudometric $d$ on $X$ with relative rank $q$,
     \begin{align*}
         \lf(Y;X) &= \maxmin(Y;X,q_d) \\
         \lf(X,d) &= \maxmin(X,q_d)
     \end{align*}
-\end{corollary}
+\end{lemma}
 
 \begin{proof}
 This follows directly from the observations
