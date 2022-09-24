@@ -57,7 +57,8 @@ x <- bumpy_circle(n, p, th, sd, r)
 
 #' 2. Compute towers of maxmin and lastfirst (enlarged) covers.
 
-
+x_m <- landmarks_maxmin(x, pick_method = "random", cover = TRUE,
+                        extend_radius = extension(mult = .1))
 
 #' 3. Transform birth and death values to metric on S^1.
 
