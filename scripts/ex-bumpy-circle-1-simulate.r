@@ -4,6 +4,8 @@ library(landmark)
 
 # source settings
 source(here::here("code/settings.r"))
+# file name
+bumpy_betti_file <- here::here("data/bumpy-betti.rds")
 
 # sampler
 bumpy_circle <- function(
@@ -40,31 +42,39 @@ maxs_to_betti <- function(maxs) {
   b
 }
 
-# initialize persistence data with parameter ranges
-bumpy_persistence <- crossing(
-  # data parameters
-  n = c(12L, 36L, 60L),
-  p = c(0, .01, .05, .1),
-  th = c(1, 3/4, 1/2) * pi,
-  sd = c(1/6, 1/4, 1/3) * pi,
-  r = c(1, 3, 10),
-  # landmark parameters
-  m = fct_inorder(c("maxmin", "lastfirst")),
-  me = c(0, 1, 2)
-) %>%
-  rowwise() %>%
-  mutate(ae = case_when(
-    m == "maxmin" ~ list(c(0, .1, .2)),
-    m == "lastfirst" ~ list(c(0, n / 12, n / 6))
-  )) %>%
-  unnest(ae) %>%
-  mutate(betti = as.list(vector(
-    mode = "integer",
-    length = nrow(bumpy_persistence)
-  )))
+# load or initialize persistence data with parameter ranges
+bumpy_persistence <- if (file.exists(bumpy_betti_file)) {
+  read_rds(bumpy_betti_file)
+} else {
+  crossing(
+    # data parameters
+    n = c(12L, 36L, 60L),
+    p = c(0, .01, .05, .1),
+    th = c(1, 3/4, 1/2) * pi,
+    sd = c(1/6, 1/4, 1/3) * pi,
+    r = c(1, 3, 10),
+    # landmark parameters
+    m = fct_inorder(c("maxmin", "lastfirst")),
+    me = c(0, 1, 2)
+  ) %>%
+    rowwise() %>%
+    mutate(ae = case_when(
+      m == "maxmin" ~ list(c(0, .1, .2)),
+      m == "lastfirst" ~ list(c(0, n / 12, n / 6))
+    )) %>%
+    unnest(ae) %>%
+    mutate(betti = as.list(vector(
+      mode = "integer",
+      length = nrow(bumpy_persistence)
+    )))
+}
+# un-done rows
+wh_undone <- which(map_lgl(bumpy_persistence$betti, ~ length(.) == 1L))
 
+# progress bar
+pb <- progress::progress_bar$new(total = length(wh_undone))
 # loop over parameter choices
-for (i in seq(nrow(bumpy_persistence))) {
+for (i in wh_undone) {
   
   n <- bumpy_persistence$n[[i]]
   p <- bumpy_persistence$p[[i]]
@@ -108,6 +118,7 @@ for (i in seq(nrow(bumpy_persistence))) {
   bumpy_persistence$betti[[i]] <- x_b
   
   # save progress
-  write_rds(bumpy_persistence, file = here::here("data/bumpy-betti.rds"))
+  write_rds(bumpy_persistence, file = bumpy_betti_file)
   
+  pb$tick()
 }

@@ -59,19 +59,58 @@ bumpy_persistence %>%
   geom_point(aes(color = m), alpha = .25) +
   geom_line(aes(color = m), alpha = .25)
 
+# custom labeller
+label_equals <- function(labels) label_both(labels, sep = " = ")
+# custom axis label
+persistent_beta <- expression(paste(
+  "Landmark persistence of ",
+  beta[0] == 1, " & ", beta[1] == 1
+))
+
 # check parameter effects on b_0 and b_1
 bumpy_persistence %>%
-  # filter(me > 0 & ae > 0) %>%
   group_by(n, m) %>%
   ggplot(aes(x = b01_lp, fill = m)) +
-  facet_wrap(vars(n), nrow = 3L) +
-  geom_histogram(position = "dodge")
-# ratio between bumps and standard deviations of bumps
+  scale_fill_brewer(type = "qual", palette = 6L) +
+  facet_wrap(vars(n), nrow = 3L, label = label_equals) +
+  geom_histogram(position = "dodge") +
+  labs(x = persistent_beta, y = NULL, fill = NULL) ->
+  bumpy_persistence_size
+ggsave(
+  here::here("docs/figures/bumpy-persistence-size.pdf"),
+  bumpy_persistence_size, width = textwidth / 2, height = textwidth / phi
+)
+
+# multiplicative and additive extensions
 bumpy_persistence %>%
-  mutate(across(c(th, sd), round, digits = 2L)) %>%
+  group_by(n, p, th, sd, r, m, me) %>%
+  mutate(`mult. ext.` = me, `add. ext.` = str_c("#", rank(rank(ae)))) %>%
+  ungroup() %>%
   ggplot(aes(x = factor(n), y = b01_lp)) +
   facet_grid(
-    rows = vars(sd), cols = vars(r),
-    label = function(labels) label_both(labels, sep = " = ")
+    rows = vars(`mult. ext.`), cols = vars(`add. ext.`),
+    label = label_equals
   ) +
-  geom_boxplot(aes(color = m))
+  geom_boxplot(aes(color = m)) +
+  scale_color_brewer(type = "qual", palette = 6L) +
+  labs(x = "n", y = persistent_beta, color = NULL) ->
+  bumpy_persistence_extensions
+ggsave(
+  here::here("docs/figures/bumpy-persistence-extensions.pdf"),
+  bumpy_persistence_extensions, width = textwidth, height = textwidth / phi
+)
+
+# ratio between bumps and standard deviations of bumps
+bumpy_persistence %>%
+  mutate(sd = fct_reorder(str_c("pi / ", as.integer(pi / sd)), sd)) %>%
+  rename(ratio = r) %>%
+  ggplot(aes(x = factor(n), y = b01_lp)) +
+  facet_grid(rows = vars(sd), cols = vars(ratio), label = label_equals) +
+  geom_boxplot(aes(color = m)) +
+  scale_color_brewer(type = "qual", palette = 6L) +
+  labs(x = "n", y = persistent_beta, color = NULL) ->
+  bumpy_persistence_distribution
+ggsave(
+  here::here("docs/figures/bumpy-persistence-distribution.pdf"),
+  bumpy_persistence_distribution, width = textwidth, height = textwidth / phi
+)
