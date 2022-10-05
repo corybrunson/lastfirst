@@ -190,7 +190,7 @@ Landmark samples and their covers from the bumpy distribution on the circle usin
 }
 \end{figure}
 
-Figure\nbs\ref{bumpy-cover} shows the covers obtained from 12 landmarks generated using the maxmin and lastfirst procedures, in both cases increasing the sizes of the sets twofold from minimality.
+Figure\nbs\ref{fig:bumpy-cover} shows the covers obtained from 12 landmarks generated using the maxmin and lastfirst procedures, in both cases increasing the sizes of the sets twofold from minimality.
 It can be seen that the maxmin witness complex (the nerve of the cover) fails to detect the 1-feature while the lastfirst witness complex succeeds.
 As will be shown later in the paper, this superior performance is robust with respect to several parameters governing the distribution and the samplers, and in particular that the lastfirst witness complex detects the feature over a wider range of sizes of $\lvert L \rvert$.
 
