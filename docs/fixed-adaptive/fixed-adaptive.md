@@ -142,14 +142,18 @@ Thus, when analysis and modeling are to be done on the samples, distance-based s
 Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than vector space embeddings. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
 
 These considerations motivate us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality.
-The two approaches are visually contrasted in Section\nbs\ref{sec:example}.
+The two approaches are visually contrasted in Section\nbs\ref{sec:examples}.
 Later sections will compare their performance on several tasks using real-world data, and specifically data and tasks for which precise sample sizes can be advantageous.
 From these experiments, then, we want to know both whether cardinality-based methods outperform distance-based methods (superiority), which might be expected, but also whether cardinality-based methods are not outperformed by distance-based methods (non-inferiority), so that they can be recommended when specific sample sizes are preferable for reasons other than performance.
 
-## Example
-\label{sec:example}
+## Examples
+\label{sec:examples}
 
-\begin{example}
+We motivate our alternative sampler using two examples.
+The first suggests a practical setting in which fixed-cardinality cover sets are more desirable for applications.
+The second provides an abstraction in which they are better able to detect topological properties.
+
+\begin{example}{Bimodal distribution of risk}
 
 Imagine an intensive care unit whose patients fall roughly into three groups: a large, clinically homogeneous, low-risk majority; a smaller, more heterogeneous, higher-risk group; and a minority of highly distinctive patients who cannot be sorted into either group and are at less predictable risk.
 The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of this situation in which each group is represented by a Gaussian distribution.
@@ -168,6 +172,27 @@ Landmark samples from the imagined ICU sample and their associated covers using 
 \label{fig:icu-cover}
 }
 \end{figure}
+
+\end{example}
+
+\begin{example}{Bimodal density on a circle}
+
+Consider a probability density function that varies significantly over $\Sph^1$ and a sample $X$ from its distribution.
+A paradigmatic goal of TDA would be to detect the 1-dimensional feature of $\Sph^1$ from the sample.
+Given a small subset of landmarks $L \subset X$, we would want a witness complex $\Wit(L,X)$ to reliably satisfy $H_1(\Wit(L,X)) = 1$.
+We would also want to reduce complexity, computational cost, and detection of spurious features.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/bumpy-covers}
+\caption{
+Landmark samples and their covers from the bumpy distribution on the circle using two selection procedures.
+\label{fig:bumpy-cover}
+}
+\end{figure}
+
+Figure\nbs\ref{bumpy-cover} shows the covers obtained from 12 landmarks generated using the maxmin and lastfirst procedures, in both cases increasing the sizes of the sets twofold from minimality.
+It can be seen that the maxmin witness complex (the nerve of the cover) fails to detect the 1-feature while the lastfirst witness complex succeeds.
+As will be shown later in the paper, this superior performance is robust with respect to several parameters governing the distribution and the samplers, and in particular that the lastfirst witness complex detects the feature over a wider range of sizes of $\lvert L \rvert$.
 
 \end{example}
 
@@ -474,7 +499,7 @@ The experiments described in Section\nbs\ref{} make use of the two real-world da
 ### MIMIC-III
 \label{sec:mimic}
 
-The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016a].
+The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016].
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
 For each patient admission, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
 Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ suitable for the cosine similarity measure, which was converted to a distance measure by subtraction from 1.
@@ -663,7 +688,7 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 
 Over the course of the COVID-19 pandemic, hospitals and other facilities experienced periods of overburden and resource depletion, and best practices were continually learned and disseminated.
 As a result, outcomes in the MXDH data reflect institutional- as well as population-level factors.
-We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a temporal CV approach [@Major2020a]:
+We took advantage of the rapid learning process in particular by adapting the nested CV approach above to a temporal CV approach [@Major2020]:
 We partitioned the data by week, beginning with Week\nbs11 (March\nbs11--17) and ending with Week\nbs19 (May\nbs6--9, the last dates for which data were available).
 For each week $i$, $11 < i \leq 19$, we trained prediction models on the data from Week $i-1$.
 We then randomly partitioned Week\nbs$i$ into six roughly equal parts and optimized and evaluated the models as above.
