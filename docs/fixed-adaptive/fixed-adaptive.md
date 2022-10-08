@@ -176,6 +176,7 @@ Landmark samples from the imagined ICU sample and their associated covers using 
 \end{example}
 
 \begin{example}{Bimodal density on a circle}
+\label{ex:bumpy-circle}
 
 Consider a probability density function that varies significantly over $\Sph^1$ and a sample $X$ from its distribution.
 A paradigmatic goal of TDA would be to detect the 1-dimensional feature of $\Sph^1$ from the sample.
@@ -190,9 +191,9 @@ Landmark samples and their covers from the bumpy distribution on the circle usin
 }
 \end{figure}
 
-Figure\nbs\ref{fig:bumpy-cover} shows the covers obtained from 12 landmarks generated using the maxmin and lastfirst procedures, in both cases increasing the sizes of the sets twofold from minimality.
+Figure\nbs\ref{fig:bumpy-cover} shows the covers obtained from 12 landmarks generated using the maxmin and lastfirst procedures, in both cases increasing the sizes (radii and cardinalities, respectively) of the sets twofold from minimality.
 It can be seen that the maxmin witness complex (the nerve of the cover) fails to detect the 1-feature while the lastfirst witness complex succeeds.
-As will be shown later in the paper, this superior performance is robust with respect to several parameters governing the distribution and the samplers, and in particular that the lastfirst witness complex detects the feature over a wider range of sizes of $\lvert L \rvert$.
+As will be shown later in the paper, this superior performance is robust with respect to several parameters governing the distribution and the samplers, in particular that the lastfirst witness complex detects the feature over a wider range of $\lvert L \rvert$.
 
 \end{example}
 
@@ -206,7 +207,6 @@ This section provides mathematical proofs of algorithms and oher properties of t
 \label{sec:samplers}
 
 In this section we define both maxmin and its counterpart lastfirst, provide algorithms for their implementation, and prove some additional properties about them.
-The concepts and results are summarized in Section\nbs\ref{}.
 
 ### Maxmin procedure
 \label{sec:maxmin}
@@ -475,10 +475,13 @@ Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cove
 ## Implementation
 \label{sec:implementation}
 
-We have implemented both procedures in the R package landmark [@Brunson2021], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
+We have implemented both procedures in the R package landmark [@Brunson2021a], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
 For relative rank--based procedures, the user can choose any tie-handling rule (see the Appendix).
 The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
-In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify additive and multiplicative extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more overlapping covers.
+In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify multiplicative and additive extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more overlapping covers.
+A multiplicative factor $a \geq 0$ extends the radius (cardinality) of each ball (neighborhood) in a maxmin (lastfirst) cover by a factor of $a$ (so that $a = 0$ produces no change), while an additive factor $b \geq 0$ extends the radius (cardinality) by $b$ units.
+
+For the bumpy circle experiments we also used the simplextree package [@Piekenbrock2020] and Python GUDHI [@Maria2014a] by way of the reticulate and interplex packages [@Ushey2022, @Brunson2022].
 
 ### Validation
 
@@ -491,10 +494,39 @@ We invite readers to experiment with new cases and to request or contribute addi
 We benchmarked the C++ and R implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using RT-transformed data and cosine similarity (Section\nbs\ref{sec:data}).
 We conducted benchmarks using the bench package [@Hester2020] on the University of Florida high-performance cluster HiPerGator.
 
-## Empirical data
+## Simulations and data
 \label{sec:data}
 
-The experiments described in Section\nbs\ref{} make use of the two real-world data sets detailed here.
+The experiments described in Section\nbs\ref{sec:experiments} make use of the sample simulations and real-world data sets detailed here.
+
+### Bumpy circle
+
+As noted in Example\nbs\ref{ex:bumpy-circle}, the most basic tools to detect homological features in data may fail when the data are not evenly distributed across the space of interest.
+A substantial share of the TDA literature is geared toward addressing this problem [@].
+The lastfirst procedure was designed in part as a deterministc sampler analogous to maxmin that is robust to such variation in density.
+We use data sets sample from a parameterized family of distributions to test its performance.
+
+The general idea is that the data used as input for the landmark proceduces will be comprised of sparsely sampled points on $\Sph^1$ that has two regions of higher density.
+We identify $\Sph^1$ with $\R / 2\pi\R$ via the parameterization $t \mapsto (\cos(2\pi t), \sin(2\pi t))$.
+The density function will be a weighted mixture distribution of three distributions: a uniform distribution $U(0,2\pi)$ on $\Sph^1$ and two Gaussian distributions $N(0,\sigma^2)$ and $N(\mu,\sigma^2)$ on $\R$ taken modulo $2\pi$.
+In addition to the sample size, we varied the mixture weights $w_0,w_1,w_2$ and the spreads and relative positions of the Gaussians.
+We also varied the number of landmarks sampled using each procedure and the multiplicative and additive extensions to the cover sets obtained.
+The values taken by each parameter are listed in Table\nbs\ref{tab:bumpy-grid}, and we performed one experiment for each combination.
+
+\begin{table}\label{tab:bumpy-grid}
+\begin{tabular}{|l|c|} \hline
+Parameter & Values \\ \hline
+sample size & $n = 12, 36, 60$ \\
+weight of uniform & $w_0 = 0, 0.01, 0.05, 0.1$ \\
+angular distance & $\mu_2 = \pi, \frac{3}{4}\pi, \frac{1}{2}\pi$ \\
+standard deviation & $\sigma = \frac{1}{6}\pi, \frac{1}{3}\pi, \frac{1}{2}\pi$ \\
+relative weights (Gaussians) & $r = w_1 / w_2 = 1, 3, 10$ \\
+sampling procedure & maxmin, lastfirst \\
+multiplicative extension & $\operatorname{ext}_\times = 0, 1, 2$ \\
+additive extension & $\operatorname{ext}_+ = 0, .1, .2 (maxmin)$ \\
+additive extension & $\operatorname{ext}_+ = 0, n / 12, n / 6 (lastfirst)$ \\ \hline
+\end{tabular}
+\end{table}
 
 ### MIMIC-III
 \label{sec:mimic}
@@ -518,6 +550,23 @@ The Mexican Department of Health (MXDH) has released official open-access data c
 [^kaggle]: <https://www.kaggle.com/lalish99/covid19-mx>
 
 ## Experiments
+\label{sec:experiments}
+
+### Bumpy circle
+
+The goal of these experiments is to find and illustrate a specific example of a situation where the lastfirst covering algorithm outperforms its maxmin counterpart. We would expect such a situation to occur when density within the input data is highly variable, motivating the choice of experimental data sets described above.
+Differences between maxmin and lastfirst can be illustrated by comparing the persistence of relevant topological features.
+
+For this example, we generated maxmin ball covers $\mathcal{B}_{m,\eps_m}(\ell_0)$ and lastfirst neighborhood covers $\mathcal{N}_{m,k_m}(\ell_0)$ for each $m = 1,\ldots,n' \leq n$ and each sample, in all cases starting with a random seed point $\ell_0$.
+We computed the _landmark persistence_ of the known 0- and 1-dimensional features of $\Sph^1$---a single connected component and a single loop---which we define to be the range of numbers of landmarks over which the landmark cover recovered each feature.
+We report the shared ranges over which both features were recovered, though the results differ only slightly from the ranges over which the loop was recovered.
+These we obtained by computing the sequence of Betti numbers $\beta_{i,m} = \beta_i(\mathcal{B}_{m,\eps_m}(\ell_0))$ or $\beta_{i,m} = \beta_i(\mathcal{N}_{m,k_m}(\ell_0))$ of the nerves of the associated sequence of covers.
+
+\begin{remark}
+Our cover sets are taken to lie in $\Sph^1$, though we computed and visualized them in $\R^2$.
+Working in $\R^2$, if $p \in \Sph^1$ and $d > 0$, then $B_d(p) \cap \Sph^1$ is either an interval of $\Sph^1$ or $\Sph^1$ itself, so in topological terms the difference does not matter. For the same reason, no spurious 1-features are possible.
+If we were to report persistence in radii, we would need to transform Euclidean distance in $\R^2$ to angular distance in $\Sph^1$; but we don't, so we didn't.
+\end{remark}
 
 ### Covers and nerves
 
@@ -630,6 +679,30 @@ The additional calculations required for the lastfirst procedure increase runtim
 
 ## Experiments
 \label{sec:experiments}
+
+### Bumpy circle
+
+
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/bumpy-persistence-distribution}
+\caption{
+Landmark persistence of maxmin and lastfirst covers, faceted by density parameters. The standard deviation is that of the two Gaussian distributions and the ratio is that between their mixture weights.
+\label{fig:bumpy-distributions}
+}
+\end{figure}
+
+
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/bumpy-persistence-extensions}
+\caption{
+Landmark persistence of maxmin and lastfirst covers, faceted by multiplicative and additive extensions (see Section\nbs\ref{sec:implementation}). The additive extensions applied to ball radii in the case of maxmin and to neighborhood cardinalities in the case of lastfirst.
+\label{fig:bumpy-extensions}
+}
+\end{figure}
+
+
 
 ### Covers and nerves
 
