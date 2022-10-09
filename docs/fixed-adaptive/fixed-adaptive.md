@@ -559,7 +559,7 @@ Differences between maxmin and lastfirst can be illustrated by comparing the per
 
 For this example, we generated maxmin ball covers $\mathcal{B}_{m,\eps_m}(\ell_0)$ and lastfirst neighborhood covers $\mathcal{N}_{m,k_m}(\ell_0)$ for each $m = 1,\ldots,n' \leq n$ and each sample, in all cases starting with a random seed point $\ell_0$.
 We computed the _landmark persistence_ of the known 0- and 1-dimensional features of $\Sph^1$---a single connected component and a single loop---which we define to be the range of numbers of landmarks over which the landmark cover recovered each feature.
-We report the shared ranges over which both features were recovered, though the results differ only slightly from the ranges over which the loop was recovered.
+We report the shared ranges over which both features were recovered, which we term the _landmark dominance_ after @deSilva2004, though the results differ only slightly from the ranges over which the loop was recovered.
 These we obtained by computing the sequence of Betti numbers $\beta_{i,m} = \beta_i(\mathcal{B}_{m,\eps_m}(\ell_0))$ or $\beta_{i,m} = \beta_i(\mathcal{N}_{m,k_m}(\ell_0))$ of the nerves of the associated sequence of covers.
 
 \begin{remark}
@@ -682,17 +682,22 @@ The additional calculations required for the lastfirst procedure increase runtim
 
 ### Bumpy circle
 
-
+Figures\nbs\ref{fig:bumpy-distribution} and \ref{fig:bumpy-extensions} compare the landmark dominance of the Betti numbers $\beta_0 = \beta_1 = 1$ of $\Sph^1$ using maxmin and lastfirst covers, respectively faceted by two parameters governing the density function on $\Sph^1$ and by the two extension parameters used to construct the covers.
+Both plots depict all experimental results.
+Boxes are bounded by quartiles and whiskers by 1.5 interquartile ranges.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/bumpy-persistence-distribution}
 \caption{
 Landmark persistence of maxmin and lastfirst covers, faceted by density parameters. The standard deviation is that of the two Gaussian distributions and the ratio is that between their mixture weights.
-\label{fig:bumpy-distributions}
+\label{fig:bumpy-distribution}
 }
 \end{figure}
 
-
+Figure\nbs\ref{fig:bumpy-distribution} shows that landmark dominance was greater, using both procedures, when the Gaussian distributions were wider.
+This is consistent with the general pattern of more uniform distributions on or near manifolds leading to better detection of homological features.
+In contrast, the relative numbers of samples from the two Gaussians had little impact on landmark dominance.
+(The proportion of uniformly sampled points and the angle between the Gaussians' centers had similarly minor effects.)
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/bumpy-persistence-extensions}
@@ -702,7 +707,11 @@ Landmark persistence of maxmin and lastfirst covers, faceted by multiplicative a
 }
 \end{figure}
 
-
+Figure\nbs\ref{fig:bumpy-extensions} demonstrates the importance of cover set extension to the successful detection of homology.
+Both procedures obtained the features of $\Sph^1$ across much wider ranges of landmarks when multiplicative or additive extensions were used, and for the most part the improvement due to both extensions was complementary.
+The extensions are not interchangeable: Increasing the ball radii by a fixed multiple has a smaller effect in sparser regions than increasing the neighborhood cardinalities by the same multiple, and a greater multiplicative extension might result in similar performance.
+This would itself still support the basic lesson that a cardinality-based approach outperforms the analogous radius-based one.
+Neither procedure reliably detected the homology of $\Sph^1$ without cover extensions, but it is worth noting that only the lastfirst witness complexes were able to detect it at all.
 
 ### Covers and nerves
 
@@ -794,6 +803,11 @@ This relaxes the symmetry assumption of maxmin and would allow lastfirst to be u
 However, it imposes costs to computation, as our algorithm requires us to either impute or compute and store all distance ranks from the new landmark at each step.
 Based on our experiments comparing implementations of the same type, this increases runtime and storage only by a constant factor.
 
+Lastfirst outperformed maxmin in settings tailored to the strengths of the algorithm (and achieved comparable performance in other settings).
+On simulated samples from an uneven density function on the circle, lastfirst-based witness complexes more reliably detected the underlying 0- and 1-dimensional features than maxmin-based ones, and this superior performance obtained over a wide range of sampler and procedure parameters.
+These experiments also demonstrated the value of a simple additional feature of our implementation, the option to multiplicatively or additively extend the sizes of cover sets.
+This generalizable procedure holds promise for the range of TDA applications like mapper-type constructions that involve single covers or tunable families of covers.
+
 Additionally, lastfirst confers some interpretability benefits in the context of applications.
 When dealing with certain data types, the meaning of numerical values of distance may not be clear or intuitive.
 For instance, on patient medical data obtained from electronic health records, custom distance metrics are often used to measure the _relative_ clinical relevance between patients, and it may not be obvious what an _absolute_ distance of, say, $.35$ between patient A and patient B might mean.
@@ -802,7 +816,6 @@ This is especially true when minimal literature references are available, as is 
 However, in most applications, the notion of neighborhoods remains intuitive: Even when a ball of radius $.35$ around patient A is hard to conceptualize, a neighborhood of 200 similar patients still has a clear meaning.
 This increased interpretability makes parameter selection easier and also makes the algorithm more accessible to researchers outside mathematics.
 
-Finally, lastfirst outperformed maxmin in settings tailored to the strengths of the algorithm (and achieved comparable performance in all other settings).
 We ran several experiments that used landmarks to obtain well-separated clusters of patients with common risk profiles and to more efficiently generate nearest neighbor predictions.
 Because we designed lastfirst to produce cover sets of equal size despite variation in the density or multiplicity of the data, we expected it to outperform maxmin with respect to the crispness of clusters and to the accuracy of predictions.
 In particular, we expected that the optimal neighborhood size for outcome prediction would be roughly equal across our data; as a result, by assigning each landmark case an equally-sized cohort of similar cases, we expected predictions based on these cohorts to outperform those based on cohorts using a fixed similarity threshold.
