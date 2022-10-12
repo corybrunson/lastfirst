@@ -82,7 +82,7 @@ In Section\nbs\ref{sec:implementation} we report the results of benchmark tests 
 $(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\R_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
 $(X,d_X)$ may be shortened to $X$, and $d_X$ to $d$, when clear from context.
 If $x\neq y$ but $d(x,y)=0$ then $x$ and $y$ are said to be indistinguishable or co-located.
-The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, the set of points co-located with those in $Y$ is denoted $\cl{Y}$, and the set of equivalence classes of $Y$ under co-location is denoted $\supp{Y}$.
+The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, the set of points co-located with those in $Y$, equivalent in this setting to the closure of $Y$, is denoted $\cl{Y}$, and the set of equivalence classes of $Y$ under co-location is denoted $\supp{Y}$.
 Throughout, let $N=\abs{X}$.
 When $Y,Z\subseteq X$, let $Y\wo Z$ denote the set difference $\{x \where x \in Y \wedge x \notin Z\}$. Then $Y \wo \cl{Z}$ is the set of points in $Y$ (with multiplicities) that are distinguishable from all points in $Z$. This means that, when defined, $\min_{y\in Y\wo \cl{Z},z\in Z}{d(y, z)}>0$.
 
@@ -99,7 +99,7 @@ $f:X \to Y$ will denote a morphism of pseudometric spaces, which we take to be a
 Denote by $\power{X}$ the power set of $X$ and by $\order{X}$ the set of ordered, non-duplicative sequences from $X$.
 We use the ball notation $B_{\eps}(x) \in \power{X}$ for the set of points less than distance $\eps$ from a point $x$; that is, $B_{\eps}(x) = \{ y \where d(x,y) < \eps \}$.
 We use an overline to also include points exactly distance $\eps$ from $x$: $\cl{B_{\eps}}(x) = \{ y \where d(x,y) \leq \eps \}$.
-If $\abs{\cl{B_\eps}(x)} \geq k$ and $\eps'<\eps \implies \abs{\cl{B_{\eps'}}(x)} < k$, then we call $N_k(x) = \cl{B_\eps}(x)$ the $k$-nearest neighborhood of $x$.
+If $k$ is an integer such that $\abs{\cl{B_\eps}(x)} \geq k$ while $\eps'<\eps \implies \abs{\cl{B_{\eps'}}(x)} < k$, then we call $N_k(x) = \cl{B_\eps}(x)$ the $k$-nearest neighborhood of $x$.
 When $X$ is in locally general position, $\abs{N_k(x)} = k$.
 
 For convenience, we assume $0\in\N$.
@@ -272,14 +272,14 @@ Note that, if $n=\uniq{X}$ or $\eps=0$, then $\cl{L}=X$.
 When the procedure stops, $X=\bigcup_{i=0}^{n-1}{\cl{B_{\eps}}(\ell_i)}$.
 This cover is not, in general, a minimal cover, but it is a minimal landmark cover in the sense that the removal of $\cl{B_\eps}(\ell_{n-1})$ or any decrease in $\eps$ will yield a collection of sets that fails to cover $X$.
 A "thickened" cover can be obtained by pre-specifying both $n$ and $\eps$ in such a way that $n \geq n(\eps)$ and $\eps \geq \eps(n)$.
-In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters implemented in our software package that make these choices easier.
+In Section\nbs\ref{sec:implementation}, we describe two adaptive parameters that make these choices easier.
 
 Maxmin is a heuristic, iterative procedure used to select a well-dispersed subset of points from $X$, where dispersion is understood in terms of the interpoint distances of this subset.
-At each step, landmarks $L = \{\ell_0, \ldots, \ell_{i-1}\}$ having been selected, the next point $\ell_i$ is selected to maximize its minimum distance $d(\ell_j,\ell_i)$ from the $\ell_j$, $0 \leq j < 1$.
+At each step, landmarks $L = \{\ell_0, \ldots, \ell_{i-1}\}$ having been selected, the next point $\ell_i$ is selected to maximize its minimum distance $d(\ell_j,\ell_i)$ from the $\ell_j$, $0 \leq j < i$.
 Equivalently, $\ell_i \in X \wo L$ is selected so that the minimum radius $\eps$ required for $\ell_i \in \bigcup_{j=0}^{i-1}{\cl{B_\eps}(\ell_j)}$ is maximized.
-This is a useful heuristic for constructing a ball cover $\mathcal{B} = \{\cl{B_\eps}(\ell_j) \where 0 \leq j < n\}$ centered at a highly mutually distant set of landmarks.
+This is a useful heuristic for constructing a ball cover $\mathcal{B} = \{\cl{B_\eps}(\ell_j) \where 0 \leq j < n\}$ centered at a highly pairwise distant set of landmarks.
 
-We desire in the next section to construct a neighborhood cover $\mathcal{N} = \{N^+_k(\ell_j) \where 0 \leq j < n\}$ whose centers are analogously dispersed.
+We desire in the next section to construct a neighborhood cover whose centers are analogously dispersed.
 Accordingly, let us redefine the maxmin procedure in terms of balls rather than of distances:
 
 \begin{proposition}[maxmin in terms of balls]\label{prop:maxmin}
@@ -383,7 +383,6 @@ Continuing Example\nbs\ref{ex:rank-neighborhoods}, we can compute the other $N_\
 \end{example}
 
 As with maxmin, a selection procedure $\sigma$ must be chosen, which may be needed even if $X$ is in general position.
-A thorough discussion of our preferred procedure, which adapts the Chebyshev center to the neighborhood setting, is in the Appendix.
 We operationalize it as well as our lastfirst procedure by way of a total ordering on the $N^\pm_\bullet$.
 
 \begin{definition}[total orders on rank sequences]
@@ -391,8 +390,8 @@ We operationalize it as well as our lastfirst procedure by way of a total orderi
     Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i : a_i > b_i \wedge (\forall j<i : a_j = b_j)$.
 \end{definition}
 
-Impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$ to emphasize the sizes of smaller neighborhoods.
-Sequences with more large values indicate points with lower out-ranks to or from more other points.
+We impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$.
+As explained in the Appendix, this extends the principle behind maxmin selection---that each subsequent landmark $\ell_i$ is (among) the last to be reached by expanding sets about the existing landmarks $L$---by stipulating that, among these candidates, $\ell_i$ is also (among) the last to be reached by _at least $k$ of these sets_, as $k$ increases from $1$.
 
 We now define our counterpart to the maxmin procedure.
 
@@ -451,8 +450,8 @@ If $n$ and $k$ are both given, then $\abs{L} \geq n$.
 Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cover of $X$ by $k$-nearest neighborhoods.
 \end{proposition}
 
-\begin{example}
-    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-neighborhood sequence:
+\begin{example}\label{ex:rank-sequence-order}
+    Return again to $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:rank-sequence}. We calculate an exhaustive lastfirst landmark set, seeded with a point of minimal out-neighborhood sequence:
     \begin{enumerate}
         \item We have
         \begin{align*}
@@ -487,7 +486,6 @@ For the bumpy circle experiments we also used the simplextree package [@Piekenbr
 
 We validated the maxmin and lastfirst procedures against manual calculations on several small example data sets, including that of Example\nbs\ref{ex:relative-rank}.
 We also validated the C++ and R implementations against each other on several larger data sets, including as part of the benchmark tests reported in the next section.
-We invite readers to experiment with new cases and to request or contribute additional features.
 
 ### Benchmark tests
 
@@ -514,6 +512,7 @@ We also varied the number of landmarks sampled using each procedure and the mult
 The values taken by each parameter are listed in Table\nbs\ref{tab:bumpy-grid}, and we performed one experiment for each combination.
 
 \begin{table}\label{tab:bumpy-grid}
+\centering
 \begin{tabular}{|l|c|} \hline
 Parameter & Values \\ \hline
 sample size & $n = 12, 36, 60$ \\
@@ -523,8 +522,8 @@ standard deviation & $\sigma = \frac{1}{6}\pi, \frac{1}{3}\pi, \frac{1}{2}\pi$ \
 relative weights (Gaussians) & $r = w_1 / w_2 = 1, 3, 10$ \\
 sampling procedure & maxmin, lastfirst \\
 multiplicative extension & $\operatorname{ext}_\times = 0, 1, 2$ \\
-additive extension & $\operatorname{ext}_+ = 0, .1, .2 (maxmin)$ \\
-additive extension & $\operatorname{ext}_+ = 0, n / 12, n / 6 (lastfirst)$ \\ \hline
+additive extension & $\operatorname{ext}_+ = 0, .1, .2$ (maxmin) \\
+ & $\operatorname{ext}_+ = 0, n / 12, n / 6$ (lastfirst) \\ \hline
 \end{tabular}
 \end{table}
 
@@ -571,16 +570,16 @@ If we were to report persistence in radii, we would need to transform Euclidean 
 ### Covers and nerves
 
 Cardinality reduction techniques can be used to model a large number of cases represented by a large number of variables as a smaller number of clusters with similarity or overlap relations among them.
-The deterministic maxmin and lastfirst procedures provide fuzzy clusters (cover sets) defined by proximity to the landmark cases and relations defined by their overlap.
+The deterministic maxmin and lastfirst procedures provide _fuzzy_ clusters---that is to say, clusters that allow for some overlap, equivalently the sets of a cover, in contrast to _crisp_ partitions that do not overlap---defined by proximity to the landmark cases and relations defined by their overlap.
 The clusters obtained by these procedures occupy a middle ground between the regular intervals or quantiles commonly used to cover samples from Euclidean space and the emergent clusters obtained heuristically by penalizing between-cluster similarity and rewarding within-cluster similarity.
-The maxmin procedure produces cover sets of (roughly) fixed radius, analogous to overlapping intervals of fixed length, while the lastfirst procedure produces cover sets of (roughly) fixed size, analogous to the quantiles of an adaptive cover.
+The maxmin procedure produces cover sets of fixed radius, analogous to overlapping intervals of fixed length, while the lastfirst procedure produces cover sets of (approximately) fixed size, analogous to the quantiles of an adaptive cover.
 This makes them natural solutions to the task of covering an arbitrary finite metric space that may or may not contain important geometric or topological structure [@Singh2007].
 
 As a practical test of this potential, we loosely followed the approach of @Dlotko2019 to construct covers and their nerves for each care unit of MIMIC-III, using maxmin and lastfirst.
 We varied the number of landmarks (6, 12, 24, 36, 48, 60, 120) and the multiplicative extension of the cover sets' sizes (0, .1, .2).
 We evaluated the procedures in three ways:
 
-- **Clustering quality:** Both procedures yield _fuzzy_ clusters---that is to say, clusters that allow for some overlap. While clustering quality measures might be useful, most, including almost all that have been proposed for fuzzy clusterings, rely on coordinate-wise calculations, specifically data and cluster centroids [@Bouguessa2006; @Wang2007; @Falasconi2010]. To our knowledge, the sole exception to have appeared in a comprehensive comparison of such measures is the _modified partition coefficient_ [@Dave1996], defined as $$\operatorname{MPC}=1-\frac{k}{k-1}(1-\frac{1}{n}\sum_{i=1}^{n}{\sum_{j=1}^{k}{{u_{ij}}^2}})$$ where $U=(u_{ij})$ is the $n\times k$ fuzzy partition matrix: $u_{ij}$ encodes the extent of membership of point $x_i$ in cluster $c_j$, and $\sum_{j=1}^{k}{u_{ij}}=1$ for all $i$. When a point $x_i$ is contained in $m$ cover sets $c_j$, we equally distribute its membership so that $u_{ij}=\frac{1}{m}$ when $x_i\in c_j$ and $u_{ij}=0$ otherwise. Thus, the MPC quantifies the extent of overlap between all pairs of clusters. Like the partition coefficient from which it is adapted, the MPC takes the value $1$ on crisp partitions and is penalized by membership sharing, but it is standardized so that its range does not depend on $k$.
+- **Clustering quality:** While clustering quality measures might be useful, most, including almost all that have been proposed for fuzzy clusterings, rely on coordinate-wise calculations, specifically data and cluster centroids [@Bouguessa2006; @Wang2007; @Falasconi2010]. Coordinates are not assumed in the general setting of finite pseudometric spaces and are unavailable or not meaningful in many real-world settings. To our knowledge, the sole exception to have appeared in a comprehensive comparison of such measures is the _modified partition coefficient_ [@Dave1996], defined as $$\operatorname{MPC}=1-\frac{k}{k-1}(1-\frac{1}{n}\sum_{i=1}^{n}{\sum_{j=1}^{k}{{u_{ij}}^2}})$$ where $U=(u_{ij})$ is the $n\times k$ fuzzy partition matrix: $u_{ij}$ encodes the extent of membership of point $x_i$ in cluster $c_j$, and $\sum_{j=1}^{k}{u_{ij}}=1$ for all $i$. When a point $x_i$ is contained in $m$ cover sets $c_j$, we equally distribute its membership so that $u_{ij}=\frac{1}{m}$ when $x_i\in c_j$ and $u_{ij}=0$ otherwise. Thus, the MPC quantifies the extent of overlap between all pairs of clusters. Like the partition coefficient from which it is adapted, the MPC takes the value $1$ on crisp partitions and is penalized by membership sharing, but it is standardized so that its range does not depend on $k$.
 - **Discrimination of risk:** For purposes of clinical phenotyping, patient clusters are more useful that better discriminate between low- and high-risk subgroups. We calculate a cover-based risk estimate from individual outcomes $y_i$ as follows: For each cover set $c_j\subset X$, let $p_j=\frac{1}{\abs{c_j}}\sum_{x_i\in c_j}{y_i}$ be the incidence of the outcome in that set. Then compute the weighted sum $q_i=\sum_{x_i\in c_j}{u_{ij}p_j}$ of these incidence rates for each case. We measure how well the cover discriminates risk as the area under the receiver operating characteristic curve (AUROC).
 <!--
 - **Homological richness:** Independent of the "true" topological structure of a data set, a simplicial complex model is more useful when it is not too sparse to be connected (or nearly so) and not too dense to visualize or contain low-degree cycles. We compare the $0$- and total $>0$-degree Betti numbers of the simplicial complex models from the perspective of optimizing $-\beta_0+\sum_{i>0}{\beta_i}$.
@@ -891,7 +890,7 @@ A pseudometric $d_X$ induces a relative rank that takes values in $\N$ given by 
 As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. Note that $q_{X,d}$ is a relative rank with $q(x,x)=0$, $q(x,y) < N$, and $\forall x,y \in X : q(x,x) \leq q(x,y)$.
 
 \begin{example}\label{ex:relative-rank}
-    Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:relative-rank-max}.
+    Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:rank-sequence-order}.
     Lack of symmetry of $q$ is shown by points $b$ and $c$ :
     \begin{align*}
         q(a,c) &= \abs{\{x \in X \where \abs{x-a} < \abs{c-a} = 2\}} &
@@ -1100,7 +1099,7 @@ While we do not use these ideas in this study, they may be suitable in some sett
 It is also possible that $\check{q}$- and $\hat{q}$-based covers could be used to produce interveaving sequences of nerves useful for stability analysis.
 
 \begin{example}\label{ex:relative-rank-max}
-Consider the same $X$ as in Example\nbs\ref{ex:rank-neighborhoods}.
+Consider the same $X$ as in Example\nbs\ref{ex:relative-rank}.
 
 The relative rank $\hat{q}$ is also asymmetric:
 \begin{align*}
