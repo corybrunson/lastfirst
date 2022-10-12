@@ -2,16 +2,14 @@
 library(tidyverse)
 
 # source and store directories
-if (str_detect(here::here(), "corybrunson")) {
-  # laptop
-  save_dir <- "data/cover"
-  lastfirst_dir <- here::here()
-} else if (str_detect(here::here(), "jason.brunson")) {
+if (dir.exists("/blue")) {
   # HiPerGator
   save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
   lastfirst_dir <- "~/lastfirst"
-} else {
-  stop("Cannot recognize working directory.")
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # laptop
+  save_dir <- "data/cover"
+  lastfirst_dir <- here::here()
 }
 
 # source settings
@@ -31,7 +29,7 @@ eval_data %>%
              linetype = as.factor(ext_mult), color = careunit)) +
   facet_grid(. ~ proc) +
   geom_line(size = .5) +
-  scale_color_brewer(type = "qual") +
+  scale_color_manual(values = unit_pal) +
   labs(x = "Number of landmarks", y = "Crispness (MPC)",
        linetype = "Extension", color = "Care unit")
 
@@ -42,7 +40,7 @@ eval_data %>%
              linetype = as.factor(ext_mult), color = careunit)) +
   facet_grid(. ~ proc) +
   geom_line(size = .5) +
-  scale_color_brewer(type = "qual") +
+  scale_color_manual(values = unit_pal) +
   labs(x = "Number of landmarks", y = "Accuracy (AUROC)",
        linetype = "Extension", color = "Care unit")
 
@@ -59,7 +57,7 @@ eval_data %>%
              linetype = as.factor(ext_mult), color = careunit)) +
   facet_grid(stat ~ proc, scales = "free_y") +
   geom_line(size = .5) +
-  scale_color_brewer(type = "qual") +
+  scale_color_manual(values = unit_pal) +
   labs(x = "Number of landmarks", y = "Statistic",
        linetype = "Extension", color = "Care unit") ->
   cover_eval_plot
@@ -75,7 +73,7 @@ eval_data %>%
   facet_grid(. ~ proc) +
   geom_line(size = .5) +
   scale_y_sqrt() +
-  scale_color_brewer(type = "qual") +
+  scale_color_manual(values = unit_pal) +
   labs(x = "Number of landmarks", y = "Euler characteristic",
        linetype = "Extension", color = "Care unit")
 
@@ -90,7 +88,7 @@ eval_data %>%
   facet_grid(dimension ~ proc, scales = "free_y") +
   geom_line(size = .5) +
   scale_y_sqrt() +
-  scale_color_brewer(type = "qual") +
+  scale_color_manual(values = unit_pal) +
   labs(x = "Number of landmarks", y = "Number of simplices",
        linetype = "Extension", color = "Care unit") ->
   cover_simp_plot
@@ -154,7 +152,6 @@ eval_data_mx %>%
              linetype = as.factor(ext_mult), color = outcome)) +
   facet_grid(. ~ proc) +
   geom_line(size = .5) +
-  scale_color_brewer(type = "qual") +
   labs(x = "Number of landmarks", y = "Accuracy (AUROC)",
        linetype = "Extension", color = "Outcome")
 
@@ -173,6 +170,7 @@ eval_data_mx %>%
              linetype = as.factor(ext_mult), color = proc)) +
   facet_grid(stat ~ ., scales = "free_y") +
   geom_line(size = .5) +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "Statistic",
        linetype = "Extension", color = "Procedure") +
   theme(legend.box = "horizontal") ->

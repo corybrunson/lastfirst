@@ -77,7 +77,6 @@ x_lf %>%
   x_lf_df
 
 # colors
-lmk_pal <- RColorBrewer::brewer.pal(n = 2L, "Set1")
 face_col <- "lightgrey"
 
 ggplot() +
@@ -92,7 +91,7 @@ ggplot() +
   geom_point(data = as.data.frame(x), aes(x = x, y = y)) +
   geom_point(
     data = x_mm_df, aes(x = x, y = y),
-    color = lmk_pal[[1L]], size = 4, shape = 1L
+    color = proc_pal[[1L]], size = 4, shape = 1L
   ) +
   geom_text(
     data = x_mm_df, aes(x = x, y = y, label = num),
@@ -113,7 +112,7 @@ ggplot() +
   geom_point(data = as.data.frame(x), aes(x = x, y = y)) +
   geom_point(
     data = x_lf_df, aes(x = x, y = y),
-    color = lmk_pal[[2L]], size = 4, shape = 1L
+    color = proc_pal[[2L]], size = 4, shape = 1L
   ) +
   geom_text(
     data = x_lf_df, aes(x = x, y = y, label = num),

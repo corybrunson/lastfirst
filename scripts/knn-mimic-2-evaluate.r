@@ -2,22 +2,20 @@
 library(tidyverse)
 
 # source and store directories
-if (str_detect(here::here(), "corybrunson")) {
-  # laptop
-  rt_data <- "~/Desktop/rt-data"
-  lastfirst_dir <- here::here()
-  save_dir <- "data/cover"
-  # sleep intervals
-  sleep_sec <- 15
-} else if (str_detect(here::here(), "jason.brunson")) {
+if (dir.exists("/blue")) {
   # HiPerGator
   rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
   lastfirst_dir <- "~/lastfirst"
   save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
   # sleep intervals
   sleep_sec <- 0
-} else {
-  stop("Cannot recognize working directory.")
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # laptop
+  rt_data <- "~/Desktop/rt-data"
+  lastfirst_dir <- here::here()
+  save_dir <- "data/cover"
+  # sleep intervals
+  sleep_sec <- 15
 }
 
 # source settings
@@ -30,8 +28,12 @@ file.path(lastfirst_dir, "data") %>%
   mutate(data = map(file, read_rds)) %>%
   select(-file) %>%
   unnest(c(data)) %>%
-  mutate(sampler = fct_inorder(sampler)) %>%
+  # mutate(sampler = fct_inorder(sampler)) %>%
   #mutate(sampler = fct_explicit_na(sampler, na_level = "none")) %>%
+  mutate(sampler = factor(
+    sampler,
+    levels = c("maxmin", "lastfirst", "random")
+  )) %>%
   mutate(wt_opt = factor(
     wt_opt,
     levels = c("rank1", "rank2", "triangle", "inverse", "gaussian")
@@ -69,6 +71,7 @@ auc_stats %>%
   #coord_flip() +
   facet_wrap(~ careunit) +
   geom_boxplot() +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-1.pdf"),
@@ -81,6 +84,7 @@ auc_stats %>%
   #coord_flip() +
   facet_wrap(~ careunit) +
   geom_boxplot() +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-2.pdf"),
@@ -101,6 +105,7 @@ auc_stats %>%
   ggplot(aes(x = factor(landmarks), y = test_auc, color = sampler)) +
   facet_grid(~ careunit) +
   geom_boxplot() +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks",
        y = "AUROC (mortality)",
        color = "Procedure") ->

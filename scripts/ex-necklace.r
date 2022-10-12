@@ -30,7 +30,8 @@ dat <- rbind(
 ggplot(dat, aes(x, y)) +
   coord_equal() +
   geom_point() +
-  theme_minimal()
+  # theme_minimal()
+  theme_void()
 
 # num <- 5L works fine, but any number 6L or higher seems to cause the error
 # using seed_index=1L also gives the error for landmarks_lastfirst
@@ -60,10 +61,12 @@ dat %>%
   facet_grid(~ procedure) +
   geom_point(shape = 16L, alpha = .5) +
   # geom_point(data = lmks, shape = 5L, size = 4, color = "#BA5216") +
-  geom_point(data = lmks, shape = 16L, aes(color = name)) +
-  geom_point(data = lmks, shape = 5L, size = 4, aes(color = name)) +
-  ggrepel::geom_text_repel(data = lmks, aes(label = name, color = name)) +
+  geom_point(data = lmks, shape = 16L, aes(color = procedure)) +
+  geom_point(data = lmks, shape = 5L, size = 4, aes(color = procedure)) +
+  ggrepel::geom_text_repel(data = lmks, aes(label = name, color = procedure)) +
+  scale_color_manual(values = proc_pal[seq(2L)]) +
   labs(x = NULL, y = NULL) +
+  theme_void() +
   theme(legend.position="none") ->
   #ggtitle("Maxmin and landmark samples from a necklace sample") ->
   lmks_plot
