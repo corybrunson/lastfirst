@@ -71,7 +71,7 @@ persistent_beta <- expression(paste(
 bumpy_persistence %>%
   group_by(n, m) %>%
   ggplot(aes(x = b01_lp, fill = m)) +
-  scale_fill_brewer(type = "qual", palette = 6L) +
+  scale_fill_manual(values = proc_pal[seq(2L)]) +
   facet_wrap(vars(n), nrow = 3L, label = label_equals) +
   geom_histogram(position = "dodge") +
   labs(x = persistent_beta, y = NULL, fill = NULL) ->
@@ -92,7 +92,7 @@ bumpy_persistence %>%
     label = label_equals
   ) +
   geom_boxplot(aes(color = m)) +
-  scale_color_brewer(type = "qual", palette = 6L) +
+  scale_color_manual(values = proc_pal[seq(2L)]) +
   labs(x = "n", y = persistent_beta, color = NULL) ->
   bumpy_persistence_extensions
 ggsave(
@@ -107,7 +107,7 @@ bumpy_persistence %>%
   ggplot(aes(x = factor(n), y = b01_lp)) +
   facet_grid(rows = vars(sd), cols = vars(ratio), label = label_equals) +
   geom_boxplot(aes(color = m)) +
-  scale_color_brewer(type = "qual", palette = 6L) +
+  scale_color_manual(values = proc_pal[seq(2L)]) +
   labs(x = "n", y = persistent_beta, color = NULL) ->
   bumpy_persistence_distribution
 ggsave(

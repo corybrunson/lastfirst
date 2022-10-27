@@ -1,14 +1,7 @@
 library(tidyverse)
 
 # source and store directories
-if (str_detect(here::here(), "corybrunson")) {
-  # laptop
-  rt_data <- "~/Desktop/rt-data"
-  lastfirst_dir <- here::here()
-  save_dir <- "data/cover"
-  # sleep intervals
-  sleep_sec <- 15
-} else if (str_detect(here::here(), "jason.brunson")) {
+if (dir.exists("/blue")) {
   # HiPerGator
   rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
   lastfirst_dir <- "~/lastfirst"
@@ -16,7 +9,12 @@ if (str_detect(here::here(), "corybrunson")) {
   # sleep intervals
   sleep_sec <- 0
 } else {
-  stop("Cannot recognize working directory.")
+  # laptop
+  rt_data <- "~/Desktop/rt-data"
+  lastfirst_dir <- here::here()
+  save_dir <- "data/cover"
+  # sleep intervals
+  sleep_sec <- 15
 }
 
 # source settings
@@ -82,7 +80,7 @@ benchmark_circle_lattice %>%
   geom_line(aes(color = implementation, linetype = procedure)) +
   geom_point(aes(color = implementation, shape = procedure)) +
   scale_y_log10() +
-  scale_color_brewer(palette = "Set1") +
+  scale_color_manual(values = impl_pal[seq(2L)]) +
   labs(x = "Size of point cloud", y = "Benchmark statistic",
        color = "Implementation",
        linetype = "Procedure", shape = "Procedure") +
@@ -121,9 +119,13 @@ benchmark_mimic %>%
   geom_line(aes(color = fraction, linetype = procedure)) +
   geom_point(aes(color = fraction, shape = procedure)) +
   scale_y_log10() +
-  scale_color_brewer(palette = "Set2") +
+  # scale_color_brewer(palette = "Accent") +
+  scale_color_manual(values = frac_pal) +
   geom_text(aes(x = n, y = label_value, label = label),
             size = 3, angle = 90, hjust = .8) +
+  # procedure aesthetics are consistent with and guided in the adjacent plot
+  guides(linetype = "none", shape = "none",
+         color = guide_legend(ncol = 2L)) +
   labs(x = "Size of cohort", y = "Benchmark statistic",
        color = "Fraction",
        linetype = "Procedure", shape = "Procedure") ->

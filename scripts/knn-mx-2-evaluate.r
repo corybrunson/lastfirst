@@ -2,22 +2,20 @@
 library(tidyverse)
 
 # source and store directories
-if (str_detect(here::here(), "corybrunson")) {
-  # laptop
-  mx_data <- "~/Desktop/covid19-mx/data"
-  lastfirst_dir <- here::here()
-  save_dir <- "data/cover"
-  # sleep intervals
-  sleep_sec <- 15
-} else if (str_detect(here::here(), "jason.brunson")) {
+if (dir.exists("/blue")) {
   # HiPerGator
   mx_data <- "/blue/rlaubenbacher/jason.brunson/covid19-mx/data"
   lastfirst_dir <- "~/lastfirst"
   save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
   # sleep intervals
   sleep_sec <- 0
-} else {
-  stop("Cannot recognize working directory.")
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # laptop
+  mx_data <- "~/Desktop/covid19-mx/data"
+  lastfirst_dir <- here::here()
+  save_dir <- "data/cover"
+  # sleep intervals
+  sleep_sec <- 15
 }
 
 # source settings
@@ -30,8 +28,12 @@ file.path(lastfirst_dir, "data") %>%
   mutate(data = map(file, read_rds)) %>%
   select(-file) %>%
   unnest(c(data)) %>%
-  mutate(sampler = fct_inorder(sampler)) %>%
+  # mutate(sampler = fct_inorder(sampler)) %>%
   #mutate(sampler = fct_explicit_na(sampler, na_level = "none")) %>%
+  mutate(sampler = factor(
+    sampler,
+    levels = c("maxmin", "lastfirst", "random")
+  )) %>%
   mutate(wt_opt = factor(
     wt_opt,
     levels = c("rank1", "rank2", "triangle", "inverse", "gaussian")
@@ -58,7 +60,8 @@ auc_stats %>%
   count() %>%
   ggplot(aes(x = wt_opt, y = n, fill = sampler)) +
   facet_wrap( ~ outcome) +
-  geom_col(position = "dodge")
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = proc_pal)
 
 # Gaussian weights only
 
@@ -69,8 +72,12 @@ file.path(lastfirst_dir, "data") %>%
   mutate(data = map(file, read_rds)) %>%
   select(-file) %>%
   unnest(c(data)) %>%
-  mutate(sampler = fct_inorder(sampler)) %>%
+  # mutate(sampler = fct_inorder(sampler)) %>%
   #mutate(sampler = fct_explicit_na(sampler, na_level = "none")) %>%
+  mutate(sampler = factor(
+    sampler,
+    levels = c("maxmin", "lastfirst", "random")
+  )) %>%
   print() -> auc_stats
 # join week cohort sizes
 read_rds(file.path(mx_data, "mx-cases.rds")) %>%
@@ -108,6 +115,7 @@ auc_stats %>%
   ggplot(aes(x = landmarks, y = test_auc, color = sampler)) +
   facet_grid(outcome ~ semana, scales = "fixed") +
   geom_line(data = filter(auc_means, ! is.na(sampler)), size = .5) +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
@@ -121,6 +129,7 @@ auc_stats %>%
   geom_line(data = filter(auc_means, ! is.na(sampler)), size = .5) +
   geom_hline(data = filter(auc_means, is.na(sampler)),
              aes(yintercept = test_auc), size = .5, color = "darkgrey") +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
