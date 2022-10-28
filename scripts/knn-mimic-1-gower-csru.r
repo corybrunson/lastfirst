@@ -119,6 +119,8 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     # skip this complete round
     next
   }
+  # print current round
+  print(str_c("Beginning round: outer = ", i, ", inner = ", j))
   
   # training, optimizing, and testing indices
   train <- which(unit_cases$outer != i & unit_cases$inner != j)
