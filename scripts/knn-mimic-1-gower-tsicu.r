@@ -74,7 +74,7 @@ outcome_vars <- c("hospital_expire_flag",
                   "SAPSII", "SAPSII_prob")
 
 # set temporary parameters (to be incorporated into a loop)
-unit <- "CCU"
+unit <- "TSICU"
 
 # add stratified cross-validation indices to binary data
 # TODO: TEST; PRE-PROCESS IN PREPARATION FOR GOWER SIMILARITY CALCULATION
