@@ -7,15 +7,11 @@ if (dir.exists("/blue")) {
   rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
   lastfirst_dir <- "~/lastfirst"
   save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
-  # sleep intervals
-  sleep_sec <- 0
 } else if (str_detect(here::here(), "jason.brunson")) {
   # laptop
   rt_data <- "~/Desktop/rt-data"
   lastfirst_dir <- here::here()
   save_dir <- "data/cover"
-  # sleep intervals
-  sleep_sec <- 15
 }
 
 # source settings
