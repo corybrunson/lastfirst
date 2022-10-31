@@ -43,30 +43,31 @@ We use this term to describe techniques that produce more tractable representati
 Topological data analysis (TDA) is a maturing field in data science at the interface of statistics, computer science, and mathematics.
 Topology is the discipline at the intersection of geometry (the study of shape) and analysis (the study of continuity) that focuses on geometric properties that are preserved under continuous transformations.
 TDA consists of the use of computational theories of continuity to investigate or exploit the structure of data.
-While TDA is most commonly associated with persistent homology (PH) and mapper-like constructions, it can be understood to include such classical and conventional techniques as cluster analysis, network analysis, and nearest neighbors prediction.
+While TDA is most commonly associated with persistent homology (PH), mapper-like constructions, and non-linear dimension reduction (NLDR), it can be understood to include such classical and conventional techniques as cluster analysis, network analysis, and nearest neighbors prediction.
 
-TDA methods, including the ~~canonical/recognizable/archetypal (i.e. the most recognizable as a result of historical contingency)~~ persistent homology and mapper [@Skaf2022] as well as manifold learning dimension reduction tools [@Ivakhno2007; @Reutlinger2012; @Aziz2017; @Viswanath2017; @Konstorum2018; @Becht2019], have been deployed widely in biomedicine.
-These methods require that data be pre-processed into the form of Euclidean vectors, and for many varieties of biomedical data, including most image and omics data, this is a straightforward requirement.
+TDA methods have been deployed widely in biomedicine; see @Skaf2022 for a review of applications of PH and mapper and various reviews of applications of NLDR [@Ivakhno2007; @Reutlinger2012; @Aziz2017; @Viswanath2017; @Konstorum2018; @Becht2019].
+These methods either require that data be transformed into Euclidean vectors or perform such a transformation, and for many types of biomedical data, including most image and omics data, this is a straightforward requirement and yields point clouds with desirable properties (separability).
 In contrast, analysis tasks in clinical and public health often involve data that have diverse numerical and categorical variable types, high rates and complex patterns of missingness, or only a small number of variables taking finitely many values.
 A variety of approaches have been taken to apply classical topological methods to clinical and public health data, whether by transformaing records to coordinate vectors ("vector space embeddings") or by using non-metric similarity measures such as those common in ecology [@Johnston1976; @Lee2015; @Dai2020].
-Extensions of these ideas to the present-day TDA toolkit are needed to bring the ~~potential/power/value~~ of more advanced methods to bear in domains that rely on more challenging data.
+Extensions of these ideas to the present-day TDA toolkit are needed to bring more advanced methods to bear in domains that rely on more challenging data.
 
 One support tool for TDA is the selection of landmarks or witnesses from a  data set, which can reduce the conceptual or computational complexity of an analysis.
-Maxmin is a common such selection procedure, which has been used to expedite the calculation of PH [@deSilva2004] or of mapper [@Singh2007] and to compute computational-topological representations of data directly.
-The maxmin sampling procedure is often used for this purpose, as it is deterministic, is computationally efficient, and generates more evenly distributed samples than random selection.
+Maxmin is a common selection procedure that has been used to expedite the calculation of PH [@deSilva2004] and of mapper [@Singh2007] and directly to compute computational-topological representations of data.
+The procedure has the advantage of being deterministic, being computationally efficient, and generating more evenly distributed samples than random selection.
 In addition to approximating PH, maxmin was used in these cases to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration.
+Like other TDA tools, maxmin is most useful on separable data and most efficient on data stored as Euclidean coordinates.
 
-In this paper, we describe an adaptation of the maxmin procedure to health data that are not naturally represented as Euclidean vectors.
+In this paper, we describe an adaptation of maxmin to health data that are not separable or Euclidean.
+Our procedure is deterministic and based not on a raw similarity or distance measure but on a rank-order of neighboring cases to each index case.
 We focus on three questions:
 (1) How is maxmin most naturally modified to sample landmarks from health data?
-(2) What useful properties do the modified procedure and its samples and covers have?
-(3) How does the procedure perform at certain analysis tasks on real-world data, and is its performance comparable or superior to that of maxmin?
-We propose a procedure that is deterministic and based not on a raw similarity or distance measure but on a rank-order of neighboring cases to each index case.
+(2) What useful properties can the modified procedure and its samples and covers be ensured to have?
+(3) How does the procedure perform on common analysis tasks on real-world data, and is its performance comparable or superior to that of maxmin?
 
 We organize the paper as follows:
-In the remainder of this section, we introduce mathematical notation used throughout and use a simple example to motivate the procedure as a counterpart to maxmin.
-We carefully define and prove algorithms and other properties for the procedure in Section\nbs\ref{sec:methods}, after which we describe our implementation and several experiments performed on real-world data to address our motivating questions.
-In Section\nbs\ref{sec:results} we summarize key definitions, algorithms, and properties, report the results of benchmark tests and robustness checks, and report the results of experiments.
+In the remainder of this section, we introduce mathematical notation and use a simple example to motivate the procedure.
+We define and prove algorithms and other properties in Section\nbs\ref{sec:methods}, after which we describe our implementation and several experiments.
+In Section\nbs\ref{sec:results} we summarize key definitions, algorithms, and properties, report benchmark tests and robustness checks, and report experimental results.
 We interpret our findings and comment on limitations and ongoing work in Section\nbs\ref{sec:discussion}.
 
 <!--
@@ -108,12 +109,13 @@ For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $
 
 ## Motivation
 
-In contrast to geometric data analytic tools like principal components analysis that reduce the dimensionality of data, much TDA relies on _cardinality reduction_.
-As distinguished by @ByczkowskaLipinska2017, an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction method is data reduction, and unsupervised clustering methods are classical examples.
-Many popular TDA techniques use cardinality rather than dimension reduction to improve efficiency, often through landmark or witness sampling:
-@deSilva2004 propose witness complexes, related to alpha complexes [@Akkiraju1995], for the rapid approximation of PH: Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale. They use maxmin as an alternative to selecting landmark points uniformly at random, which ensures that the landmarks are locally separated and roughly evenly distributed.
-Other uses include the selection of a sample of points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their shared radius [@Dlotko2019].
-However, maxmin comes with its own limitations in the analysis of data that vary greatly in density or have many multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
+In contrast to most geometric data analytic tools, such as linear regression and principal components analysis, that reduce the dimensionality of data, much TDA relies on the reduction of _cardinality_.
+As distinguished by @ByczkowskaLipinska2017, an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction technique is data reduction, and unsupervised clustering methods are classical examples.
+Many popular TDA techniques reduce cardinality rather than dimension to improve efficiency, often through landmark or witness sampling:
+@deSilva2004 propose witness complexes, related to alpha complexes [@Akkiraju1995], for the rapid approximation of PH:
+<!--Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale.-->
+They use maxmin as an alternative to random landmark selection, which ensures that landmarks are locally separated and roughly evenly distributed.
+Other uses include sampling points from a computationally intractable point cloud for the purpose of downstream topological analysis, as when performing the mapper construction [@Singh2007]; and the heuristic optimization of a fixed-radius ball cover of a point cloud, in the sense of minimizing both the number of balls and their radii [@Dlotko2019].
 
 <!--
 @Dlotko2019 proposed ball covers as an alternative to mapper, where they exchange user discretion and manual effort for computational cost, and the mapper construction itself relies on a crucial covering step that has received limited theoretical attention [@Dey2015; @Carriere2018].
@@ -139,12 +141,14 @@ At the opposite extreme, rare phenotypes are often isolated in sparse regions of
 Thus, when analysis and modeling are to be done on the samples, distance-based selection risks high computational cost in one direction and low statistical power in the other.
 -->
 
-Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than vector space embeddings. Furthermore, because measurements are coarse and often missing, such data often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. All of these attributes violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
+The maxmin sampling procedure comes with its own limitations in the analysis of data that vary greatly in density or have many multiplicities. This is a frequent concern when sparse, heterogeneous, and incomplete data are modeled as finite pseudometric spaces.
+Especially in analyses of medical and healthcare data, underlying variables can often only be understood as ordinal, and high-dimensional data sets are commonly analyzed using similarity measures rather than vector space embeddings.
+Because measurements are coarse and often missing, such data also often contain indistinguishable entries---cases all of whose measurements are equal and that are therefore represented as multiple instances of the same point. These qualities violate the assumptions of the ball cover approach and suggest the need for an ordinal counterpart.
 
-These considerations motivate us to produce a counterpart to the ball cover that we call the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality.
+These considerations motivate us to define the _neighborhood cover_, each set of which may have a different radius but (roughly) the same cardinality.
 The two approaches are visually contrasted in Section\nbs\ref{sec:examples}.
 Later sections will compare their performance on several tasks using real-world data, and specifically data and tasks for which precise sample sizes can be advantageous.
-From these experiments, then, we want to know both whether cardinality-based methods outperform distance-based methods (superiority), which might be expected, but also whether cardinality-based methods are not outperformed by distance-based methods (non-inferiority), so that they can be recommended when specific sample sizes are preferable for reasons other than performance.
+From these experiments, we want to learn both whether cardinality-based methods outperform distance-based methods (superiority), which might be expected, but also whether cardinality-based methods are not outperformed by distance-based methods (non-inferiority), so that they can be recommended when specific sample sizes are preferable for reasons other than performance.
 
 ## Examples
 \label{sec:examples}
@@ -474,13 +478,13 @@ Otherwise, $L$ is minimal in the sense that no proper prefix of $L$ gives a cove
 ## Implementation
 \label{sec:implementation}
 
-We have implemented both procedures in the R package landmark [@Brunson2021a], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
+We have implemented both procedures in the R package landmark [@Brunson2021], borrowing a maxmin implementation by @Piekenbrock2020. Each procedure is implemented for Euclidean distances in C++ using Rcpp [@Eddelbuettel2011] and for many other distance metrics and similarity measures in R using the proxy package [@Meyer2021].
 For relative rank--based procedures, the user can choose any tie-handling rule (see the Appendix).
 The landmark-generating procedures return the indices of the selected landmarks, optionally together with the sets of indices of the points in the cover set centered at each landmark.
 In addition to the number of landmarks $n$ and either the radius $\eps$ of the balls or the cardinality $k$ of the neighborhoods, the user may also specify multiplicative and additive extension factors for $n$ and for $\eps$ or $k$. These will produce additional landmarks ($n$) and larger cover sets ($\eps$ or $k$) with increased overlaps, in order to construct more overlapping covers.
 A multiplicative factor $a \geq 0$ extends the radius (cardinality) of each ball (neighborhood) in a maxmin (lastfirst) cover by a factor of $a$ (so that $a = 0$ produces no change), while an additive factor $b \geq 0$ extends the radius (cardinality) by $b$ units.
 
-For the bumpy circle experiments we also used the simplextree package [@Piekenbrock2020] and Python GUDHI [@Maria2014a] by way of the reticulate and interplex packages [@Ushey2022, @Brunson2022].
+For the bumpy circle experiments we also used the simplextree package [@Piekenbrock2020] and Python GUDHI [@Maria2014] by way of the reticulate and interplex packages [@Ushey2022, @Brunson2022].
 
 ### Validation
 
@@ -532,9 +536,14 @@ additive extension & $\operatorname{ext}_+ = 0, .1, .2$ (maxmin) \\
 
 The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016].
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
-For each patient admission, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
-Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ suitable for the cosine similarity measure, which was converted to a distance measure by subtraction from 1.
-Because cosine similarity is monotonically related to the angle metric, our topological results will be the same up to this rescaling, so for simplicity we use cosine similarity in our experiments.
+
+We ran experiments on these data using three distance measures defined on patient admissions:
+First, we extracted or calculated the vital sign, laboratory test, administrative, procedural, and demographic variables used by @Lee2015.
+From these, we calculated the cosine similarity (simplified from its form there, using one-hot encoding of categorical variables) and the Gower distance [@Gower1971].
+As a domain-agnostic alternative, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
+Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ and again calculated cosine similarity.
+In both cases, cosine was converted to a distance measure by subtraction from 1.
+Because cosine similarity is monotonically related to the angle metric, our topological results will be the same as if we had used the latter.
 
 [^mimic-units]: <https://mimic.physionet.org/mimictables/transfers/>
 [^ethnicity]: White, Black/African American, Unknown/Not Specified, Hispanic or Latino, Other, Unable to Obtain, Asian, Patient Declined to Answer, Asian – Chinese, Hispanic Latino – Puerto Rican, Black/Cape Verdean, White – Russian, Multi Race Ethnicity, Black/Haitian, Hispanic/Latino – Dominican, White – Other European, Asian – Asian Indian, Portuguese, White – Brazilian, Asian – Vietnamese, Black/African, Middle Eastern, Hispanic/Latino – Guatemalan, Hispanic/Latino – Cuban, Asian – Filipino, White – Eastern European, American Indian/Alaska Native, Hispanic/Latino – Salvadoran, Asian – Cambodian, Native Hawaiian or Other Pacific Islander, Asian – Korean, Asian – Other, Hispanic/Latino – Mexican, Hispanic/Latino – Central American (Other), Hispanic/Latino – Colombian, Caribbean Island, South American, Asian – Japanese, Hispanic/Latino – Honduran, Asian – Thai, American Indian/Alaska Native Federally Recognized Tribe
@@ -752,15 +761,21 @@ Right: the modified partition coefficient (MPC) and the c-statistics of the risk
 
 ### Interpolative nearest neighbors prediction
 
+The relative performance of maxmin- and lastfirst-localized models differed on the MIMIC data, somewhat by unit but most significantly by the choice of metric.
+The predictive models performed similarly under the angle distance on the variables of @Lee2015, while lastfirst outperformed maxmin on the same variables under the Gower distance and maxmin outperformed lastfirst under the angle distance on the RT-transformed demographic and diagnosis variables.
+In every case the deterministic samplers outperformed random selection.
+We plot results using the Gower distance and include analogous plots in the Appendix.
+
 Boxplots of the AUROCs for each cross-validation step are presented in Figure\nbs\ref{fig:knn-mimic}.
-While both landmark procedures yielded stronger results than random selection, lastfirst performed on average slightly worse than maxmin on each data set.
-Importantly, both landmark procedures also yielded more accurate predictions than a basic unweighted nearest-neighbors model, lending support to the modeling approach itself.
-Interestingly, only on the largest data set (the MICU) did increasing the number of landmarks from 36 to 360 appreciably improve predictive accuracy (using all three selection procedures).
+The variation across folds exceeds the variation between sampling procedures, but the superiority of lastfirst is visible and consistent throughout,
+though in some cases one or both deterministic samplers fail to outperform random selection.
+Notably, for several care units, a basic unweighted nearest-neighbors model outperformed localized models fitted using both samplers. This was not the case when using the other two distances.
+Localized predictive models on most units improved performance by incorporating more landmarks, though in no case models on 360 landmarks clearly outperform those on 180 landmarks.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-auc-2}
+\includegraphics[width=\textwidth]{../figures/knn-gower-auc-2}
 \caption{
-AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures to generate landmarks.
+AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under Gower distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
 AUROCs of simple nearest-neighbor predictive models are included for comparison.
 \label{fig:knn-mimic}
@@ -819,24 +834,22 @@ We ran several experiments that used landmarks to obtain well-separated clusters
 Because we designed lastfirst to produce cover sets of equal size despite variation in the density or multiplicity of the data, we expected it to outperform maxmin with respect to the crispness of clusters and to the accuracy of predictions.
 In particular, we expected that the optimal neighborhood size for outcome prediction would be roughly equal across our data; as a result, by assigning each landmark case an equally-sized cohort of similar cases, we expected predictions based on these cohorts to outperform those based on cohorts using a fixed similarity threshold.
 
-Contrary to expectations, maxmin produced crisper clusterings on average, and in the case of MIMIC-III more accurate predictions.
-However, when the sets of these covers had their radii or cardinalities extended by a fixed proportion, those of lastfirst better preserved these qualities.
-Additionally, in the case of MXDH, neither landmark selection procedure produced consistently more accurate predictions.
-Specifically, when predicting mortality in MIMIC-III, even with the theory-agnostic RT-similarity measure, a patient's prognosis is better-guided by a cohort cutoff at a fixed minimum similarity than by one of a fixed size.
-This suggests that the use of personalized cohorts to improve predictive modeling, as employed by @Lee2015, may be strengthened by optimizing a fixed similarity threshold rather than a fixed cohort size.
-<!--In contrast, this stronger performance was not evident on MXDH, which contained fewer variables and as a result exhibited many more occurrences of duplication.-->
+Contrary to expectations, maxmin produced crisper clusterings on average; though, when the clusters were extended by a fixed proportion, those of lastfirst better preserved these qualities.
+Which localized cohorts were more predictive of clinical outcomes---those obtained using maxmin-based ball covers or lastfirst-based neighborhood covers---varied.
+When predicting mortality on MIMIC-III, the answer depended largely on the care unit but also, importantly, on the underlying distance measure.
+In the case of MXDH, neither landmark selection procedure produced consistently more accurate predictions.
 
+Under certain conditions, then, the use of personalized cohorts to improve predictive modeling, as employed by @Lee2015, may be strengthened by optimizing a fixed similarity threshold rather than a fixed cohort size.
 It is worth noting that @Park2006, to our knowledge the only other investigators who have compared predictive models based on cohorts bounded by a radius versus a cardinality, reached a similar conclusion.
-Notably, however, lastfirst performed better, relative to maxmin, on tasks involving the MXDH data, which had more categorical variables, more indistinguishable records, and fewer variables overall---that is, data for which the limitations of maxmin we described at the outset are more acute.
-Taken together, these results indicate that lastfirst covers are competitive with maxmin covers for basic analysis tasks and should be considered for more advanced tasks, for example witness complexes or mapper-like constructions, where consistency in the sizes of cover sets or density-based representativeness is advantageous.
+The relative performance of lastfirst to maxmin was greater on most tasks involving the MXDH data, which had more categorical variables, more indistinguishable records, and fewer variables overall---that is, data for which the limitations of maxmin we described at the outset are more acute.
+Yet it was least at predicting mortality in MIMIC-III when similarity was calculated exclusively from binary variables (RT-transformed data).
 
-One way to encapsulate these results is in terms of a balance between relevance and power, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
+On the whole, lastfirst covers are competitive with maxmin covers for basic analysis tasks.
+In the absence of clear determinants of superiority, we suggest that lastfirst should be considered for more advanced tasks, for example witness complexes or mapper-like constructions, in cases where consistency in the sizes of cover sets or density-based representativeness is itself advantageous, e.g. when generating a sample for downstream modeling purposes.
+
+One way to reconcile our results is in terms of a balance between relevance and power, with fixed-radius balls (respectively, fixed-cardinality neighborhoods) providing training cohorts of roughly equal relevance (statistical power) to all test cases.
 With sufficiently rich data, relevance can be more precisely measured and becomes more important to cohort definition, as with MIMIC.
 When variables are fewer, as with MXDH, relevance is more difficult to measure, so that larger samples can improve performance even at the expense of such a measure.
-
-
-
-
 
 
 # Appendix
@@ -1182,6 +1195,28 @@ Lastfirst and maxmin perform similarly when PH is computed using witness complex
 \caption{
 Relative dominance of the spherical homology groups in the persistent homology of four samples from the sphere, using each of three landmark procedures and three persistence computations. Similar plots of absolute dominance (not shown) tell a consistent story, but the distributions are more skewed so the comparisons are less clear.
 \label{fig:sphere}
+}
+\end{figure}
+
+## Interpolative nearest neighbors prediction
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/knn-cos-auc-2}
+\caption{
+AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on domain-informed variables to generate landmarks.
+Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
+AUROCs of simple nearest-neighbor predictive models are included for comparison.
+\label{fig:knn-mimic}
+}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/knn-rt-auc-2}
+\caption{
+AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on RT-transformed data to generate landmarks.
+Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
+AUROCs of simple nearest-neighbor predictive models are included for comparison.
+\label{fig:knn-mimic}
 }
 \end{figure}
 
