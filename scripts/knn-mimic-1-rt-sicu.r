@@ -1,7 +1,6 @@
 # session library
 library(tidyverse)
 library(landmark)
-library(ordr)
 
 # source and store directories
 if (str_detect(here::here(), "corybrunson")) {
@@ -67,8 +66,8 @@ auc_fun <- function(response, predictor) {
   ))))
 }
 
-if (file.exists(file.path(lastfirst_dir, "data/auc-stats-ccu.rds"))) {
-  readr::read_rds(file.path(lastfirst_dir, "data/auc-stats-ccu.rds")) ->
+if (file.exists(file.path(lastfirst_dir, "data/auc-stats-sicu.rds"))) {
+  readr::read_rds(file.path(lastfirst_dir, "data/auc-stats-sicu.rds")) ->
     auc_stats
 } else {
   # initialize data frame
@@ -76,7 +75,7 @@ if (file.exists(file.path(lastfirst_dir, "data/auc-stats-ccu.rds"))) {
 }
 
 # add stratified cross-validation indices to binary data
-file.path(rt_data, str_c("mimic-micu-cases.rds")) %>%
+file.path(rt_data, str_c("mimic-sicu-cases.rds")) %>%
   read_rds() %>%
   group_by(mortality_hosp) %>%
   mutate(row = row_number()) %>%
@@ -125,81 +124,6 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     lapply(enframe, name = "id", value = "dist") %>%
     lapply(mutate, rank = rank(dist, ties.method = "min")) %>%
     lapply(filter, rank <= max_k)
-  
-  # regression models on demographic variables
-  k <- 180L
-  k_opt_coefs <- lapply(nbrs, function(df) {
-    k_pred <- unit_pred[train[df$id[df$rank <= k]], ]
-    k_pred <- k_pred[, str_detect(colnames(k_pred),
-                                  "^(gender_)")]
-    k_pred <- k_pred[, setdiff(colnames(k_pred), c("gender_m")), drop = FALSE]
-    k_resp <- unit_resp[train[df$id[df$rank <= k]], , drop = FALSE]
-    k_data <- as.data.frame(cbind(k_pred, k_resp))
-    k_mod <- glm(mortality_hosp ~ ., data = k_data,
-                 family = binomial(link = "logit"))
-    mutate(broom::tidy(k_mod), k = k)
-  })
-  # risk factor profiles
-  k_opt_coefs %>%
-    enframe(name = "opt_case", value = "tidy") %>%
-    unnest(tidy) %>%
-    mutate(term = snakecase::to_snake_case(term)) %>%
-    pivot_wider(id_cols = opt_case,
-                names_from = term, values_from = estimate) %>%
-    drop_na() %>%
-    filter(opt_case != 240L & opt_case != 639L) %>%
-    print() -> k_opt_profs
-  # distributions of intercepts and of gender effects
-  k_opt_coefs %>%
-    enframe(name = "opt_case", value = "tidy") %>%
-    unnest(tidy) %>%
-    mutate(term = snakecase::to_snake_case(term)) %>%
-    filter(term == "intercept" | term == "gender_f") %>%
-    arrange(estimate) %>%
-    slice_head(n = nrow(.) - 180L) %>%
-    slice_tail(n = nrow(.) - 180L) %>%
-    group_by(term) %>%
-    mutate(rank = row_number()) %>%
-    ungroup() %>%
-    ggplot(aes(x = estimate)) +
-    facet_wrap(~ term) +
-    geom_histogram()
-  k_opt_coefs %>%
-    enframe(name = "opt_case", value = "tidy") %>%
-    unnest(tidy) %>%
-    mutate(term = snakecase::to_snake_case(term)) %>%
-    filter(term == "intercept" | term == "gender_f") %>%
-    arrange(estimate) %>%
-    slice_head(n = nrow(.) - 180L) %>%
-    slice_tail(n = nrow(.) - 180L) %>%
-    group_by(term) %>%
-    mutate(rank = row_number()) %>%
-    ungroup() %>%
-    ggplot(aes(x = estimate, y = rank)) +
-    facet_wrap(~ term) +
-    geom_point()
-  # association between gender effects and intercepts
-  k_opt_profs %>%
-    select(opt_case, intercept, gender_f) %>%
-    ggplot(aes(x = intercept, y = gender_f)) +
-    geom_point()
-  # PCA of age group and gender effects
-  k_opt_profs %>%
-    select(-opt_case, -intercept) %>%
-    prcomp(center = TRUE, scale. = FALSE) %>%
-    as_tbl_ord() %>%
-    augment() %>%
-    bind_cols_u(select(k_opt_profs, opt_case, intercept)) %>%
-    print() -> k_opt_ord
-  # biplot
-  ggbiplot(k_opt_ord) +
-    geom_u_text(aes(label = opt_case, color = intercept)) +
-    geom_v_text_radiate(aes(label = .name)) +
-    geom_v_vector() +
-    scale_x_continuous(expand = expansion(mult = .5))
-  
-  stop()
-  
   # predictions for each landmark using each neighborhood size
   k_opt_preds <- sapply(nbrs, function(df) {
     vapply(seq(max_k),
@@ -228,7 +152,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
   
   # augment data frame
   auc_stats <- bind_rows(auc_stats, tibble(
-    careunit = "CCU",
+    careunit = "SICU",
     outer = i, inner = j,
     sampler = NA_character_, landmarks = NA_integer_,
     k_wt_auc = list(k_aucs),
@@ -292,7 +216,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     
     # augment data frame
     auc_stats <- bind_rows(auc_stats, tibble(
-      careunit = "CCU",
+      careunit = "SICU",
       outer = i, inner = j,
       sampler = names(lmk_funs)[[l]], landmarks = n_lmks,
       k_wt_auc = list(k_wt_auc_data),
@@ -303,5 +227,5 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     
   }
   
-  #write_rds(auc_stats, file.path(lastfirst_dir, "data/auc-stats-ccu.rds"))
+  write_rds(auc_stats, file.path(lastfirst_dir, "data/auc-rt-sicu.rds"))
 }

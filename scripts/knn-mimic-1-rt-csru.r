@@ -66,8 +66,8 @@ auc_fun <- function(response, predictor) {
   ))))
 }
 
-if (file.exists(file.path(lastfirst_dir, "data/auc-stats-tsicu.rds"))) {
-  readr::read_rds(file.path(lastfirst_dir, "data/auc-stats-tsicu.rds")) ->
+if (file.exists(file.path(lastfirst_dir, "data/auc-stats-csru.rds"))) {
+  readr::read_rds(file.path(lastfirst_dir, "data/auc-stats-csru.rds")) ->
     auc_stats
 } else {
   # initialize data frame
@@ -75,7 +75,7 @@ if (file.exists(file.path(lastfirst_dir, "data/auc-stats-tsicu.rds"))) {
 }
 
 # add stratified cross-validation indices to binary data
-file.path(rt_data, str_c("mimic-tsicu-cases.rds")) %>%
+file.path(rt_data, str_c("mimic-csru-cases.rds")) %>%
   read_rds() %>%
   group_by(mortality_hosp) %>%
   mutate(row = row_number()) %>%
@@ -152,7 +152,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
   
   # augment data frame
   auc_stats <- bind_rows(auc_stats, tibble(
-    careunit = "TSICU",
+    careunit = "CSRU",
     outer = i, inner = j,
     sampler = NA_character_, landmarks = NA_integer_,
     k_wt_auc = list(k_aucs),
@@ -216,7 +216,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     
     # augment data frame
     auc_stats <- bind_rows(auc_stats, tibble(
-      careunit = "TSICU",
+      careunit = "CSRU",
       outer = i, inner = j,
       sampler = names(lmk_funs)[[l]], landmarks = n_lmks,
       k_wt_auc = list(k_wt_auc_data),
@@ -227,5 +227,5 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     
   }
   
-  write_rds(auc_stats, file.path(lastfirst_dir, "data/auc-stats-tsicu.rds"))
+  write_rds(auc_stats, file.path(lastfirst_dir, "data/auc-rt-csru.rds"))
 }

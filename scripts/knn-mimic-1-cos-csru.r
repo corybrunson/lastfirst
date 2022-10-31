@@ -1,24 +1,24 @@
+# adapted from 'knn-mimic-1-simulate-ccu.r' for cosine similarity
+
 # session library
 library(tidyverse)
 library(landmark)
 
 # source and store directories
-if (str_detect(here::here(), "corybrunson")) {
-  # laptop
-  rt_data <- "~/Desktop/rt-data"
-  lastfirst_dir <- here::here()
-  save_dir <- "data/cover"
-  # sleep intervals
-  sleep_sec <- 15
-} else if (str_detect(here::here(), "jason.brunson")) {
+if (dir.exists("/blue")) {
   # HiPerGator
+  mimic_data <- "~/mimic-analytic"
   rt_data <- "/blue/rlaubenbacher/jason.brunson/rt-data"
-  lastfirst_dir <- "~/lastfirst"
   save_dir <- "/blue/rlaubenbacher/jason.brunson/lastfirst/data/cover"
-  # sleep intervals
-  sleep_sec <- 0
-} else {
-  stop("Cannot recognize working directory.")
+  lastfirst_dir <- "~/lastfirst"
+  # add personal library to path
+  .libPaths(new = "/home/jason.brunson/R/x86_64-pc-linux-gnu-library/4.2")
+} else if (str_detect(here::here(), "jason.brunson")) {
+  # desktop or laptop
+  mimic_data <- "~/Documents/research/tahda/UCONN-Health-project/data"
+  rt_data <- "~/Desktop/rt-data"
+  save_dir <- "data/cover"
+  lastfirst_dir <- here::here()
 }
 
 # folds in cross-validation
@@ -66,17 +66,25 @@ auc_fun <- function(response, predictor) {
   ))))
 }
 
-if (file.exists(file.path(lastfirst_dir, "data/auc-stats-ccu.rds"))) {
-  readr::read_rds(file.path(lastfirst_dir, "data/auc-stats-ccu.rds")) ->
-    auc_stats
-} else {
-  # initialize data frame
-  auc_stats <- tibble()
-}
+# variables to remove for predictive modeling
+time_vars <- c("dischtime", "intime", "outtime") 
+other_vars <- c("subject_id", "hadm_id", "icustay_id", "dbsource", "unit")
+outcome_vars <- c("hospital_expire_flag",
+                  "add_mort30d", "disch_mort30d", "readd_30d",
+                  "SAPSII", "SAPSII_prob")
+
+# set temporary parameters (to be incorporated into a loop)
+unit <- "CSRU"
 
 # add stratified cross-validation indices to binary data
-file.path(rt_data, str_c("mimic-ccu-cases.rds")) %>%
+# TODO: TEST; PRE-PROCESS IN PREPARATION FOR COSINE SIMILARITY CALCULATION
+file.path(mimic_data, str_c("analytic-wide-", unit, ".rds")) %>%
   read_rds() %>%
+  # select(all_of(c(outcome_vars, time_vars, other_vars)))
+  mutate(mortality_hosp = hospital_expire_flag) %>%
+  select(-all_of(c(outcome_vars, time_vars, other_vars))) %>%
+  # TODO: REMOVE AFTER EXPERIMENTS
+  # sample_frac(size = .2) %>%
   group_by(mortality_hosp) %>%
   mutate(row = row_number()) %>%
   mutate(outer = (sample(row) %% o_folds) + 1L) %>%
@@ -88,16 +96,31 @@ file.path(rt_data, str_c("mimic-ccu-cases.rds")) %>%
   print() -> unit_cases
 unit_cases %>% select(mortality_hosp, outer, inner) %>% table() %>% print()
 
+unit_auc_file <-
+  file.path(lastfirst_dir, str_c("data/auc-cos-", tolower(unit), ".rds"))
+if (file.exists(unit_auc_file)) {
+  auc_cos <- readr::read_rds(unit_auc_file)
+} else {
+  # initialize data frame
+  auc_cos <- tibble(outer = integer(0L), inner = integer(0L))
+}
+
 # loop over folds
+pb <- progress::progress_bar$new(
+  total = o_folds * i_folds * length(lmk_funs) * length(ns_lmks),
+  clear = FALSE
+)
 for (i in seq(o_folds)) for (j in seq(i_folds)) {
-  n_ij <- length(which(auc_stats$outer == i & auc_stats$inner == j))
+  n_ij <- length(which(auc_cos$outer == i & auc_cos$inner == j))
   if (n_ij < length(ns_lmks) * length(lmk_funs)) {
     # begin this incomplete round from scratch
-    auc_stats <- filter(auc_stats, outer != i | inner != j)
+    auc_cos <- filter(auc_cos, outer != i | inner != j)
   } else {
     # skip this complete round
     next
   }
+  # print current round
+  print(str_c("Beginning round: outer = ", i, ", inner = ", j))
   
   # training, optimizing, and testing indices
   train <- which(unit_cases$outer != i & unit_cases$inner != j)
@@ -106,8 +129,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
   
   # binary predictor and response matrices
   unit_pred <- unit_cases %>%
-    select(-subject_id, -hadm_id, -outer, -inner,
-           -contains("mortality")) %>%
+    select(-contains("mortality")) %>%
     mutate_all(as.integer) %>%
     as.matrix()
   unit_resp <- unit_cases %>%
@@ -115,7 +137,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
     mutate_all(as.integer) %>%
     as.matrix()
   
-  print(c(i, j))
+  # print(c(i, j))
   
   # nearest training neighbors of each optimizing datum
   nbrs <- proxy::dist(unit_pred[train, ], unit_pred[opt, ],
@@ -151,22 +173,24 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
                       predictor = as.vector(test_preds))
   
   # augment data frame
-  auc_stats <- bind_rows(auc_stats, tibble(
-    careunit = "CCU",
+  auc_cos <- bind_rows(auc_cos, tibble(
+    careunit = unit,
     outer = i, inner = j,
     sampler = NA_character_, landmarks = NA_integer_,
     k_wt_auc = list(k_aucs),
     k_opt = k_opt, wt_opt = NA_character_,
     opt_auc = max_auc, test_auc = test_auc
   ))
-  Sys.sleep(sleep_sec)
+  Sys.sleep(15)
   
   # loop over landmark-generating functions and numbers of landmarks
   for (l in seq_along(lmk_funs)) for (n_lmks in ns_lmks) {
-    print(c(i, j, names(lmk_funs)[[l]], n_lmks))
+    # print(c(i, j, names(lmk_funs)[[l]], n_lmks))
+    pb$tick()
     
-    # training set landmarks
+    # training set landmarks (updated syntax)
     lmks <- lmk_funs[[l]](unit_pred[train, ], num = n_lmks)
+    if (is.data.frame(lmks)) lmks <- lmks$landmark
     # nearest training neighbors of these landmarks
     nbrs <- proxy::dist(unit_pred[train, ], unit_pred[train[lmks], ],
                         method = "cosine") %>%
@@ -186,7 +210,7 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
                                  method = "cosine")
     k_wt_aucs <- array(NA_real_, dim = c(max_k, length(wt_funs)))
     k_wt_auc_data <- k_wt_aucs %>%
-      as_tibble() %>%
+      as.data.frame() %>% as_tibble() %>%
       set_names(names(wt_funs)) %>%
       mutate(k = row_number())
     
@@ -215,17 +239,18 @@ for (i in seq(o_folds)) for (j in seq(i_folds)) {
                         predictor = as.vector(test_preds))
     
     # augment data frame
-    auc_stats <- bind_rows(auc_stats, tibble(
-      careunit = "CCU",
+    auc_cos <- bind_rows(auc_cos, tibble(
+      careunit = unit,
       outer = i, inner = j,
       sampler = names(lmk_funs)[[l]], landmarks = n_lmks,
       k_wt_auc = list(k_wt_auc_data),
       k_opt = k_wt_opt[[1L]], wt_opt = names(wt_funs)[[k_wt_opt[[2L]]]],
       opt_auc = max_auc, test_auc = test_auc
     ))
-    Sys.sleep(sleep_sec)
+    Sys.sleep(15)
     
   }
   
-  write_rds(auc_stats, file.path(lastfirst_dir, "data/auc-stats-ccu.rds"))
+  
+  write_rds(auc_cos, unit_auc_file)
 }

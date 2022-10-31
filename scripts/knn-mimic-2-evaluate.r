@@ -17,9 +17,12 @@ if (dir.exists("/blue")) {
 # source settings
 source(file.path(lastfirst_dir, "code/settings.r"))
 
+# similarity measure used to generate data: `rt`, `gower`, `cos`
+meas <- "gower"
+
 # bind all results
 file.path(lastfirst_dir, "data") %>%
-  list.files("^auc-stats-[a-z]+\\.rds", full.names = TRUE) %>%
+  list.files(str_c("^auc-", meas, "-[a-z]+\\.rds"), full.names = TRUE) %>%
   enframe(name = NULL, value = "file") %>%
   mutate(data = map(file, read_rds)) %>%
   select(-file) %>%
@@ -70,7 +73,7 @@ auc_stats %>%
   scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
-ggsave(here::here("docs/figures/knn-auc-1.pdf"),
+ggsave(here::here(str_c("docs/figures/knn-", meas, "-auc-1.pdf")),
        auc_stats_plot,
        width = textwidth, height = textwidth / phi)
 
@@ -83,7 +86,7 @@ auc_stats %>%
   scale_color_manual(values = proc_pal) +
   labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
   auc_stats_plot
-ggsave(here::here("docs/figures/knn-auc-2.pdf"),
+ggsave(here::here(str_c("docs/figures/knn-", meas, "-auc-2.pdf")),
        auc_stats_plot,
        width = textwidth, height = textwidth / phi)
 
@@ -106,6 +109,6 @@ auc_stats %>%
        y = "AUROC (mortality)",
        color = "Procedure") ->
   auc_stats_plot
-ggsave(here::here("docs/figures/knn-auc.jpg"),
+ggsave(here::here(str_c("docs/figures/knn-", meas, "-auc.jpg")),
        auc_stats_plot,
        width = textwidth, height = textwidth / 4)
