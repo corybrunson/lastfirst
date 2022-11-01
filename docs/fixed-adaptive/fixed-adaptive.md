@@ -1243,7 +1243,7 @@ In both models, overall performance was uncorrelated with unit size (by which th
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/knn-compare-main}
 \caption{
-
+Main effects of the multiple regression models defined by Equations\nbs\ref{eqn:knn-mimic-main} and \ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-main}
 }
 \end{figure}
@@ -1251,7 +1251,7 @@ In both models, overall performance was uncorrelated with unit size (by which th
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/knn-compare-prod}
 \caption{
-
+Interaction effects of the multiple regression model defined by Equations\nbs\ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-prod}
 }
 \end{figure}

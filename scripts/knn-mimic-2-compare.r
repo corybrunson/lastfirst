@@ -111,6 +111,7 @@ auc_mod_prod %>%
   mutate(unit = str_extract(term, "^[A-Z]{3,5}")) %>%
   mutate(measure = str_extract(term, "(cosine|Gower)")) %>%
   mutate(sampler = str_extract(term, "(random|maxmin|lastfirst)$")) %>%
+  mutate(sampler = factor(sampler, c("maxmin", "lastfirst", "random"))) %>%
   mutate(interaction = str_count(term, "\\:")) %>%
   ggplot(aes(x = estimate, y = term, shape = measure, color = sampler)) +
   scale_shape(na.value = 1L) +
@@ -118,6 +119,7 @@ auc_mod_prod %>%
   geom_pointrange(aes(xmin = estimate - 2*std.error,
                       xmax = estimate + 2*std.error)) +
   theme(legend.box = "horizontal") +
+  scale_color_manual(values = proc_pal) +
   labs(x = "Interaction effect", y = NULL, color = NULL, shape = NULL) ->
   auc_reg_prod_plot
 ggsave(here::here("docs/figures/knn-compare-prod.pdf"),
