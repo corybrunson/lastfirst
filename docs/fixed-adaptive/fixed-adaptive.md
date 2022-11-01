@@ -599,6 +599,7 @@ We hypothesized that lastfirst covers would exhibit less overlap than maxmin cov
 ### Interpolative nearest neighbors prediction
 
 Landmark points may also be used to trade accuracy for memory in neighborhood-based prediction modeling. Consider the following approach: A modeling process involves predictor data $X \in \R^{n \times p}$ and response data $y \in \R^{n \times 1}$, partitioned into training and testing sets $X_0,X_1$ and $y_0,y_1$ according to a partition $I_0 \sqcup I_1 = \{1,\ldots,n\}$ of the index set. Given $x \in X_1$, a nearest neighbors model computes the prediction $p(x) = \frac{1}{k}\sum_{q(x,x_i) \leq k}{y_i}$ by averaging the responses for the $k^\text{th}$ nearest neighbors of $x$ in $X_0$. By selecting a landmark set $L \subset X_0$, a researcher can reduce the computational cost of the model as follows: For each $\ell \in L$, calculate $p(\ell)$ as above. Then, for each $x \in X_1$, calculate $p_L(x) = \sum_{\ell \in L}{w(d(x,\ell)) p(\ell)} / \sum_{\ell \in L}{w(d(x,\ell))}$, where $w : \R_{\geq 0} \to \R_{\geq 0}$ is a weighting function (for example, $w(d)=d^{-1}$). The nearest neighbor predictions for $L$ thus serve as proxies for the responses associated with $X_0$.
+We refer to these as interpolative nearest neighbors (INN) models.
 
 We took this approach to the prediction of in-hospital mortality for patients with records in each critical care unit of MIMIC-III.
 We then implemented the following procedure:
@@ -761,24 +762,25 @@ Right: the modified partition coefficient (MPC) and the c-statistics of the risk
 
 ### Interpolative nearest neighbors prediction
 
-The relative performance of maxmin- and lastfirst-localized models differed on the MIMIC data, somewhat by unit but most significantly by the choice of metric.
+Both ball and neighborhood covers were used to build INN models of clinical outcomes.
+Their relative performance differed on the MIMIC data, somewhat by unit but most significantly by the choice of metric.
 The predictive models performed similarly under the angle distance on the variables of @Lee2015, while lastfirst outperformed maxmin on the same variables under the Gower distance and maxmin outperformed lastfirst under the angle distance on the RT-transformed demographic and diagnosis variables.
 In every case the deterministic samplers outperformed random selection.
 We plot results using the Gower distance and include analogous plots in the Appendix.
 
-Boxplots of the AUROCs for each cross-validation step are presented in Figure\nbs\ref{fig:knn-mimic}.
+Boxplots of the AUROCs for each cross-validation step are presented in Figure\nbs\ref{fig:knn-mimic-gower}.
 The variation across folds exceeds the variation between sampling procedures, but the superiority of lastfirst is visible and consistent throughout,
 though in some cases one or both deterministic samplers fail to outperform random selection.
-Notably, for several care units, a basic unweighted nearest-neighbors model outperformed localized models fitted using both samplers. This was not the case when using the other two distances.
-Localized predictive models on most units improved performance by incorporating more landmarks, though in no case models on 360 landmarks clearly outperform those on 180 landmarks.
+Notably, for several care units, a basic unweighted nearest neighbors model outperformed the INN models fitted using both samplers. This was not the case when using the other two distances.
+INN models on most units improved performance by incorporating more landmarks, though in no case models on 360 landmarks clearly outperform those on 180 landmarks.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/knn-gower-auc-2}
 \caption{
-AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under Gower distance on domain-informed variables to generate landmarks.
+AUROCs of the INN models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under Gower distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
 AUROCs of simple nearest-neighbor predictive models are included for comparison.
-\label{fig:knn-mimic}
+\label{fig:knn-mimic-gower}
 }
 \end{figure}
 
@@ -797,7 +799,7 @@ Overall, performance improved slightly as the number of landmarks increased from
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/knn-auc-mx-gaussian}
 \caption{
-AUROCs of the sliding-window interpolative predictive models of intubation and mortality in the MXDH data based on covers constructed using random, maxmin, and lastfirst procedures to generate landmarks.
+AUROCs of the sliding-window INN models of intubation and mortality in the MXDH data based on covers constructed using random, maxmin, and lastfirst procedures to generate landmarks.
 \label{fig:knn-mx}
 }
 \end{figure}
@@ -1200,13 +1202,17 @@ Relative dominance of the spherical homology groups in the persistent homology o
 
 ## Interpolative nearest neighbors prediction
 
+Maxmin-based ball covers and lastfirst-based neighborhood covers were used to build interpolative nearest neighbors models to predict mortality using data from MIMIC-III.
+Figures\nbs\ref{fig:knn-mimic-cos} and \ref{fig:knn-mimic-rt} compare their performance in each critical care unit.
+Results differed greatly by distance measure and less so by cover construction.
+
 \begin{figure}
 \includegraphics[width=\textwidth]{../figures/knn-cos-auc-2}
 \caption{
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
 AUROCs of simple nearest-neighbor predictive models are included for comparison.
-\label{fig:knn-mimic}
+\label{fig:knn-mimic-cos}
 }
 \end{figure}
 
@@ -1216,9 +1222,43 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on RT-transformed data to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
 AUROCs of simple nearest-neighbor predictive models are included for comparison.
-\label{fig:knn-mimic}
+\label{fig:knn-mimic-rt}
 }
 \end{figure}
+
+We used multiple linear regression quantified the relative importance of care unit (population), distance measure, cover construction, and number of landmarks.
+We modeled the expected AUROC for each folded cross-validation step $Y_i$ as a linear function of the care unit $U$ (reference value $u_0 = $ TSICU), the distance measure $D$ (reference value $d_0 = $ RT), the sampling procedure $S$ (reference value $s_0 = $ random), and the number of landmarks $L$ also treated as a categorical variable (reference value $\ell_0 = 36$).
+We fit one model with main effects only (Equation\nbs\ref{eqn:knn-mimic-main}) and another model with two- and three-way interaction effects among unit, measure, and procedure (Equation\nbs\ref{eqn:knn-mimic-prod}).
+\begin{align}
+\label{eqn:knn-mimic-main}
+Y_i &= \beta_0 + \beta_U U_i + \beta_D D_i + \beta_S S_i + \beta_L L_i + \epsilon_i \\
+\label{eqn:knn-mimic-prod}
+Y_i &= \beta_0 + \beta_U U_i + \beta_D D_i + \beta_S S_i + \beta_U U_i \beta_D D_i + \beta_U U_i \beta_S S_i + \beta_D D_i \beta_S S_i + \beta_L L_i + \epsilon_i \\
+\end{align}
+
+Figure\nbs\ref{fig:knn-mimic-main} juxtaposes the main effects obtained from both models.
+Recall that all models were optimized for neighborhood size and weighting function before being evaluated.
+In both models, overall performance was uncorrelated with unit size (by which the units are ordered, with TSICU the smallest), Gower distance provided for better-performing models than cosine distance, ball covers slightly outperformed neighborhood covers, and performance improved with additional landmarks.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/knn-compare-main}
+\caption{
+
+\label{fig:knn-mimic-main}
+}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../figures/knn-compare-prod}
+\caption{
+
+\label{fig:knn-mimic-prod}
+}
+\end{figure}
+
+The lower main effect estimates of the models with interaction effects compensate for the positive skew of the interaction effects themselves, so we only draw comparisons within groups of interaction effects.
+The Gower distance is clearly superior to cosine distance, and both outperform the RT-transform cosine distance.
+Ball and neighborhood covers perform similarly throughout and have similar dependencies on care unit and distance measure.
 
 
 # References

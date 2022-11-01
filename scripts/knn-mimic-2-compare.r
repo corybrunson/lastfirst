@@ -57,6 +57,7 @@ file.path(rt_data) %>%
 # regress test performance on factors + unit-measure-procedure interactions
 auc_stats %>%
   filter(! is.na(sampler)) %>%
+  # filter(! is.na(sampler) & measure != "RT") %>%
   transmute(
     AUROC = test_auc, unit = careunit,
     measure = fct_relevel(measure, "RT"),
@@ -64,43 +65,61 @@ auc_stats %>%
     landmarks = as.factor(landmarks)
   ) ->
   auc_data
-# main effects only
+# model with main effects only
 auc_data %>%
   lm(formula = AUROC ~ unit + measure + sampler + landmarks) ->
   auc_mod_main
+# model with interaction effects
 auc_data %>%
   lm(formula = AUROC ~ unit * measure * sampler + landmarks) ->
   auc_mod_prod
-auc_mod_main %>%
-  tidy() %>%
-  filter(term != "(Intercept)") %>%
-  mutate(term = str_remove(term, "unit|measure|sampler")) %>%
-  mutate(term = fct_rev(fct_inorder(term))) %>%
-  ggplot(aes(x = estimate, y = term)) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_pointrange(aes(xmin = estimate - 2*std.error,
-                      xmax = estimate + 2*std.error))
-# interaction effects
-auc_data %>%
-  lm(formula = AUROC ~ unit * measure * sampler + landmarks) ->
-  auc_mod_prod
-auc_mod_prod %>%
-  tidy() %>%
+# compare main effects
+bind_rows(
+  mutate(tidy(auc_mod_main), regression = "main effects"),
+  mutate(tidy(auc_mod_prod), regression = "interaction effects")
+) %>%
+  mutate(regression = fct_inorder(regression)) %>%
   filter(term != "(Intercept)" & ! str_detect(term, "\\:")) %>%
   mutate(term = str_remove(term, "unit|measure|sampler")) %>%
+  mutate(term = ifelse(
+    str_detect(term, "^landmarks[0-9]+$"),
+    str_replace(term, "^landmarks([0-9]+)$", "\\1 landmarks"),
+    term
+  )) %>%
   mutate(term = fct_rev(fct_inorder(term))) %>%
   ggplot(aes(x = estimate, y = term)) +
+  # facet_grid(rows = vars(regression)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_pointrange(aes(xmin = estimate - 2*std.error,
-                      xmax = estimate + 2*std.error))
+  geom_pointrange(aes(xmin = estimate - 2 * std.error,
+                      xmax = estimate + 2 * std.error,
+                      shape = regression)) +
+  labs(x = "Main effect", y = NULL, shape = NULL) ->
+  auc_reg_main_plot
+ggsave(here::here("docs/figures/knn-compare-main.pdf"),
+       auc_reg_main_plot,
+       width = textwidth, height = textwidth / (phi^2))
+
+# inspect interaction effects
 auc_mod_prod %>%
   tidy() %>%
-  filter(str_detect(term, "^unit.+\\:measure.+\\:sample.+$")) %>%
+  # filter(str_detect(term, "^unit.+\\:measure.+\\:sample.+$")) %>%
+  filter(str_detect(term, "\\:")) %>%
   mutate(term = str_remove_all(term, "unit|measure|sampler")) %>%
+  mutate(term = str_replace_all(term, "\\:", " × ")) %>%
   mutate(term = fct_rev(fct_inorder(term))) %>%
-  separate(term, c("unit", "measure", "sampler"), "\\:", remove = FALSE) %>%
+  # separate(term, c("unit", "measure", "sampler"), "\\:", remove = FALSE) %>%
+  mutate(unit = str_extract(term, "^[A-Z]{3,5}")) %>%
+  mutate(measure = str_extract(term, "(cosine|Gower)")) %>%
+  mutate(sampler = str_extract(term, "(random|maxmin|lastfirst)$")) %>%
+  mutate(interaction = str_count(term, "\\:")) %>%
   ggplot(aes(x = estimate, y = term, shape = measure, color = sampler)) +
+  scale_shape(na.value = 1L) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_pointrange(aes(xmin = estimate - 2*std.error,
                       xmax = estimate + 2*std.error)) +
-  theme(legend.box = "horizontal")
+  theme(legend.box = "horizontal") +
+  labs(x = "Interaction effect", y = NULL, color = NULL, shape = NULL) ->
+  auc_reg_prod_plot
+ggsave(here::here("docs/figures/knn-compare-prod.pdf"),
+       auc_reg_prod_plot,
+       width = textwidth, height = textwidth / phi)
