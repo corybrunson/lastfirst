@@ -86,12 +86,12 @@ ggplot() +
   geom_disk(
     data = x_mm_df, aes(x = x, y = y),
     radius = (1 + me) * x_mm$radius[[l]],
-    fill = face_col, alpha = .15, color = NA
+    fill = face_col, alpha = .15, color = "black", size = .25
   ) +
   geom_point(data = as.data.frame(x), aes(x = x, y = y)) +
   geom_point(
     data = x_mm_df, aes(x = x, y = y),
-    color = proc_pal[[1L]], size = 4, shape = 1L
+    color = proc_pal[[1L]], size = 4, shape = 5L
   ) +
   geom_text(
     data = x_mm_df, aes(x = x, y = y, label = num),
@@ -107,12 +107,12 @@ ggplot() +
   coord_equal(xlim = c(-1.2, 1.2), ylim = c(-1.2, 1.2)) +
   geom_circle(
     data = x_lf_df, aes(x0 = x, y0 = y, r = radius),
-    fill = face_col, alpha = .15, color = NA
+    fill = face_col, alpha = .15, color = "black", size = .25
   ) +
   geom_point(data = as.data.frame(x), aes(x = x, y = y)) +
   geom_point(
     data = x_lf_df, aes(x = x, y = y),
-    color = proc_pal[[2L]], size = 4, shape = 1L
+    color = proc_pal[[2L]], size = 4, shape = 5L
   ) +
   geom_text(
     data = x_lf_df, aes(x = x, y = y, label = num),
