@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2022.3.6)  11 NOV 2022 11:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2022.3.6)  11 NOV 2022 11:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**arxiv.tex
-(./arxiv.tex
+**fixed-adaptive.tex
+(./fixed-adaptive.tex
 LaTeX2e <2020-10-01> patch level 4
 L3 programming layer <2021-02-18> (/usr/local/texlive/2021/texmf-dist/tex/latex
 /base/article.cls
@@ -900,12 +900,12 @@ Package: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)
 (/usr/local/texlive/2021/texmf-dist/tex/latex/bookmark/bkm-pdftex.def
 File: bkm-pdftex.def 2020-11-06 v1.29 bookmark driver for pdfTeX (HO)
 \BKM@id=\count335
-))) (./arxiv.aux
+))) (./fixed-adaptive.aux
 
 LaTeX Warning: Label `sec:experiments' multiply defined.
 
 )
-\openout1 = `arxiv.aux'.
+\openout1 = `fixed-adaptive.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 74.
 LaTeX Font Info:    ... okay on input line 74.
@@ -1330,8 +1330,8 @@ f> <../figures/knn-compare-prod.pdf>]
 Underfull \vbox (badness 1590) has occurred while \output is active []
 
 [28]
-No file arxiv.bbl.
-[29] (./arxiv.aux)
+No file fixed-adaptive.bbl.
+[29] (./fixed-adaptive.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -1340,13 +1340,13 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 31448 strings out of 478994
- 616206 string characters out of 5858185
- 1141563 words of memory out of 5000000
+ 31449 strings out of 478994
+ 616310 string characters out of 5858185
+ 1141590 words of memory out of 5000000
  47683 multiletter control sequences out of 15000+600000
  505528 words of font info for 244 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 116i,12n,122p,621b,823s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 116i,12n,122p,630b,823s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2021/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/usr/local/
 texlive/2021/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/local/texlive/2021/
 texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/local/texlive/2021/texmf-dist
@@ -1375,7 +1375,7 @@ lm/lmsy7.pfb></usr/local/texlive/2021/texmf-dist/fonts/type1/public/lm/lmsy9.pf
 b></usr/local/texlive/2021/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></usr/lo
 cal/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></us
 r/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
-Output written on arxiv.pdf (29 pages, 784918 bytes).
+Output written on fixed-adaptive.pdf (29 pages, 784918 bytes).
 PDF statistics:
  941 PDF objects out of 1000 (max. 8388607)
  816 compressed objects within 9 object streams
