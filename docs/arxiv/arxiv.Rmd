@@ -1,29 +1,30 @@
 ---
-title: "Fixed and adaptive landmark sets for finite metric spaces"
-author:
-  - Jason Cory Brunson
-  - Yara Skaf
-output:
-  pdf_document:
-    fig_caption: yes
-    keep_tex: yes
+title: Fixed and adaptive landmark sets\linebreak for finite pseudometric spaces
+authors:
+  - name: Jason Cory Brunson
+    thanks: J.C.B. was partially supported by 5T-90DE021989-07 Grant from the National Institutes of Health (NIDCR).
+    department: Laboratory for Systems Medicine
+    affiliation: University of Florida
+    location: Gainesville FL
+    email: jason.brunson@medicine.ufl.edu
+  - name: Yara Skaf
+    department: Laboratory for Systems Medicine
+    affiliation: University of Florida
+    location: Gainesville FL
+abstract: |
+  Write an abstract!
+keywords:
+  - topological data analysis
+  - landmark sampling
+  - localized models
+  - case-based reasoning
+bibliography: ../lastfirst.bib
+biblio-style: unsrt
+output: rticles::arxiv_article
 header-includes:
   \usepackage{format}
 ---
 
-<!--Submission format
-header-includes:
-  \usepackage{lineno}
-  \linenumbers
-  \doublespacing
--->
-<!--Print units
-header-includes:
-  \usepackage{lengthconvert}
-  \Convertsetup{unit=cm}
--->
-
-\pagebreak
 
 # Introduction
 
@@ -1297,19 +1298,3 @@ Ball and neighborhood covers perform similarly throughout and have similar depen
 
 
 # References
-
-<!--
-# To generate the LaTeX file, execute the following:
-pandoc fixed-adaptive.md \
-  -s \
-  --number-sections \
-  --bibliography=../lastfirst.bib \
-  -o fixed-adaptive.tex
-# To generate the PDF directly, execute the following:
-pandoc fixed-adaptive.md \
-  -t latex \
-  --number-sections \
-  --bibliography=../lastfirst.bib \
-  --citeproc \
-  -o fixed-adaptive.pdf
--->

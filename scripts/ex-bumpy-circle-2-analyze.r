@@ -1,5 +1,6 @@
 # packages
 library(tidyverse)
+library(patchwork)
 
 # source settings
 source(here::here("code/settings.r"))
@@ -93,7 +94,7 @@ bumpy_persistence %>%
   ) +
   geom_boxplot(aes(color = m)) +
   scale_color_manual(values = proc_pal[seq(2L)]) +
-  labs(x = "n", y = persistent_beta, color = NULL) ->
+  labs(x = "Number of landmarks", y = persistent_beta, color = NULL) ->
   bumpy_persistence_extensions
 ggsave(
   here::here("docs/figures/bumpy-persistence-extensions.pdf"),
@@ -108,9 +109,20 @@ bumpy_persistence %>%
   facet_grid(rows = vars(sd), cols = vars(ratio), label = label_equals) +
   geom_boxplot(aes(color = m)) +
   scale_color_manual(values = proc_pal[seq(2L)]) +
-  labs(x = "n", y = persistent_beta, color = NULL) ->
+  labs(x = "Number of landmarks", y = persistent_beta, color = NULL) ->
   bumpy_persistence_distribution
 ggsave(
   here::here("docs/figures/bumpy-persistence-distribution.pdf"),
   bumpy_persistence_distribution, width = textwidth, height = textwidth / phi
+)
+
+(bumpy_persistence_distribution +
+    labs(x = NULL) + theme(legend.position = "none")) +
+  bumpy_persistence_extensions +
+  plot_layout(ncol = 1L) ->
+  bumpy_persistence_distribution_extensions
+ggsave(
+  here::here("docs/figures/bumpy-persistence-distribution-extensions.pdf"),
+  bumpy_persistence_distribution_extensions,
+  width = textwidth, height = textwidth * 1.1
 )
