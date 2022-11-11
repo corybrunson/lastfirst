@@ -11,6 +11,7 @@ authors:
     department: Laboratory for Systems Medicine
     affiliation: University of Florida
     location: Gainesville FL
+    email: yara.skaf@ufl.edu
 abstract: |
   Write an abstract!
 keywords:
