@@ -76,7 +76,31 @@ from the National Institutes of Health (NIDCR).}
 
 
 \begin{abstract}
-Write an abstract!
+Topological data analysis (TDA) is an expanding field that leverages
+principles and tools from algebraic topology to quantify structural
+features of data sets or transform them into more manageable forms. As
+its theoretical foundations have been developed, TDA has shown promise
+in extracting useful information from high-dimensional, noisy, and
+complex data such as those used in biomedicine. To operate efficiently,
+these techniques may employ landmark samplers, either random or
+heuristic. The heuristic maxmin procedure obtains a roughly even
+distribution of sample points by implicitly constructing a cover
+comprising sets of uniform radius. However, issues arise with data that
+vary in density or include points with multiplicities, as are common in
+biomedicine. We propose an analogous procedure, ``lastfirst'' based on
+ranked distances, which implies a cover comprising sets of uniform
+cardinality. We first rigorously define the procedure and prove that it
+obtains landmarks with desired properties. We then perform benchmark
+tests and compare its performance to that of maxmin, on feature
+detection and class prediction tasks involving simulated and real-world
+biomedical data. Lastfirst is more general than maxmin in that it can be
+applied to any data on which arbitrary (and not necessarily symmetric)
+pairwise distances can be computed. Lastfirst is more computationally
+costly, but our implementation scales at the same rate as maxmin. We
+find that lastfirst achieves comparable performance on prediction tasks
+and outperforms maxmin on homology detection tasks. Where the numerical
+values of similarity measures are not meaningful, as in many biomedical
+contexts, lastfirst sampling may also improve interpretability.
 \end{abstract}
 
 \keywords{
@@ -2065,7 +2089,7 @@ Rouvreau, Vincent. 2021. {``Alpha Complex.''} In \emph{{GUDHI User} and
 \leavevmode\vadjust pre{\hypertarget{ref-Singh2007}{}}%
 Singh, Gurjeet, Facundo Mémoli, and Gunner Carlsson. 2007.
 {``Topological {Methods} for the {Analysis} of {High Dimensional Data
-Sets} and {3d Object Recognition}.''} In \emph{Eurographics {Symposium}
+Sets} and {3D Object Recognition}.''} In \emph{Eurographics {Symposium}
 on {Point-Based Graphics}}, edited by M. Botsch, R. Pajarola, B. Chen,
 and M. Zwicker. {The Eurographics Association}.
 \url{https://doi.org/10.2312/SPBG/SPBG07/091-100}.
