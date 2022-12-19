@@ -309,7 +309,7 @@ Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$,
 The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/vardens-cover}
+\includegraphics[width=\textwidth]{vardens-cover}
 \caption{
 Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
 \label{fig:icu-cover}
@@ -327,7 +327,7 @@ Given a small subset of landmarks $L \subset X$, we would want a witness complex
 We would also want to reduce complexity, computational cost, and detection of spurious features.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-covers}
+\includegraphics[width=\textwidth]{bumpy-covers}
 \caption{
 Landmark samples and their covers from the bumpy distribution on the circle using two selection procedures.
 \label{fig:bumpy-cover}
@@ -1108,7 +1108,7 @@ be revealed by a comparison of the persistent features obtained by
 sequences of covers obtained by both procedures on this data set.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
+\includegraphics[width=\textwidth]{necklace-landmarks}
 \caption{
 Landmark samples of size 12 from a necklace data set using two selection procedures.
 \label{fig:necklace}
@@ -1119,8 +1119,8 @@ Landmark samples of size 12 from a necklace data set using two selection procedu
 \subsubsection{Benchmark tests}\label{benchmark-tests-1}}
 
 \begin{figure}
-\includegraphics[width=.6666667\textwidth]{../figures/benchmark-circle-lattice}
-\includegraphics[width=.3333333\textwidth]{../figures/benchmark-mimic}
+\includegraphics[width=.6666667\textwidth]{benchmark-circle-lattice}
+\includegraphics[width=.3333333\textwidth]{benchmark-mimic}
 \caption{
 Benchmark results for computing landmarks on two families of artificial data (circle and lattice) and one collection of empirical data (RT-similarity space of critical care units in MIMIC-III). Some points are missing because benchmark tests did not complete within 1 hour.
 \label{fig:benchmark}
@@ -1140,8 +1140,6 @@ took much longer and failed to complete in many of our tests.
 \hypertarget{experiments-1}{%
 \subsection{Experiments}\label{experiments-1}}
 
-\label{sec:experiments}
-
 \hypertarget{bumpy-circle-2}{%
 \subsubsection{Bumpy circle}\label{bumpy-circle-2}}
 
@@ -1154,7 +1152,7 @@ experimental results. Boxes are bounded by quartiles and whiskers by 1.5
 interquartile ranges.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-persistence-distribution-extensions}
+\includegraphics[width=\textwidth]{bumpy-persistence-distribution-extensions}
 \caption{
 Landmark persistence of maxmin and lastfirst covers, faceted by density parameters (above) and by multiplicative and additive extensions (below).
 See Section\nbs\ref{sec:implementation} for details.
@@ -1213,8 +1211,8 @@ with maxmin covers yielding the most accurate predictions when
 unextended but lastfirst covers retaining more accuracy after extension.
 
 \begin{figure}
-\includegraphics[width=.5\textwidth]{../figures/cover-simplices}
-\includegraphics[width=.5\textwidth]{../figures/cover-evaluate}
+\includegraphics[width=.5\textwidth]{cover-simplices}
+\includegraphics[width=.5\textwidth]{cover-evaluate}
 \caption{
 Summary and evaluation statistics versus number of 0-simplices (landmarks) for the covers generated using the maxmin and lastfirst procedures, with three multiplicative extensions in their size.
 Left: the sizes of their nerves, as numbers of 1- and 2-simplices, using a square root--transformed vertical scale.
@@ -1235,8 +1233,8 @@ numbers of landmarks, though for smaller numbers different selection
 procedures performed best for different outcomes.
 
 \begin{figure}
-\includegraphics[width=.5\textwidth]{../figures/cover-simplices-mx}
-\includegraphics[width=.5\textwidth]{../figures/cover-evaluate-mx}
+\includegraphics[width=.5\textwidth]{cover-simplices-mx}
+\includegraphics[width=.5\textwidth]{cover-evaluate-mx}
 \caption{
 Summary and evaluation statistics versus number of 0-simplices (landmarks) for the covers generated using the maxmin and lastfirst procedures, with three multiplicative extensions in their size.
 Left: the sizes of their nerves, as numbers of 1- and 2-simplices, using a square root--transformed vertical scale.
@@ -1272,7 +1270,7 @@ units improved performance by incorporating more landmarks, though in no
 case models on 360 landmarks clearly outperform those on 180 landmarks.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-gower-auc-2}
+\includegraphics[width=\textwidth]{knn-gower-auc-2}
 \caption{
 AUROCs of the INN models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under Gower distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -1306,7 +1304,7 @@ performance improved slightly as the number of landmarks increased from
 50 to 150 but either plateaued or declined from 150 to 250.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-auc-mx-gaussian}
+\includegraphics[width=\textwidth]{knn-auc-mx-gaussian}
 \caption{
 AUROCs of the sliding-window INN models of intubation and mortality in the MXDH data based on covers constructed using random, maxmin, and lastfirst procedures to generate landmarks.
 \label{fig:knn-mx}
@@ -1846,7 +1844,7 @@ regions. Lastfirst and maxmin perform similarly when PH is computed
 using witness complexes.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/homology-sphere-relative}
+\includegraphics[width=\textwidth]{homology-sphere-relative}
 \caption{
 Relative dominance of the spherical homology groups in the persistent homology of four samples from the sphere, using each of three landmark procedures and three persistence computations. Similar plots of absolute dominance (not shown) tell a consistent story, but the distributions are more skewed so the comparisons are less clear.
 \label{fig:sphere}
@@ -1865,8 +1863,8 @@ critical care unit. Results differed greatly by distance measure and
 less so by cover construction.
 
 \begin{figure}
-\includegraphics[width=\textwidth,trim=0 55 0 0,clip=true]{../figures/knn-cos-auc-2}
-\includegraphics[width=\textwidth]{../figures/knn-rt-auc-2}
+\includegraphics[width=\textwidth,trim=0 55 0 0,clip=true]{knn-cos-auc-2}
+\includegraphics[width=\textwidth]{knn-rt-auc-2}
 \caption{
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on domain-informed variables (top) and on RT-transformed data (below) to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -1904,7 +1902,7 @@ outperformed neighborhood covers, and performance improved with
 additional landmarks.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-compare-main}
+\includegraphics[width=\textwidth]{knn-compare-main}
 \caption{
 Main effects of the multiple regression models defined by Equations\nbs\ref{eqn:knn-mimic-main} and \ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-main}
@@ -1912,7 +1910,7 @@ Main effects of the multiple regression models defined by Equations\nbs\ref{eqn:
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-compare-prod}
+\includegraphics[width=\textwidth]{knn-compare-prod}
 \caption{
 Interaction effects of the multiple regression model defined by Equations\nbs\ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-prod}
@@ -1936,19 +1934,20 @@ care unit and distance measure.
 \leavevmode\vadjust pre{\hypertarget{ref-Akkiraju1995}{}}%
 Akkiraju, Nataraj, Herbert Edelsbrunner, Michael Facello, Ping Fu, Ernst
 P. Mücke, and Carlos Varela. 1995. {``Alpha Shapes: Definition and
-Software.''} In.
+Software.''} \emph{The Geometry Center}.
+\url{http://www.geom.uiuc.edu/software/cglist/GeomDir/shapes95def/index.html}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Aziz2017}{}}%
 Aziz, Rabia, C. K. Verma, Namita Srivastava, Rabia Aziz, C. K. Verma,
 and Namita Srivastava. 2017. {``Dimension Reduction Methods for
-Microarray Data: A Review.''} \emph{AIMSBOA} 4 (1): 179--97.
+Microarray Data: A Review.''} \emph{AIMS Bioengineering} 4 (1): 179--97.
 \url{https://doi.org/10.3934/bioeng.2017.1.179}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Becht2019}{}}%
 Becht, Etienne, Leland McInnes, John Healy, Charles-Antoine Dutertre,
 Immanuel W H Kwok, Lai Guan Ng, Florent Ginhoux, and Evan W Newell.
 2019. {``Dimensionality Reduction for Visualizing Single-Cell Data Using
-{UMAP}.''} \emph{Nat Biotechnol} 37 (1): 38--44.
+{UMAP}.''} \emph{Nature Biotechnology} 37 (1): 38--44.
 \url{https://doi.org/10.1038/nbt.4314}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Bouguessa2006}{}}%
@@ -1965,7 +1964,7 @@ Pomocą Technik Selekcji Przypadków.''} \emph{Przegląd Elektrotechniczny}
 \leavevmode\vadjust pre{\hypertarget{ref-Dai2020}{}}%
 Dai, Leyu, He Zhu, and Dianbo Liu. 2020. {``Patient Similarity: Methods
 and Applications.''} \emph{arXiv:2012.01976 {[}Cs{]}}, December.
-\url{https://arxiv.org/abs/2012.01976}.
+\url{http://arxiv.org/abs/2012.01976}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Dave1996}{}}%
 Dave, Rajesh N. 1996. {``Validating Fuzzy Partitions Obtained Through
@@ -1978,6 +1977,7 @@ Using Witness Complexes.''} In \emph{{SPBG}'04 {Symposium} on
 {Point-Based Graphics} 2004}, edited by Markus Gross, Hanspeter Pfister,
 Marc Alexa, and Szymon Rusinkiewicz, 157--66. {The Eurographics
 Association}.
+\url{http://diglib.eg.org/handle/10.2312/SPBG.SPBG04.157-166}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Diaconis2013}{}}%
 Diaconis, Persi, Susan Holmes, and Mehrdad Shahshahani. 2013.
@@ -1985,10 +1985,11 @@ Diaconis, Persi, Susan Holmes, and Mehrdad Shahshahani. 2013.
 Statistical Theory} and {Applications}: {A Festschrift} in Honor of
 {Morris L}. {Eaton}}, 10:102--25. Institute of {Mathematical Statistics
 Collections}. {Institute of Mathematical Statistics}.
+\url{http://projecteuclid.org/euclid.imsc/1379942050}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Dlotko2019}{}}%
 Dłotko, Paweł. 2019. {``Ball Mapper: A Shape Summary for Topological
-Data Analysis,''} January.
+Data Analysis,''} January. \url{http://arxiv.org/abs/1901.07410}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Eddelbuettel2011}{}}%
 Eddelbuettel, Dirk, and Romain Francois. 2011. {``Rcpp: {Seamless R} and
@@ -2016,14 +2017,14 @@ of {Its Properties}.''} \emph{Biometrics} 27 (4): 857--71.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Hester2020}{}}%
 Hester, Jim. 2020. {``{bench}: {High Precision Timing} of {R
-Expressions}.''}
+Expressions}.''} \url{https://CRAN.R-project.org/package=bench}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ivakhno2007}{}}%
 Ivakhno, Sergii, and J. Douglas Armstrong. 2007. {``Non-Linear
-Dimensionality Reduction of Signaling Networks.''} \emph{BMC Syst Biol}
-1 (1): 27. \url{https://doi.org/10.1186/1752-0509-1-27}.
+Dimensionality Reduction of Signaling Networks.''} \emph{BMC Systems
+Biology} 1 (1): 27. \url{https://doi.org/10.1186/1752-0509-1-27}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-Johnson2016}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-Johnson2016a}{}}%
 Johnson, Alistair E. W., Tom J. Pollard, Lu Shen, Li-wei H. Lehman,
 Mengling Feng, Mohammad Ghassemi, Benjamin Moody, Peter Szolovits, Leo
 Anthony Celi, and Roger G. Mark. 2016. {``{MIMIC-III}, a Freely
@@ -2037,6 +2038,7 @@ Measure.''} {United States}.
 \leavevmode\vadjust pre{\hypertarget{ref-Kachanovich2021}{}}%
 Kachanovich, Siargey. 2021. {``Witness Complex.''} In \emph{{GUDHI User}
 and {Reference Manual}}, 3.4.1 ed. {GUDHI Editorial Board}.
+\url{https://gudhi.inria.fr/doc/3.4.1/group__witness__complex.html}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Konstorum2018}{}}%
 Konstorum, Anna, Nathan Jekel, Emily Vidal, and Reinhard Laubenbacher.
@@ -2069,6 +2071,7 @@ in {Computer Science}. {Berlin, Heidelberg}: {Springer}.
 Maria, Clément, Paweł Dłotko, Vincent Rouvreau, and Marc Glisse. 2021.
 {``Rips Complex.''} In \emph{{GUDHI User} and {Reference Manual}}, 3.4.1
 ed. {GUDHI Editorial Board}.
+\url{https://gudhi.inria.fr/doc/3.4.1/group__rips__complex.html}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Park2006}{}}%
 Park, Yoon-Joo, Byung-Chun Kim, and Se-Hak Chun. 2006. {``New Knowledge
@@ -2085,6 +2088,7 @@ Discovery.''} \emph{Journal of Molecular Graphics and Modelling} 34
 \leavevmode\vadjust pre{\hypertarget{ref-Rouvreau2021}{}}%
 Rouvreau, Vincent. 2021. {``Alpha Complex.''} In \emph{{GUDHI User} and
 {Reference Manual}}, 3.4.1 ed. {GUDHI Editorial Board}.
+\url{https://gudhi.inria.fr/doc/3.4.1/group__alpha__complex.html}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Singh2007}{}}%
 Singh, Gurjeet, Facundo Mémoli, and Gunner Carlsson. 2007.
@@ -2105,7 +2109,7 @@ Viswanath, Satish E., Pallavi Tiwari, George Lee, Anant Madabhushi, and
 for the Alzheimer's Disease Neuroimaging Initiative. 2017.
 {``Dimensionality Reduction-Based Fusion Approaches for Imaging and
 Non-Imaging Biomedical Data: Concepts, Workflow, and Use-Cases.''}
-\emph{BMC Med Imaging} 17 (1): 2.
+\emph{BMC Medical Imaging} 17 (1): 2.
 \url{https://doi.org/10.1186/s12880-016-0172-6}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wang2007}{}}%
@@ -2127,7 +2131,7 @@ Zhong, Haodi, Grigorios Loukides, and Robert Gwadera. 2020.
 \end{CSLReferences}
 
 \bibliographystyle{unsrt}
-\bibliography{../lastfirst.bib}
+\bibliography{lastfirst.bib}
 
 
 \end{document}

@@ -31,7 +31,7 @@ keywords:
   - landmark sampling
   - localized models
   - case-based reasoning
-bibliography: ../lastfirst.bib
+bibliography: lastfirst.bib
 biblio-style: unsrt
 output: rticles::arxiv_article
 header-includes:
@@ -183,7 +183,7 @@ Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$,
 The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/vardens-cover}
+\includegraphics[width=\textwidth]{vardens-cover}
 \caption{
 Landmark samples from the imagined ICU sample and their associated covers using two selection procedures.
 \label{fig:icu-cover}
@@ -201,7 +201,7 @@ Given a small subset of landmarks $L \subset X$, we would want a witness complex
 We would also want to reduce complexity, computational cost, and detection of spurious features.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-covers}
+\includegraphics[width=\textwidth]{bumpy-covers}
 \caption{
 Landmark samples and their covers from the bumpy distribution on the circle using two selection procedures.
 \label{fig:bumpy-cover}
@@ -554,7 +554,7 @@ additive extension & $\operatorname{ext}_+ = 0, .1, .2$ (maxmin) \\
 ### MIMIC-III
 \label{sec:mimic}
 
-The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016].
+The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016a].
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
 
 We ran experiments on these data using three distance measures defined on patient admissions:
@@ -683,7 +683,7 @@ We use small landmark samples to illustrate the differences between the maxmin a
 Publicly available software tools are not yet available to compute persistent homology for arbitrary sequences of simplicial maps, but we suggest that the relative strengths of maxmin and lastfirst would be revealed by a comparison of the persistent features obtained by sequences of covers obtained by both procedures on this data set.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/necklace-landmarks}
+\includegraphics[width=\textwidth]{necklace-landmarks}
 \caption{
 Landmark samples of size 12 from a necklace data set using two selection procedures.
 \label{fig:necklace}
@@ -693,8 +693,8 @@ Landmark samples of size 12 from a necklace data set using two selection procedu
 ### Benchmark tests
 
 \begin{figure}
-\includegraphics[width=.6666667\textwidth]{../figures/benchmark-circle-lattice}
-\includegraphics[width=.3333333\textwidth]{../figures/benchmark-mimic}
+\includegraphics[width=.6666667\textwidth]{benchmark-circle-lattice}
+\includegraphics[width=.3333333\textwidth]{benchmark-mimic}
 \caption{
 Benchmark results for computing landmarks on two families of artificial data (circle and lattice) and one collection of empirical data (RT-similarity space of critical care units in MIMIC-III). Some points are missing because benchmark tests did not complete within 1 hour.
 \label{fig:benchmark}
@@ -707,7 +707,6 @@ They appeared to scale slightly better in terms of time than the lastfirst imple
 The additional calculations required for the lastfirst procedure increase runtimes by a median factor of 2.5 in our \pkg{R} implementations. The \pkg{C++} implementation of lastfirst is based on combinatorial definitions and not optimized for speed, and as a result took much longer and failed to complete in many of our tests.
 
 ## Experiments
-\label{sec:experiments}
 
 ### Bumpy circle
 
@@ -717,7 +716,7 @@ Boxes are bounded by quartiles and whiskers by 1.5 interquartile ranges.
 
 <!--
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-persistence-distribution}
+\includegraphics[width=\textwidth]{bumpy-persistence-distribution}
 \caption{
 Landmark persistence of maxmin and lastfirst covers, faceted by density parameters. The standard deviation is that of the two Gaussian distributions and the ratio is that between their mixture weights.
 \label{fig:bumpy-distribution}
@@ -726,7 +725,7 @@ Landmark persistence of maxmin and lastfirst covers, faceted by density paramete
 -->
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-persistence-distribution-extensions}
+\includegraphics[width=\textwidth]{bumpy-persistence-distribution-extensions}
 \caption{
 Landmark persistence of maxmin and lastfirst covers, faceted by density parameters (above) and by multiplicative and additive extensions (below).
 See Section\nbs\ref{sec:implementation} for details.
@@ -743,7 +742,7 @@ In contrast, the relative numbers of samples from the two Gaussians had little i
 
 <!--
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/bumpy-persistence-extensions}
+\includegraphics[width=\textwidth]{bumpy-persistence-extensions}
 \caption{
 Landmark persistence of maxmin and lastfirst covers, faceted by multiplicative and additive extensions (see Section\nbs\ref{sec:implementation}). The additive extensions applied to ball radii in the case of maxmin and to neighborhood cardinalities in the case of lastfirst.
 \label{fig:bumpy-extensions}
@@ -768,8 +767,8 @@ Contrary to expectations, unextended maxmin covers were usually crisper than the
 The same patterns were observed in the risk discrimination of maxmin versus lastfirst covers, with maxmin covers yielding the most accurate predictions when unextended but lastfirst covers retaining more accuracy after extension.
 
 \begin{figure}
-\includegraphics[width=.5\textwidth]{../figures/cover-simplices}
-\includegraphics[width=.5\textwidth]{../figures/cover-evaluate}
+\includegraphics[width=.5\textwidth]{cover-simplices}
+\includegraphics[width=.5\textwidth]{cover-evaluate}
 \caption{
 Summary and evaluation statistics versus number of 0-simplices (landmarks) for the covers generated using the maxmin and lastfirst procedures, with three multiplicative extensions in their size.
 Left: the sizes of their nerves, as numbers of 1- and 2-simplices, using a square root--transformed vertical scale.
@@ -785,8 +784,8 @@ This indicates that the nearest neighborhoods formed a more parsimonious cover o
 The predictive accuracies of the cover set–based models converged with increasing numbers of landmarks, though for smaller numbers different selection procedures performed best for different outcomes.
 
 \begin{figure}
-\includegraphics[width=.5\textwidth]{../figures/cover-simplices-mx}
-\includegraphics[width=.5\textwidth]{../figures/cover-evaluate-mx}
+\includegraphics[width=.5\textwidth]{cover-simplices-mx}
+\includegraphics[width=.5\textwidth]{cover-evaluate-mx}
 \caption{
 Summary and evaluation statistics versus number of 0-simplices (landmarks) for the covers generated using the maxmin and lastfirst procedures, with three multiplicative extensions in their size.
 Left: the sizes of their nerves, as numbers of 1- and 2-simplices, using a square root--transformed vertical scale.
@@ -810,7 +809,7 @@ Notably, for several care units, a basic unweighted nearest neighbors model outp
 INN models on most units improved performance by incorporating more landmarks, though in no case models on 360 landmarks clearly outperform those on 180 landmarks.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-gower-auc-2}
+\includegraphics[width=\textwidth]{knn-gower-auc-2}
 \caption{
 AUROCs of the INN models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under Gower distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -832,7 +831,7 @@ Again both landmark selection procedures yielded stronger results than random se
 Overall, performance improved slightly as the number of landmarks increased from 50 to 150 but either plateaued or declined from 150 to 250.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-auc-mx-gaussian}
+\includegraphics[width=\textwidth]{knn-auc-mx-gaussian}
 \caption{
 AUROCs of the sliding-window INN models of intubation and mortality in the MXDH data based on covers constructed using random, maxmin, and lastfirst procedures to generate landmarks.
 \label{fig:knn-mx}
@@ -1228,7 +1227,7 @@ Random selection is usually better than lastfirst selection at detecting this vo
 Lastfirst and maxmin perform similarly when PH is computed using witness complexes.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/homology-sphere-relative}
+\includegraphics[width=\textwidth]{homology-sphere-relative}
 \caption{
 Relative dominance of the spherical homology groups in the persistent homology of four samples from the sphere, using each of three landmark procedures and three persistence computations. Similar plots of absolute dominance (not shown) tell a consistent story, but the distributions are more skewed so the comparisons are less clear.
 \label{fig:sphere}
@@ -1243,7 +1242,7 @@ Results differed greatly by distance measure and less so by cover construction.
 
 <!--
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-cos-auc-2}
+\includegraphics[width=\textwidth]{knn-cos-auc-2}
 \caption{
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on domain-informed variables to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -1253,7 +1252,7 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-rt-auc-2}
+\includegraphics[width=\textwidth]{knn-rt-auc-2}
 \caption{
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on RT-transformed data to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -1264,8 +1263,8 @@ AUROCs of simple nearest-neighbor predictive models are included for comparison.
 -->
 
 \begin{figure}
-\includegraphics[width=\textwidth,trim=0 55 0 0,clip=true]{../figures/knn-cos-auc-2}
-\includegraphics[width=\textwidth]{../figures/knn-rt-auc-2}
+\includegraphics[width=\textwidth,trim=0 55 0 0,clip=true]{knn-cos-auc-2}
+\includegraphics[width=\textwidth]{knn-rt-auc-2}
 \caption{
 AUROCs of the interpolative predictive models of mortality in five MIMIC-III care units based on covers constructed using random, maxmin, and lastfirst procedures under angular distance on domain-informed variables (top) and on RT-transformed data (below) to generate landmarks.
 Each boxplot summarizes AUROCs from $6 \times 6 = 36$ models, one for each combination of outer and inner fold.
@@ -1290,7 +1289,7 @@ Recall that all models were optimized for neighborhood size and weighting functi
 In both models, overall performance was uncorrelated with unit size (by which the units are ordered, with TSICU the smallest), Gower distance provided for better-performing models than cosine distance, ball covers slightly outperformed neighborhood covers, and performance improved with additional landmarks.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-compare-main}
+\includegraphics[width=\textwidth]{knn-compare-main}
 \caption{
 Main effects of the multiple regression models defined by Equations\nbs\ref{eqn:knn-mimic-main} and \ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-main}
@@ -1298,7 +1297,7 @@ Main effects of the multiple regression models defined by Equations\nbs\ref{eqn:
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../figures/knn-compare-prod}
+\includegraphics[width=\textwidth]{knn-compare-prod}
 \caption{
 Interaction effects of the multiple regression model defined by Equations\nbs\ref{eqn:knn-mimic-prod}.
 \label{fig:knn-mimic-prod}
