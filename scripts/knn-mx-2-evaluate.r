@@ -116,12 +116,9 @@ auc_stats %>%
   facet_grid(outcome ~ semana, scales = "fixed") +
   geom_line(data = filter(auc_means, ! is.na(sampler)), size = .5) +
   scale_color_manual(values = proc_pal) +
-  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) ->
   auc_stats_plot
-ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
-       auc_stats_plot,
-       width = textwidth, height = textwidth / phi)
-
 # compare performance across samplers, no. landmarks, and week (& w/o sampling)
 auc_stats %>%
   ggplot(aes(x = landmarks, y = test_auc, color = sampler)) +
@@ -130,7 +127,8 @@ auc_stats %>%
   geom_hline(data = filter(auc_means, is.na(sampler)),
              aes(yintercept = test_auc), size = .5, color = "darkgrey") +
   scale_color_manual(values = proc_pal) +
-  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") ->
+  labs(x = "Number of landmarks", y = "AUROC", color = "Procedure") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) ->
   auc_stats_plot
 ggsave(here::here("docs/figures/knn-auc-mx-gaussian.pdf"),
        auc_stats_plot,

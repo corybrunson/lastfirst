@@ -2,20 +2,21 @@
 title: Fixed and adaptive landmark sets\linebreak for finite pseudometric spaces
 authors:
   - name: Jason Cory Brunson
-    thanks: J.C.B. was partially supported by 5T-90DE021989-07 Grant from the National Institutes of Health (NIDCR).
+    thanks: ORCID 0000-0003-3126-9494
     department: Laboratory for Systems Medicine
     affiliation: University of Florida
-    location: Gainesville FL
+    location: Gainesville, FL, USA
     email: jason.brunson@medicine.ufl.edu
   - name: Yara Skaf
+    thanks: ORCID 0000-0002-7097-4260
     department: Laboratory for Systems Medicine
     affiliation: University of Florida
-    location: Gainesville FL
+    location: Gainesville, FL, USA
     email: yara.skaf@ufl.edu
 abstract: |
   Topological data analysis (TDA) is an expanding field that leverages principles and tools from algebraic topology to quantify structural features of data sets or transform them into more manageable forms.
   As its theoretical foundations have been developed, TDA has shown promise in extracting useful information from high-dimensional, noisy, and complex data such as those used in biomedicine.
-  To operate efficiently, these techniques may employ landmark samplers, either random or heuristic.
+  To improve efficiency, these techniques may employ landmark samplers.
   The heuristic maxmin procedure obtains a roughly even distribution of sample points by implicitly constructing a cover comprising sets of uniform radius.
   However, issues arise with data that vary in density or include points with multiplicities, as are common in biomedicine.
   We propose an analogous procedure, "lastfirst" based on ranked distances, which implies a cover comprising sets of uniform cardinality.
@@ -38,6 +39,20 @@ header-includes:
   \usepackage{format}
 ---
 
+
+# Acknowledgments {-}
+
+We are grateful to Reinhard Laubenbacher, Matthew Wheeler, and Peter Bubenik for critical feedback on earlier drafts of this manuscript.
+J.C.B. was supported by the University of Connecticut Skeletal, Craniofacial and Oral Biology Training Grant (National Institute of Dental and Craniofacial Research grant 5T90DE021989-07).
+Y.S. was supported by the University of Florida and Florida State University Clinical and Translational Science Awards (National Center for Advancing Translational Sciences grants TL1TR001428 and UL1TR001427).
+
+
+## Competing interests {-}
+
+Both authors declare that we have no conflicts of interest.
+
+
+\pagebreak
 
 # Introduction
 
@@ -65,8 +80,9 @@ In contrast, analysis tasks in clinical and public health often involve data tha
 A variety of approaches have been taken to apply classical topological methods to clinical and public health data, whether by transformaing records to coordinate vectors ("vector space embeddings") or by using non-metric similarity measures such as those common in ecology [@Johnston1976; @Lee2015; @Dai2020].
 Extensions of these ideas to the present-day TDA toolkit are needed to bring more advanced methods to bear in domains that rely on more challenging data.
 
-One support tool for TDA is the selection of landmarks or witnesses from a  data set, which can reduce the conceptual or computational complexity of an analysis.
-Maxmin is a common selection procedure that has been used to expedite the calculation of PH [@deSilva2004] and of mapper [@Singh2007] and directly to compute computational-topological representations of data.
+One support tool for TDA is the selection of landmarks from a data set, which can reduce the conceptual or computational complexity of an analysis.
+Maxmin is an agglomerative procedure to sample landmarks that are close to the data but well-separated from each other; it maintains a constant lower bound on the ratio of the minimum distance between landmarks to the maximum distance from the landmarks to the data [@Boissonnat2018, \S\nbs{5.1.3}].
+It has been used to expedite the calculation of PH [@deSilva2004] and of mapper [@Singh2007] and directly to compute computational-topological representations of data.
 The procedure has the advantage of being deterministic, being computationally efficient, and generating more evenly distributed samples than random selection.
 In addition to approximating PH, maxmin was used in these cases to reduce the sizes of simplicial complex models of point cloud data for the sake of visualization and exploration.
 Like other TDA tools, maxmin is most useful on separable data and most efficient on data stored as Euclidean coordinates.
@@ -88,13 +104,13 @@ We interpret our findings and comment on limitations and ongoing work in Section
 In this paper, we develop a sampling procedure complementary to maxmin, based on the rankings of points by distance or similarity rather than on raw distances or similarities. In the remainder of this section, we motivate the procedure, which we call lastfirst, as a counterpart to maxmin obtained by adapting the latter from the use of fixed-radius balls to the use of fixed-cardinality neighborhoods.
 We work through an extended example that illustrates some common patterns of clinical data and models, how they raise concerns for uses of maxmin landmark selection, and how lastfirst selection addresses these concerns.
 We then formally describe the procedure and prove some of its basic properties in Section\nbs\ref{sec:procedures}.
-This technical discussion is accompanied by a small example in $\Z$ that spotlights edge cases and how they are handled, and it is followed by an example that extends the idea from $\Z$ to $\R^2$.
+This technical discussion is accompanied by a small example in $\Z$ that spotlights edge cases and how they are handled, and it is followed by an example that extends the idea from $\Z$ to $\bbR^2$.
 In Section\nbs\ref{sec:implementation} we report the results of benchmark tests and robustness checks of lastfirst on simulated and empirical data sets. We describe some basic and novel applications to real-world data in Section\nbs\ref{sec:experiments}.
 -->
 
 ## Conventions
 
-$(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\R_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
+$(X, d_X)$ will refer to a finite pseudometric space with point set $X$ and pseudometric $d_X:X\times X\to\bbR_{\geq 0}$, which by definition satisfies all of the properties of a metric except that $d_X(x,y)=0$ implies $x=y$.
 $(X,d_X)$ may be shortened to $X$, and $d_X$ to $d$, when clear from context.
 If $x\neq y$ but $d(x,y)=0$ then $x$ and $y$ are said to be indistinguishable or co-located.
 The cardinality of $Y\subseteq X$ (counting multiplicities) is denoted $\abs{Y}$, the set of points co-located with those in $Y$, equivalent in this setting to the closure of $Y$, is denoted $\cl{Y}$, and the set of equivalence classes of $Y$ under co-location is denoted $\supp{Y}$.
@@ -117,15 +133,15 @@ We use an overline to also include points exactly distance $\eps$ from $x$: $\cl
 If $k$ is an integer such that $\abs{\cl{B_\eps}(x)} \geq k$ while $\eps'<\eps \implies \abs{\cl{B_{\eps'}}(x)} < k$, then we call $N_k(x) = \cl{B_\eps}(x)$ the $k$-nearest neighborhood of $x$.
 When $X$ is in locally general position, $\abs{N_k(x)} = k$.
 
-For convenience, we assume $0\in\N$.
-For $a,b \in \N$ with $a<b$, we use $[a,b]$ to denote the arithmetic sequence $(a,a+1,\ldots,b)$.
-For $a,b \in \N$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $b$.
+For convenience, we assume $0\in\bbN$.
+For $a,b \in \bbN$ with $a<b$, we use $[a,b]$ to denote the arithmetic sequence $(a,a+1,\ldots,b)$.
+For $a,b \in \bbN$, we use $a^b$ to denote the sequence $(a,\ldots,a)$ of length $b$.
 
 ## Motivation
 
 In contrast to most geometric data analytic tools, such as linear regression and principal components analysis, that reduce the dimensionality of data, much TDA relies on the reduction of _cardinality_.
 As distinguished by @ByczkowskaLipinska2017, an $n\times p$ data table of $n$ cases (rows) and $p$ variables (columns) can be dimension-reduced to an $n\times q$ table, where $q<p$, or cardinality-reduced to an $m\times p$ table, where $m<n$. The most common cardinality reduction technique is data reduction, and unsupervised clustering methods are classical examples.
-Many popular TDA techniques reduce cardinality rather than dimension to improve efficiency, often through landmark or witness sampling:
+Many popular TDA techniques reduce cardinality rather than dimension to improve efficiency, often through landmark sampling:
 @deSilva2004 propose witness complexes, related to alpha complexes [@Akkiraju1995], for the rapid approximation of PH:
 <!--Given a point cloud, a set of landmark points and their overlapping neighborhoods define a nerve, which stands in for the Vietoris--Rips complex at each scale.-->
 They use maxmin as an alternative to random landmark selection, which ensures that landmarks are locally separated and roughly evenly distributed.
@@ -178,7 +194,7 @@ The top panel of Figure\nbs\ref{fig:icu-cover} depicts a simple model of this si
 The points $X$ along the abscissa are sampled randomly from this distribution.
 
 The bottom panel of Figure\nbs\ref{fig:icu-cover} shows how the maxmin and lastfirst procedures generate sequences in $X$ of four landmarks each.
-Each procedure begins with a seed landmark $\ell_0$ selected to be reachable by minimum-radius balls (maxmin) or by minimum-cardinality neighborhoods (lastfirst) from all other points in $X$; see the appendix for details.
+Each procedure begins with a seed landmark $\ell_0$ selected to be reachable by minimum-radius balls (maxmin) or by minimum-cardinality neighborhoods (lastfirst) from all other points in $X$; see the Appendix for details.
 Whereas the maxmin landmarks are roughly equally-spaced across the range of $X$, the lastfirst landmarks lie at roughly equal quantiles of $X$.
 The lastfirst procedure will be advantageous when subpopulations can be discriminated at different resolutions and the ability to do so is limited primarily by sample size.
 
@@ -220,6 +236,8 @@ As will be shown later in the paper, this superior performance is robust with re
 
 This section provides mathematical proofs of algorithms and oher properties of the landmark samplers (Section\nbs\ref{sec:samplers}), summarizes their implementation as an \pkg{R} package (Section\nbs\ref{sec:implementation}), and describes several experiments performed on real-world data to address our motivating questions (Sections\nbs\ref{sec:data} and \ref{sec:experiments}).
 
+The \pkg{R} code used to perform experiments, conduct analyses, present results, and prepare the manuscript are publicly available at the project repository on GitHub: <https://github.com/corybrunson/lastfirst>.
+
 ## Samplers
 \label{sec:samplers}
 
@@ -248,7 +266,7 @@ Note that $\maxmin(Y)$ is nonempty when $X \wo \cl{Y} \neq \varnothing$ and that
 \label{alg:maxmin}
 \begin{algorithmic}[1]
 \REQUIRE finite pseudometric space $(X,d)$
-\REQUIRE at least one parameter $n \in \N$ or $\eps \geq 0$
+\REQUIRE at least one parameter $n \in \bbN$ or $\eps \geq 0$
 \REQUIRE seed point $\ell_0 \in X$
 \REQUIRE selection procedure $\sigma$
 \IF{$\eps$ is not given}
@@ -274,7 +292,7 @@ Each step receives a proper subset $L\subset X$ and returns a point $x\in X\wo \
 
 First, choose a number $n\leq\uniq{X}$ of landmark points to generate or a radius $\eps\geq 0$ for which to require that the balls $\{ \cl{B_{\eps}}(\ell) : \ell \in L \}$ cover $X$.
 Choose a first landmark point $\ell_0\in X$.[^seed]
-Inductively over $i\in\N$, if ever $i\geq n$ or $d(L,X\wo \cl{L})\leq\eps$, then stop.
+Inductively over $i\in\bbN$, if ever $i\geq n$ or $d(L,X\wo \cl{L})\leq\eps$, then stop.
 Otherwise, when $L=\{\ell_0,\ldots,\ell_{i-1}\}$, choose $\ell_i\in\maxmin(L)$, according to a preferred procedure $\sigma$ (see the Appendix).
 If $n$ was prescribed, then set $\eps=\eps(n)=d(L,X\wo \cl{L})$; if $\eps$ was prescribed, then set $n=n(\eps)=\abs{L}$.
 Write $\mathcal{B}_{n,\eps}(\ell_0)=\{\cl{B_{\eps}}(\ell_i)\}_{i=0}^{n}$ for the resulting \emph{landmark ball cover of $X$}.
@@ -403,8 +421,8 @@ As with maxmin, a selection procedure $\sigma$ must be chosen, which may be need
 We operationalize it as well as our lastfirst procedure by way of a total ordering on the $N^\pm_\bullet$.
 
 \begin{definition}[total orders on rank sequences]
-    Let $a_n = (a_1,\ldots,a_M),b_n = (b_1,\ldots,b_M)\in\N^M$.
-    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists i : a_i > b_i \wedge (\forall j<i : a_j = b_j)$.
+    Let $a_n = (a_1,\ldots,a_M),b_n = (b_1,\ldots,b_M)\in\bbN^M$.
+    Then $a_n < b_n$ in the reverse lexicographic (revlex) order if $\exists\, i : a_i > b_i \wedge (\forall\, j<i : a_j = b_j)$.
 \end{definition}
 
 We impose the revlex order on the $N_\bullet^+$ and $N_\bullet^-$.
@@ -428,7 +446,7 @@ Write $\mathcal{N}_{n,k}(\ell_0) = \{ N_k(\ell_i) \}_{i=0}^{n}$ for the resultin
 \label{alg:lastfirst}
 \begin{algorithmic}[1]
 \REQUIRE finite pseudometric space $(X,d)$
-\REQUIRE at least one parameter $n \in \N$ or $k \in \N$
+\REQUIRE at least one parameter $n \in \bbN$ or $k \in \bbN$
 \REQUIRE seed point $\ell_0 \in X$
 \REQUIRE selection procedure $\sigma$
 \IF{$k$ is not given}
@@ -513,7 +531,7 @@ We also validated the \pkg{C++} and \pkg{R} implementations against each other o
 
 ### Benchmark tests
 
-We benchmarked the \pkg{C++} and \pkg{R} implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\R^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using RT-transformed data and cosine similarity (Section\nbs\ref{sec:data}).
+We benchmarked the \pkg{C++} and \pkg{R} implementations on three data sets: uniform samples from the unit circle $\Sph^1\subset\bbR^2$ convoluted with Gaussian noise, samples with duplication from the integer lattice $[0,23]\times[0,11]$ using the probability mass function $p(a,b) \propto 2^{-ab}$, and patients recorded at each critical care unit in MIMIC-III using RT-transformed data and cosine similarity (Section\nbs\ref{sec:data}).
 We conducted benchmarks using the \pkg{bench} package [@Hester2020] on the University of Florida high-performance cluster HiPerGator.
 
 ## Simulations and data
@@ -529,8 +547,8 @@ The lastfirst procedure was designed in part as a deterministic sampler analogou
 We use data sets sample from a parameterized family of distributions to test its performance.
 
 The general idea is that the data used as input for the landmark proceduces will be comprised of sparsely sampled points on $\Sph^1$ that has two regions of higher density.
-We identify $\Sph^1$ with $\R / 2\pi\R$ via the parameterization $t \mapsto (\cos(2\pi t), \sin(2\pi t))$.
-The density function will be a weighted mixture distribution of three distributions: a uniform distribution $U(0,2\pi)$ on $\Sph^1$ and two Gaussian distributions $N(0,\sigma^2)$ and $N(\mu,\sigma^2)$ on $\R$ taken modulo $2\pi$.
+We identify $\Sph^1$ with $\bbR / 2\pi\bbR$ via the parameterization $t \mapsto (\cos(2\pi t), \sin(2\pi t))$.
+The density function will be a weighted mixture distribution of three distributions: a uniform distribution $U(0,2\pi)$ on $\Sph^1$ and two Gaussian distributions $N(0,\sigma^2)$ and $N(\mu,\sigma^2)$ on $\bbR$ taken modulo $2\pi$.
 In addition to the sample size, we varied the mixture weights $w_0,w_1,w_2$ and the spreads and relative positions of the Gaussians.
 We also varied the number of landmarks sampled using each procedure and the multiplicative and additive extensions to the cover sets obtained.
 The values taken by each parameter are listed in Table\nbs\ref{tab:bumpy-grid}, and we performed one experiment for each combination.
@@ -549,24 +567,28 @@ multiplicative extension & $\operatorname{ext}_\times = 0, 1, 2$ \\
 additive extension & $\operatorname{ext}_+ = 0, .1, .2$ (maxmin) \\
  & $\operatorname{ext}_+ = 0, n / 12, n / 6$ (lastfirst) \\ \hline
 \end{tabular}
+\caption{Parameter values used in bumpy circle simulations.}
 \end{table}
 
 ### MIMIC-III
 \label{sec:mimic}
 
-The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016a].
+The open-access critical care database MIMIC-III ("Medical Information Mart for Intensive Care"), derived from the administrative and clinical records for 58,976 admissions of 46,520 patients over 12 years and maintained by the MIT Laboratory for Computational Physiology and collaborating groups, has been widely used for education and research [@Goldberger2000; @Johnson2016; @Johnson2016b].
+Researchers may gain access to the database by completing a training course in human subjects research and signing a data use agreement.[^mimic-access]
 For our analyses we included data for patients admitted to five care units: coronary care (CCU), cardiac surgery recovery (CSRU), medical intensive care (MICU), surgical intensive care (SICU), and trauma/surgical intensive care (TSICU).[^mimic-units]
+
+[^mimic-access]: <https://mimic.mit.edu/docs/gettingstarted/>
 
 We ran experiments on these data using three distance measures defined on patient admissions:
 First, we extracted or calculated the vital sign, laboratory test, administrative, procedural, and demographic variables used by @Lee2015.
 From these, we calculated the cosine similarity (simplified from its form there, using one-hot encoding of categorical variables) and the Gower distance [@Gower1971].
 As a domain-agnostic alternative, we extracted the set of ICD-9/10 codes from the patient's record and several categorical demographic variables: age group (18–29, decades 30–39 through 70–79, and 80+), recorded gender (M or F), stated ethnicity (41 values),[^ethnicity] stated religion,[^religion] marital status[^marital], and type of medical insurance[^insurance].
-Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \B^{n \times p}$ and again calculated cosine similarity.
+Following @Zhong2020, we transformed these _relational-transaction (RT)_ data into a binary case-by-variable matrix $X \in \bbB^{n \times p}$ and again calculated cosine similarity.
 In both cases, cosine was converted to a distance measure by subtraction from 1.
 Because cosine similarity is monotonically related to the angle metric, our topological results will be the same as if we had used the latter.
 
 [^mimic-units]: <https://mimic.physionet.org/mimictables/transfers/>
-[^ethnicity]: White, Black/African American, Unknown/Not Specified, Hispanic or Latino, Other, Unable to Obtain, Asian, Patient Declined to Answer, Asian – Chinese, Hispanic Latino – Puerto Rican, Black/Cape Verdean, White – Russian, Multi Race Ethnicity, Black/Haitian, Hispanic/Latino – Dominican, White – Other European, Asian – Asian Indian, Portuguese, White – Brazilian, Asian – Vietnamese, Black/African, Middle Eastern, Hispanic/Latino – Guatemalan, Hispanic/Latino – Cuban, Asian – Filipino, White – Eastern European, American Indian/Alaska Native, Hispanic/Latino – Salvadoran, Asian – Cambodian, Native Hawaiian or Other Pacific Islander, Asian – Korean, Asian – Other, Hispanic/Latino – Mexican, Hispanic/Latino – Central American (Other), Hispanic/Latino – Colombian, Caribbean Island, South American, Asian – Japanese, Hispanic/Latino – Honduran, Asian – Thai, American Indian/Alaska Native Federally Recognized Tribe
+[^ethnicity]: White, Black/African American, Unknown/Not Specified, Hispanic or Latino, Other, Unable to Obtain, Asian, Patient Declined to Answer, Asian – Chinese, Hispanic Latino – Puerto Rican, Black/Cape Verdean, White – Russian, Multi Race Ethnicity, Black/Haitian, Hispanic/Latino – Dominican, White – Other European, Asian – Asian Indian, Portuguese, White – Brazilian, Asian – Vietnamese, Black/African, Middle Eastern, Hispanic/Latino – Guatemalan, Hispanic/Latino – Cuban, Asian – Filipino, White – Eastern European, American Indian/Alaska Native, Hispanic/Latino – Salvadoran, Asian – Cambodian, Native Hawaiian or Other Pacific Islander, Asian – Korean, Asian – Other, Hispanic/Latino – Mexican, Hispanic/Latino – Central American (Other), Hispanic/Latino – Colombian, Caribbean Island, South American, Asian – Japanese, Hispanic/Latino – Honduran, Asian – Thai, American Indian/Alaska Native Federally Recognized Tribe
 [^religion]: Catholic, unspecified/unobtainable/missing, Protestant Quaker, Jewish, other, Episcopalian, Greek Orthodox, Christian Scientist, Buddhist, Muslim, Jehovah's Witness, Unitarian-Universalist, 7th Day Adventist, Hindu, Romanian Eastern Orthodox, Baptist, Hebrew, Methodist, Lutheran
 [^marital]: married, single, widowed, divorced, unknown/missing, separated, life partner
 [^insurance]: Medicare, private, Medicaid, povernment, self pay
@@ -591,9 +613,9 @@ We report the shared ranges over which both features were recovered, which we te
 These we obtained by computing the sequence of Betti numbers $\beta_{i,m} = \beta_i(\mathcal{B}_{m,\eps_m}(\ell_0))$ or $\beta_{i,m} = \beta_i(\mathcal{N}_{m,k_m}(\ell_0))$ of the nerves of the associated sequence of covers.
 
 \begin{remark}
-Our cover sets are taken to lie in $\Sph^1$, though we computed and visualized them in $\R^2$.
-Working in $\R^2$, if $p \in \Sph^1$ and $d > 0$, then $B_d(p) \cap \Sph^1$ is either an interval of $\Sph^1$ or $\Sph^1$ itself, so in topological terms the difference does not matter. For the same reason, no spurious 1-features are possible.
-If we were to report persistence in radii, we would need to transform Euclidean distance in $\R^2$ to angular distance in $\Sph^1$; but we don't, so we didn't.
+Our cover sets are taken to lie in $\Sph^1$, though we computed and visualized them in $\bbR^2$.
+Working in $\bbR^2$, if $p \in \Sph^1$ and $d > 0$, then $B_d(p) \cap \Sph^1$ is either an interval of $\Sph^1$ or $\Sph^1$ itself, so in topological terms the difference does not matter. For the same reason, no spurious 1-features are possible.
+If we were to report persistence in radii, we would need to transform Euclidean distance in $\bbR^2$ to angular distance in $\Sph^1$; but we don't, so we didn't.
 \end{remark}
 
 ### Covers and nerves
@@ -618,7 +640,7 @@ We hypothesized that lastfirst covers would exhibit less overlap than maxmin cov
 
 ### Interpolative nearest neighbors prediction
 
-Landmark points may also be used to trade accuracy for memory in neighborhood-based prediction modeling. Consider the following approach: A modeling process involves predictor data $X \in \R^{n \times p}$ and response data $y \in \R^{n \times 1}$, partitioned into training and testing sets $X_0,X_1$ and $y_0,y_1$ according to a partition $I_0 \sqcup I_1 = \{1,\ldots,n\}$ of the index set. Given $x \in X_1$, a nearest neighbors model computes the prediction $p(x) = \frac{1}{k}\sum_{q(x,x_i) \leq k}{y_i}$ by averaging the responses for the $k^\text{th}$ nearest neighbors of $x$ in $X_0$. By selecting a landmark set $L \subset X_0$, a researcher can reduce the computational cost of the model as follows: For each $\ell \in L$, calculate $p(\ell)$ as above. Then, for each $x \in X_1$, calculate $p_L(x) = \sum_{\ell \in L}{w(d(x,\ell)) p(\ell)} / \sum_{\ell \in L}{w(d(x,\ell))}$, where $w : \R_{\geq 0} \to \R_{\geq 0}$ is a weighting function (for example, $w(d)=d^{-1}$). The nearest neighbor predictions for $L$ thus serve as proxies for the responses associated with $X_0$.
+Landmark points may also be used to trade accuracy for memory in neighborhood-based prediction modeling. Consider the following approach: A modeling process involves predictor data $X \in \bbR^{n \times p}$ and response data $y \in \bbR^{n \times 1}$, partitioned into training and testing sets $X_0,X_1$ and $y_0,y_1$ according to a partition $I_0 \sqcup I_1 = \{1,\ldots,n\}$ of the index set. Given $x \in X_1$, a nearest neighbors model computes the prediction $p(x) = \frac{1}{k}\sum_{q(x,x_i) \leq k}{y_i}$ by averaging the responses for the $k^\text{th}$ nearest neighbors of $x$ in $X_0$. By selecting a landmark set $L \subset X_0$, a researcher can reduce the computational cost of the model as follows: For each $\ell \in L$, calculate $p(\ell)$ as above. Then, for each $x \in X_1$, calculate $p_L(x) = \sum_{\ell \in L}{w(d(x,\ell)) p(\ell)} / \sum_{\ell \in L}{w(d(x,\ell))}$, where $w : \bbR_{\geq 0} \to \bbR_{\geq 0}$ is a weighting function (for example, $w(d)=d^{-1}$). The nearest neighbor predictions for $L$ thus serve as proxies for the responses associated with $X_0$.
 We refer to these as interpolative nearest neighbors (INN) models.
 
 We took this approach to the prediction of in-hospital mortality for patients with records in each critical care unit of MIMIC-III.
@@ -899,9 +921,9 @@ Relative ranks are a much more general notion of metric that encompasess ranks i
 <!--As used here, relative rank is unrelated to the _rank-distance_ between permutations, which is used to define rank correlation coefficients, and from the _ordinal distance_ proposed by Pattanaik and Xu (2008), a loosening of the concept of pseudometric that dispenses with the triangle inequality.-->
 
 \begin{definition}[relative rank]
-    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \R_{\geq 0}$ subject only to the following inequality:
+    A \emph{relative rank} on $X$ is a binary relation $q: X \times X \to \bbR_{\geq 0}$ subject only to the following inequality:
     \begin{equation}\label{eqn:relative-rank}
-        \forall x,y \in X : d(x,x) \leq d(x,y)
+        \forall\, x,y \in X : d(x,x) \leq d(x,y)
     \end{equation}
 \end{definition}
 
@@ -926,17 +948,23 @@ consisting of $q$-\emph{maxmin points}.
 \end{definition}
 -->
 
-A pseudometric $d_X$ induces a relative rank that takes values in $\N$ given by the ordinal of one point's distance from another:
+A pseudometric $d_X$ induces a relative rank that takes values in $\bbN$ given by the ordinal of one point's distance from another:
 
 \begin{definition}[out-rank and in-rank]
-    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \N$ as follows:
+    For $x,y\in X$ with pseudometric $d$, define the \emph{out-rank} $q_{X,d} : X \times X \longrightarrow \bbN$ as follows:
     \begin{equation}\label{eqn:out-rank}
         q_{X,d}(x,y)=\abs{\{z\in X \where d(x,z) < d(x,y)\}}%>
     \end{equation}
     and the \emph{in-rank} $q_{X,d}^\top(x,y) = q_{X,d}(y,x)$.
 \end{definition}
 
-As with $d$, we allow ourselves to write $q=q_{X,d}$ when clear from context. Note that $q_{X,d}$ is a relative rank with $q(x,x)=0$, $q(x,y) < N$, and $\forall x,y \in X : q(x,x) \leq q(x,y)$.
+As with $d$, we allow ourselves to write $q=q_X=q_d=q_{X,d}$ when clear from context. Note that $q_{X,d}$ is a relative rank with $q(x,x)=0$, $q(x,y) < N$, and $\forall\, x,y \in X : q(x,x) \leq q(x,y)$.
+
+A _quasi-pseudometric_ that violates symmetry, or a _semi-(quasi-)pseudometric_ that satisfies a weaker triangle inequality, induces a relative rank in the same way, since in each case the axiom $d(x,x) = 0$ provides that $q_d(x,x) = \abs{\{z\in X \where d(x,z) < d(x,x)\}} = 0 \leq q_d(x,y)$.
+More interestingly, if this axiom is dropped to define a _partial pseudometric_ [@Matthews1994], then the axiom $d(x,x) \leq d(x,y)$ (named ``small self-distances'' by @Bukatin2009) likewise provides Equation\nbs\ref{eqn:relative-rank}.
+
+It is also worth noting that the out-rank construction is idempotent.
+This follows from the observation that $q_d(x,z) < q_d(x,y)$ means that $\exists\, w : d(x,z) \leq d(x,w) < d(x,y)$ and can be reformulated simply as $d(x,z) < d(x,y)$. When $d$ is itself a relative rank induced from a generalized metric, then both $d$ and $q_d$ are completely determined by these inequalities (Equation\nbs\ref{eqn:out-rank}).
 
 \begin{example}\label{ex:relative-rank}
     Recall $X=\{a,b,c,d\}$ from Example\nbs\ref{ex:rank-sequence-order}.
@@ -1048,7 +1076,7 @@ The reverse implication is similarly straightforward.
 \begin{algorithmic}[1]
 \REQUIRE finite pseudometric space $(X,d)$
 \REQUIRE seed point $\ell_0 \in X$
-\REQUIRE number of landmarks $n \in \N$ or cover set cardinality $k \in \N$
+\REQUIRE number of landmarks $n \in \bbN$ or cover set cardinality $k \in \bbN$
 \REQUIRE selection procedure $\sigma$
 \STATE if $n$ is not given, set $n \leftarrow 0$
 \label{line:n}
@@ -1056,14 +1084,14 @@ The reverse implication is similarly straightforward.
 \label{line:k}
 \STATE $L \leftarrow \varnothing$ initial landmark set
 \STATE $F \leftarrow \{ \ell_0 \}$ initial lastfirst set
-\STATE $R \in \N^{N \times 0}$, a $0$-dimensional $\N$-valued matrix
+\STATE $R \in \bbN^{N \times 0}$, a $0$-dimensional $\bbN$-valued matrix
 \FOR{$i$ from $0$ to $\uniq{X} - 1$}
     \STATE $\ell_i \leftarrow \sigma(F)$
     \STATE $L \leftarrow L \cup \{\ell_i\}$
-    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\R_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
-    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\N_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
+    \STATE $D_i \leftarrow (d_{i1},\ldots,d_{iN}) \in {\bbR_{\geq 0}}^N$, where $d_{ir} = d(\ell_i, x_r)$
+    \STATE $Q_i \leftarrow \verb|rank|(D_i) \in {\bbN_{\geq 0}}^N$ (so that $Q = (q(\ell_i, x_1),\ldots,q(\ell_i, x_N))$)
     \label{line:rank}
-    \STATE $R \leftarrow [R, Q_i] \in \N^{N \times (i+1)}$
+    \STATE $R \leftarrow [R, Q_i] \in \bbN^{N \times (i+1)}$
     \STATE $k_{\min} \leftarrow \max_{r=1}^{N}{ \min_{j=1,i+1}{ R_{r,j} } }$ (minimum $k$ for which neighborhoods centered at $L$ cover $X$)
     \label{line:kmin}
     \IF{$D(L, X \wo \cl{L}) = 0$}
@@ -1074,7 +1102,7 @@ The reverse implication is similarly straightforward.
         \STATE \textbf{break}
         \label{line:check}
     \ENDIF
-    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \N^{N \times (i+1)}$
+    \STATE $R \leftarrow [ \verb|sort|({R_{1,\bullet}})^\top \cdots \verb|sort|({R_{N,\bullet}})^\top ]^\top \in \bbN^{N \times (i+1)}$
     \label{line:sort}
     \STATE $F \leftarrow X \wo \cl{L}$
     \FOR{$j$ from $1$ to $i$}
@@ -1133,7 +1161,7 @@ Because columns $1$ through $i-1$ of $R$ were sorted in the previous iteration (
 
 ### Tie handling
 
-We might have defined two relative ranks $\check{q}, \hat{q} : X \times X \longrightarrow \N$ ("$q$-check" and "$q$-hat") as follows:
+We might have defined two relative ranks $\check{q}, \hat{q} : X \times X \longrightarrow \bbN$ ("$q$-check" and "$q$-hat") as follows:
 \begin{align*}
 & \check{q}(x,y)=\abs{\{z\in X \where d(x,z)<d(x,y)\}} \\%>
 & \hat{q}(x,y)=\abs{\{z\in X \where d(x,z)\leq d(x,y)\}} - 1
@@ -1207,7 +1235,7 @@ We hypothesized that, as measured by the fraction of their parameter ranges, the
 ### Spherical sample with variable density
 -->
 
-We compared the suitability of three landmarking procedures (uniformly random, maxmin, lastfirst) on datasets with varying density and duplication patterns by extending an example of @deSilva2004. Each expriment proceeded as follows: We sampled $n=540$ points from the sphere $\Sph^2\subset\R^3$ and in different experiments selected $k=12,36,60$ landmark points. We then used the landmarks to compute PH and computed the _relative dominance_ $(R_1 - R_0) / K_0$ and _absolute dominance_ $(R_1 - R_0) / K_1$ of the last interval over which all Betti numbers agreed with those of $\Sph^2$.
+We compared the suitability of three landmarking procedures (uniformly random, maxmin, lastfirst) on datasets with varying density and duplication patterns by extending an example of @deSilva2004. Each expriment proceeded as follows: We sampled $n=540$ points from the sphere $\Sph^2\subset\bbR^3$ and in different experiments selected $k=12,36,60$ landmark points. We then used the landmarks to compute PH and computed the _relative dominance_ $(R_1 - R_0) / K_0$ and _absolute dominance_ $(R_1 - R_0) / K_1$ of the last interval over which all Betti numbers agreed with those of $\Sph^2$.
 These statistics provide an indication of how successfully PH recovered the homology of the manifold from which the points were sampled.
 
 The points $x=(r,\theta,\phi)$ were sampled using four procedures: uniform sampling, skewed sampling, uniform sampling with skewed boosting, and skewed sampling with skewed boosting. The first procedure was used by @deSilva2004 and here serves as a baseline. For a sample $S$ (with multiplicities) generated from each of the other three procedures, the expected density $\lim_{\eps\to 0}\lim_{n\to\infty}\frac{1}{n}\abs{\{x=(r,\theta,\phi)\in S \where \alpha-\eps<\phi<\alpha+\eps\}}$ of points near a given latitude $\alpha\in[0,\pi]$ is proportional to the quartic function $p:[0,1]\to[0,1]$ defined by $p(x)=(\frac{\phi}{\pi})^4$.

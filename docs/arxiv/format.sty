@@ -1,21 +1,21 @@
 %%%%%%%%%%%%%%%%%%%% packages %%%%%%%%%%%%%%%%%%%%
 %% format/style packages
-\usepackage{lmodern}
-\usepackage{ifxetex,ifluatex}
-\usepackage{dcolumn}
-\usepackage{geometry}
-\usepackage{pdflscape}
-\usepackage{bm}
-\usepackage{rotating}
-\usepackage{float}
+% \usepackage{lmodern}
+% \usepackage{ifxetex,ifluatex}
+% \usepackage{dcolumn}
+% \usepackage{geometry}
+% \usepackage{pdflscape}
+% \usepackage{bm}
+% \usepackage{rotating}
+% \usepackage{float}
 \usepackage{xcolor} % custom colors
-\usepackage[most]{tcolorbox} % boxed definitions/examples
-\usepackage{wrapfig} % wrap text around figures/code listings
+% \usepackage[most]{tcolorbox} % boxed definitions/examples
+% \usepackage{wrapfig} % wrap text around figures/code listings
 
 %% math/code packages
 \usepackage{amsmath,amsthm,amssymb} % extra math stuff
-\usepackage{centernot} % centered overlay slash
-\usepackage{listings} % code snippets
+% \usepackage{centernot} % centered overlay slash
+% \usepackage{listings} % code snippets
 \usepackage{algorithmic}
 \usepackage[ruled]{algorithm}
 \usepackage{tikz-cd} % number lines, arrow diagrams, networks
@@ -27,30 +27,26 @@
 
 %% general math commands
 \newcommand{\Epsilon}{{\mathrm{E}}}
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\Z}{\mathbb{Z}}
-\newcommand{\R}{\mathbb{R}}
-%\newcommand{\Q}{\mathbb{Q}}
-\newcommand{\B}{\mathbb{B}}
-\newcommand{\C}{\mathbb{C}}
-%\renewcommand{\C}{\mathbb{C}}
+\newcommand{\bbN}{\mathbb{N}}
+\newcommand{\bbZ}{\mathbb{Z}}
+\newcommand{\bbR}{\mathbb{R}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\bbB}{\mathbb{B}}
+\newcommand{\bbC}{\mathbb{C}}
+% \renewcommand{\bbC}{\mathbb{C}}
 \newcommand{\Sph}{\mathbb{S}}
 \newcommand{\where}{ : }
 \newcommand{\wo}{\smallsetminus}
-\newcommand{\sub}{\subseteq}
-\newcommand{\A}{\forall\ }
-\newcommand{\E}{\exists\ }
-\newcommand{\nimplies}{\centernot\implies}
+% \newcommand{\nimplies}{\centernot\implies}
 \newcommand{\eps}{\varepsilon}
 \newcommand{\Eps}{\Epsilon}
-\newcommand{\xn}{\left\{ x_n \right\}}
-\newcommand{\seq}{\left\{ x_i \right\}_{i=1}^\infty}
+% \newcommand{\xn}{\left\{ x_n \right\}}
 \newcommand{\abs}[1]{\lvert #1\rvert}
-\newcommand{\fxy}{f: X \longrightarrow Y}
+% \newcommand{\fxy}{f: X \longrightarrow Y}
 \newcommand{\cl}{\overline}
 \newcommand{\del}{\partial}
-\renewcommand{\|}{\ |\ }
-\newcommand{\cat}[1]{\bm{\mathsf{#1}}}
+% \renewcommand{\|}{\ |\ }
+% \newcommand{\cat}[1]{\bm{\mathsf{#1}}}
 \newcommand{\argmin}{\operatorname{argmin}}
 \newcommand{\argmax}{\operatorname{argmax}}
 \newcommand{\power}[1]{\mathcal{P}(#1)}
@@ -62,8 +58,8 @@
 %\newcommand{\pkg}[1]{#1}
 
 %% project specific commands
-\newcommand{\bc}{\mathcal{C}^{B}_{\epsilon,n}}
-\newcommand{\nc}{\mathcal{C}^{N}_{k,n}}
+% \newcommand{\bc}{\mathcal{C}^{B}_{\epsilon,n}}
+% \newcommand{\nc}{\mathcal{C}^{N}_{k,n}}
 \newcommand{\Wit}{\operatorname{Wit}}
 %\newcommand{\supp}{\operatorname{supp}}
 \newcommand{\supp}[1]{[#1]}
@@ -90,20 +86,20 @@
 %\floatname{algorithm}{Algorithm}
 
 %% set up listings for code snippets
-\lstset{
-    basicstyle=\ttfamily\small,
-    frame=lines,
-    language=Python,
-    commentstyle=\color{gray},
-    keepspaces=true,
-    columns=[l]fullflexible,
-    flexiblecolumns=true,
-    escapeinside={(*}{*)},
-    captionpos=t,
-    abovecaptionskip=0em,
-    aboveskip=0pt,
-    belowskip=4pt
-}
+% \lstset{
+%     basicstyle=\ttfamily\small,
+%     frame=lines,
+%     language=Python,
+%     commentstyle=\color{gray},
+%     keepspaces=true,
+%     columns=[l]fullflexible,
+%     flexiblecolumns=true,
+%     escapeinside={(*}{*)},
+%     captionpos=t,
+%     abovecaptionskip=0em,
+%     aboveskip=0pt,
+%     belowskip=4pt
+% }
 
 %% set names of code snippets to be "\textbf{Algorithm n.}"
 %\renewcommand\lstlistingname{Algorithm}
@@ -196,8 +192,8 @@
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 
 \hypersetup{
-  pdftitle={Robust recovery of homological features in simulated and real-world data sets using the mapper construction},
-  pdfauthor={Jason Cory Brunson; Yara Skaf; Brandon Demkowicz; Sanmati Choudhary},
+  pdftitle={Fixed and adaptive landmark sets for finite pseudometric spaces},
+  pdfauthor={Jason Cory Brunson; Yara Skaf},
   hidelinks,
-  pdfcreator={LaTeX via pandoc}}
+  pdfcreator={LaTeX via Pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
