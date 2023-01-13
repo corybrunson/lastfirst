@@ -2,13 +2,13 @@
 title: Fixed and adaptive landmark sets\linebreak for finite pseudometric spaces
 authors:
   - name: Jason Cory Brunson
-    thanks: ORCID 0000-0003-3126-9494
+    thanks: Supported by the University of Connecticut Skeletal, Craniofacial and Oral Biology Training Grant (National Institute of Dental and Craniofacial Research grant 5T90DE021989-07).
     department: Laboratory for Systems Medicine
     affiliation: University of Florida
     location: Gainesville, FL, USA
     email: jason.brunson@medicine.ufl.edu
   - name: Yara Skaf
-    thanks: ORCID 0000-0002-7097-4260
+    thanks: Supported by the University of Florida and Florida State University Clinical and Translational Science Awards (National Center for Advancing Translational Sciences grants TL1TR001428 and UL1TR001427).
     department: Laboratory for Systems Medicine
     affiliation: University of Florida
     location: Gainesville, FL, USA
@@ -43,13 +43,13 @@ header-includes:
 # Acknowledgments {-}
 
 We are grateful to Reinhard Laubenbacher, Matthew Wheeler, and Peter Bubenik for critical feedback on earlier drafts of this manuscript.
-J.C.B. was supported by the University of Connecticut Skeletal, Craniofacial and Oral Biology Training Grant (National Institute of Dental and Craniofacial Research grant 5T90DE021989-07).
-Y.S. was supported by the University of Florida and Florida State University Clinical and Translational Science Awards (National Center for Advancing Translational Sciences grants TL1TR001428 and UL1TR001427).
 
 
+<!--
 ## Competing interests {-}
 
 Both authors declare that we have no conflicts of interest.
+-->
 
 
 \pagebreak
